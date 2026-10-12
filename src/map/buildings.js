@@ -11,6 +11,12 @@ const NEUTRAL = '#e9e4d9';
 const SELECTED = '#e3b664';
 
 export async function loadBuildings(viewer) {
+  // Before any data is prepared these files don't exist. Vite then answers
+  // with index.html instead of a 404, so check for that first and say what to do.
+  const probe = await fetch('/tileset/tileset.json');
+  if (!probe.ok || !(probe.headers.get('content-type') ?? '').includes('json')) {
+    throw new Error('No 3D buildings have been prepared yet. Run npm run data:pilot (or data:convert with a CityGML file), then reload.');
+  }
   const [manifestResponse, tileset] = await Promise.all([
     fetch('/buildings-manifest.json'),
     Cesium.Cesium3DTileset.fromUrl('/tileset/tileset.json', {
