@@ -40,7 +40,9 @@ const HELSINKI_LAYERS = {
     'Sijoitussopimus_alue', 'Sijoitussopimus_piste',
     'Lyhyt_maanvuokraus_alue', 'Lyhyt_maanvuokraus_piste',
     'Tapahtumat_alue', 'Tapahtumat_piste',
-    'Winkki_tyot_yleisilla_alueilla', 'Winkki_vuokraukset_ja_tapahtumat_yleisilla_alueilla',
+    
+    // The Winkki layers' real names are English; their titles are the Finnish ones on HRI.
+    'Winkki_works', 'Winkki_rents_audiences',
   ],
 };
 
