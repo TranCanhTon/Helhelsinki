@@ -18,6 +18,12 @@ export function gridPointToLocal([east, north, height]) {
   return FRAME.toLocal(geodeticToEcef(lon, lat, height));
 }
 
+export const LIMITATIONS = [
+  'Partial coverage: only the areas listed in coverage are modelled.',
+  'Heights are N2000 (above sea level) shown above a flat sea-level globe; there is no terrain model, so buildings on higher ground can appear to float slightly.',
+  'Neutral colours; facade textures are not included.',
+];
+
 // glTF models are "Y up"; 3D Tiles rotates them to "Z up" when loading.
 // So local [east, north, up] is stored as [east, up, -north].
 export const toGltfAxes = ([e, n, u]) => [e, u, -n];

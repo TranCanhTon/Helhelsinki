@@ -41,7 +41,7 @@ The full original spec is in four Markdown files Ton has: `AI_BUILD_PROMPT.md`, 
 | Phase | Content | Status |
 | --- | --- | --- |
 | 0 | Setup, Vite + Cesium skeleton, data source probe | Done |
-| 1 | Helsinki boundary, 400 m pilot of real CityGML buildings, converter to 3D Tiles, viewer with picking | Code done and tested on synthetic shapes. **Not yet run on real data** (see section 6). |
+| 1 | Helsinki boundary, 400 m pilot of real buildings, converter to 3D Tiles, viewer with picking | **Done.** 60 real buildings around Senate Square render and pick correctly (desktop and phone). Built from the city's LOD2 3D tiles because the CityGML WFS was down (see section 6). |
 | 2 | Central Helsinki coverage, base map (land, water, streets) in day and dusk, labels, neighbourhood panel, layout shell | Not started |
 | 3 | Address search (Finnish and Swedish), selection highlight, unmatched address marker, building card, phone bottom sheet, URL state | Not started |
 | 4 | Price: StatFin postal-area sale and rent, translucent ground areas | Not started |
@@ -108,16 +108,21 @@ Heights: N2000 is used directly as height above a flat sea-level globe. There is
 
 ## 6. Immediate next steps
 
-1. Check `git pull` on Ton's PC is up to date.
-2. Run `npm run data:boundary`. Confirm the 8 control points pass and note the area in km².
-3. Run `npm run data:buildings -- --area=pilot`.
-   - On 12 Oct 2026 the citydb WFS (`https://kartta.hel.fi/3d/citydb-wfs/wfs`) answered **HTTP 503** to everything. Retry first.
-   - **Fallback 1:** Ton exports CityGML (LOD2, no textures) for the Senate Square area from the Export / Object Export Wizard at https://kartta.hel.fi/3d/. It emails a download link. Put the `.gml` in `data/raw/buildings/pilot/`. The city says these exports lack building attributes; check whether gml:id, RATU or VTJ-PRT are present. If they are not, the register join will not work and you need to decide with Ton what to do.
-   - **Fallback 2:** the 2019 archive `https://3d.hel.ninja/data/citygml/Helsinki3D_CityGML_Kalasatama_20190326.zip` (23.5 MB). It is the only file there, it is old, and the server once had a bad TLS certificate. Never disable TLS checks.
-   - The parser was written from the CityGML 2.0 standard and tested on synthetic files only. Expect to adjust it once a real file arrives: generic attribute names, xlink surfaces, srsName text and envelope handling. Check `data/raw/buildings/pilot-warnings.txt` after converting.
-4. `npm run data:register -- --area=pilot`, then `npm run data:convert -- --area=pilot`, then `npm run dev`, and check in the browser.
-5. Run `npm run check:picking` (uses installed Chrome on Windows) and look at the screenshots.
-6. Agree the new design direction with Ton, then continue with Phase 2.
+State on 12 Oct 2026:
+- `npm run data:boundary` ran on Ton's PC: 8/8 control points ok, 713.4 km² (Helsinki incl. sea).
+- The CityGML WFS (`https://kartta.hel.fi/3d/citydb-wfs/wfs`) answered HTTP 503 (maintenance page), also from a browser.
+- Workaround used: the city publishes the same LOD2 model as 3D tiles for its own map (`https://kartta.hel.fi/3d/datasource-data/16fc3fd5-df6d-4f48-bfd5-9aeee430a02f/tileset.json`, layer "Rakennukset (LOD2)", CC BY 4.0).
+  - Same `BID_...` building IDs, plus `RATU`, `VTJ_PRT`, address and storeys in the batch table.
+  - No Draco compression; RTC_CENTER plus a CITY_MODEL node matrix; Y-up.
+- `scripts/import-city-tiles.mjs` (`npm run data:city-tiles -- --area=pilot`) downloads the overlapping leaf tiles (geometricError 0), extracts each building's triangles to ECEF, filters by area + Helsinki boundary, joins the register and rebuilds our own tiles through `scripts/lib/publish-buildings.mjs` (shared with the CityGML converter).
+  - The pilot was produced from a browser-made bundle (`--bundle=`) because Claude's cloud workspace cannot reach kartta.hel.fi. Ton's PC can, so the normal command works there.
+- Result: 60 buildings, 4 tiles, 14,227 triangles, 1.23 MB, 55/60 with an address. Files are in `D:\HelsinkiMap\helhelsinki\public\`. `npm run check:picking` passed 10/10 clicks.
+
+Next:
+1. Ton runs `npm run dev` and checks the map at http://localhost:5173.
+2. Agree the new design direction with Ton (rule 4), then Phase 2.
+3. For Phase 2 coverage, try the CityGML WFS again (`npm run data:buildings`). If it is still down, use `npm run data:city-tiles` with new areas in `scripts/config.mjs`.
+4. The CityGML parser was tested on synthetic files only. When the WFS works, compare its output for the pilot with the city-tiles output (same IDs).
 
 ## 7. Probe findings (what each source has)
 

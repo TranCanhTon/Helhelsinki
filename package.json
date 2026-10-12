@@ -20,7 +20,8 @@
     "data:register": "node scripts/fetch-register.mjs",
     "data:convert": "node scripts/convert-buildings.mjs",
     "data:pilot": "npm run data:boundary && npm run data:buildings -- --area=pilot && npm run data:register -- --area=pilot && npm run data:convert -- --area=pilot",
-    "check:picking": "node scripts/check-picking.mjs"
+    "check:picking": "node scripts/check-picking.mjs",
+    "data:city-tiles": "node scripts/import-city-tiles.mjs"
   },
   "dependencies": {
     "@turf/boolean-point-in-polygon": "7.2.0",

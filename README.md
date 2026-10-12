@@ -35,6 +35,7 @@ This reads `package.json` and downloads the libraries into `node_modules/`. Exac
 | `npm run data:register -- --area=pilot` | Downloads the building register (addresses, building type) for the same area. |
 | `npm run data:convert -- --area=pilot` | Converts the CityGML into 3D tiles, checks them and publishes to `public/`. |
 | `npm run data:pilot` | All four steps above for the pilot area. |
+| `npm run data:city-tiles -- --area=pilot` | Alternative building source: reads the city's own published LOD2 3D tiles (same model and IDs) when the CityGML service is down, then builds our tiles the same way. |
 | `npm run check:picking` | With `npm run dev` running: opens the map in Chrome, clicks buildings and checks the right one is selected. |
 
 If the city's 3D service is down, put a CityGML file you exported yourself from https://kartta.hel.fi/3d/ into `data/raw/buildings/pilot/` and run `npm run data:convert -- --area=pilot`.

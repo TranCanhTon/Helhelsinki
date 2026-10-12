@@ -39,5 +39,9 @@ export function enuFrame(lon, lat, height = 0) {
       const d = [point[0] - origin[0], point[1] - origin[1], point[2] - origin[2]];
       return [dot(d, east), dot(d, north), dot(d, up)];
     },
+    // ECEF direction (like a surface normal) -> local [east, north, up] direction.
+    toLocalVector(vector) {
+      return [dot(vector, east), dot(vector, north), dot(vector, up)];
+    },
   };
 }
