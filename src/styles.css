@@ -1,0 +1,30 @@
+:root {
+  --panel: #101a30;
+  --surface: #1c2839;
+  --text: #edf0ec;
+  --muted: #aab9c1;
+  --accent: #ddc59e;
+  --radius: 16px;
+  --border: rgba(237, 240, 236, 0.12);
+  --serif: Georgia, 'Times New Roman', serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #app {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0e1a2b;
+  color: var(--text);
+  font-family: var(--sans);
+}
+
+#scene {
+  position: absolute;
+  inset: 0;
+}
+
+/* Hide Cesium's own logo strip; we show our own credits later. */
+.cesium-viewer-bottom { display: none; }

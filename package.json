@@ -1,0 +1,35 @@
+{
+  "name": "helhelsinki",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Helsinki Lens: a 3D map of Helsinki for checking a building's surroundings before an apartment viewing.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "predev": "node scripts/copy-cesium.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/copy-cesium.mjs",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "data:probe": "node scripts/probe-sources.mjs"
+  },
+  "dependencies": {
+    "@turf/boolean-point-in-polygon": "7.2.0",
+    "@xmldom/xmldom": "0.9.12",
+    "cesium": "1.145.0",
+    "earcut": "3.0.2",
+    "polygon-clipping": "0.15.7",
+    "proj4": "2.22.0"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1",
+    "vite": "6.4.4"
+  },
+  "overrides": {
+    "@cesium/engine": "26.3.0",
+    "@cesium/widgets": "16.2.0"
+  }
+}

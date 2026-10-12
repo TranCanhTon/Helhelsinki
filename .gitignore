@@ -1,0 +1,18 @@
+node_modules/
+dist/
+
+# Recreated from node_modules by scripts/copy-cesium.mjs
+public/cesium/
+
+# Raw downloads from the data sources. Never committed; they can be fetched again.
+data/raw/
+data/staging/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+Thumbs.db
