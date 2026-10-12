@@ -43,14 +43,14 @@ The full original spec is in four Markdown files Ton has: `AI_BUILD_PROMPT.md`, 
 | 0 | Setup, Vite + Cesium skeleton, data source probe | Done |
 | 1 | Helsinki boundary, 400 m pilot of real buildings, converter to 3D Tiles, viewer with picking | **Done.** 60 real buildings around Senate Square render and pick correctly (desktop and phone). Built from the city's LOD2 3D tiles because the CityGML WFS was down (see section 6). |
 | 2 | Central Helsinki coverage, base map (land, water, streets) in day and dusk, labels, neighbourhood panel, layout shell | Not started |
-| 3 | Address search (Finnish and Swedish), selection highlight, unmatched address marker, building card, phone bottom sheet, URL state | Not started |
+| 3 | Address search (Finnish and Swedish), selection highlight, unmatched address marker, building card, phone bottom sheet, URL state, **rental and sale listing links on the card** (Oikotie, Etuovi, Vuokraovi, SATO, Lumo search pages + Copy address; Ton asked for this, do not drop it) | Not started |
 | 4 | Price: StatFin postal-area sale and rent, translucent ground areas | Not started |
 | 5 | Noise: 2022 Lden road, rail, metro, tram, "All" = highest band | Not started |
 | 6 | Parking: segments, paid and resident zones, density, clusters, dots | Not started |
 | 7 | HSL GTFS stops and lines, nearest 3 within 1.5 km, OSM landmarks | Not started |
 | 8 | Construction nearby (Ton's own feature, details in section 7) | Not started |
 | 9 | Share URLs, phone polish, error states, sources panel, tests, README, refresh commands, scope audit | Not started |
-| 10 | Optional listing links, later Brave search | Not started |
+| 10 | Optional: automatic listing search through a server endpoint and Brave Search key (the manual portal links are already in Phase 3) | Not started |
 
 Ton asked to do one or two phases at a time and to walk him through each.
 
