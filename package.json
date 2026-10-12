@@ -14,7 +14,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test \"tests/**/*.test.mjs\"",
-    "data:probe": "node scripts/probe-sources.mjs"
+    "data:probe": "node scripts/probe-sources.mjs",
+    "data:boundary": "node scripts/fetch-boundary.mjs",
+    "data:buildings": "node scripts/fetch-buildings.mjs",
+    "data:register": "node scripts/fetch-register.mjs",
+    "data:convert": "node scripts/convert-buildings.mjs",
+    "data:pilot": "npm run data:boundary && npm run data:buildings -- --area=pilot && npm run data:register -- --area=pilot && npm run data:convert -- --area=pilot",
+    "check:picking": "node scripts/check-picking.mjs"
   },
   "dependencies": {
     "@turf/boolean-point-in-polygon": "7.2.0",

@@ -4,7 +4,7 @@ A 3D map of Helsinki for checking a building's surroundings before an apartment 
 
 **Helsinki only.** No Espoo or Vantaa data is downloaded into published files or shown.
 
-Status: Phase 0 (project setup and data source check).
+Status: Phase 1 (Helsinki boundary and the first real 3D buildings).
 
 ## What you need
 
@@ -30,6 +30,14 @@ This reads `package.json` and downloads the libraries into `node_modules/`. Exac
 | `npm run build` | Builds the finished website into `dist/`. |
 | `npm test` | Runs the automated tests. |
 | `npm run data:probe` | Makes small test requests to every data source and saves samples to `data/raw/probe/`. |
+| `npm run data:boundary` | Downloads the 60 Helsinki districts and builds the Helsinki boundary. |
+| `npm run data:buildings -- --area=pilot` | Downloads 3D buildings (CityGML) for an area, page by page. Resumes if stopped. |
+| `npm run data:register -- --area=pilot` | Downloads the building register (addresses, building type) for the same area. |
+| `npm run data:convert -- --area=pilot` | Converts the CityGML into 3D tiles, checks them and publishes to `public/`. |
+| `npm run data:pilot` | All four steps above for the pilot area. |
+| `npm run check:picking` | With `npm run dev` running: opens the map in Chrome, clicks buildings and checks the right one is selected. |
+
+If the city's 3D service is down, put a CityGML file you exported yourself from https://kartta.hel.fi/3d/ into `data/raw/buildings/pilot/` and run `npm run data:convert -- --area=pilot`.
 
 ## Folders
 

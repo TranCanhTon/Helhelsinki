@@ -10,6 +10,36 @@
   <body>
     <div id="app">
       <div id="scene"></div>
+
+      <header class="brand">
+        <span class="brand-mark">H</span>
+        <span class="brand-name">Helsinki Lens</span>
+      </header>
+
+      <nav class="map-tools" aria-label="Map controls">
+        <button id="tool-home" type="button" title="Reset view (Home)" aria-label="Reset view">⌂</button>
+        <button id="tool-zoom-in" type="button" title="Zoom in (+)" aria-label="Zoom in">+</button>
+        <button id="tool-zoom-out" type="button" title="Zoom out (−)" aria-label="Zoom out">−</button>
+        <button id="tool-overhead" type="button" title="Overhead view" aria-label="Toggle overhead view">2D</button>
+        <button id="tool-rotate-left" type="button" title="Rotate left" aria-label="Rotate left">↶</button>
+        <button id="tool-rotate-right" type="button" title="Rotate right" aria-label="Rotate right">↷</button>
+        <button id="tool-north" type="button" title="Face north" aria-label="Face north"><span id="compass">N</span></button>
+      </nav>
+
+      <div class="map-caption">
+        <span class="scale-line"></span><span id="scale-label">100 m</span>
+        <span class="hint">Drag to move · Scroll to zoom · Shift + drag to rotate</span>
+      </div>
+
+      <aside id="building-card" class="building-card" hidden aria-live="polite"></aside>
+
+      <div id="loading" class="loading" role="status">
+        <div class="spinner"></div>
+        <strong>Helsinki Lens</strong>
+        <span id="loading-text">Loading 3D buildings…</span>
+      </div>
+
+      <footer class="credits">3D buildings and register © City of Helsinki · CC BY 4.0</footer>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>
