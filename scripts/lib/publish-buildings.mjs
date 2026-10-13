@@ -74,7 +74,10 @@ export async function publishBuildings({root, items, boundary, dataset}) {
   const problems = validateTileset({tileset, manifest, readTile: uri => tileCache.get(uri), isInside: boundary.isInside});
   if (problems.length) throw new Error('Validation failed; public/ was NOT changed:\n' + problems.slice(0, 30).join('\n'));
 
+  // Keep sections other scripts own (addresses, labels, trees, prices, basemap).
+  const previous = await readFile(new URL('public/dataset.json', root), 'utf8').then(JSON.parse, () => ({}));
   const fullDataset = {
+    ...previous,
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
     ...dataset,

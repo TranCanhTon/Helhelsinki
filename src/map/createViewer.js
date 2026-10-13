@@ -26,15 +26,25 @@ export function createViewer(containerId) {
     scene3DOnly: true,
     skyBox: false,
     skyAtmosphere: false,
+    // Draw only when something changes (camera move, tile loaded, new colour),
+    // not 60 times a second. Code that changes the picture calls
+    // scene.requestRender(). Without this an idle map keeps a CPU core busy.
+    requestRenderMode: true,
+    maximumRenderTimeChange: Infinity,
   });
 
   const scene = viewer.scene;
-  scene.backgroundColor = Cesium.Color.fromCssColorString('#0e1a2b');
-  scene.globe.baseColor = Cesium.Color.fromCssColorString('#16263a');
+  // "Copper and granite" day colours (see src/styles.css).
+  scene.backgroundColor = Cesium.Color.fromCssColorString('#dfe3e0');
+  scene.globe.baseColor = Cesium.Color.fromCssColorString('#d9d7d0');
   scene.globe.showGroundAtmosphere = false;
   scene.fog.enabled = false;
   if (scene.sun) scene.sun.show = false;
   if (scene.moon) scene.moon.show = false;
+
+  // Cesium only works through its tile loading queue while drawing, so keep
+  // drawing until the ground is loaded, then go idle.
+  scene.postRender.addEventListener(() => { if (!scene.globe.tilesLoaded) scene.requestRender(); });
 
   // Draw at most 1.5x device pixels, so high-DPI phones don't render 3x.
   viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 1.5);

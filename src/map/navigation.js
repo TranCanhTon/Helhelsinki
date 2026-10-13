@@ -58,6 +58,7 @@ export class Navigation {
     this.viewer.camera.lookAt(target, new Cesium.HeadingPitchRange(Cesium.Math.toRadians(s.heading), Cesium.Math.toRadians(s.pitch), s.range));
     // lookAt locks the camera to the target; release it so picking works normally.
     this.viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    this.viewer.scene.requestRender();
     this.onChange(s, this);
   }
 

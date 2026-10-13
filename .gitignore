@@ -14,6 +14,7 @@ data/staging/
 !.env.example
 
 *.log
+.claude/
 .DS_Store
 Thumbs.db
 
@@ -24,3 +25,20 @@ public/buildings-manifest.json
 public/dataset.json
 public/map/
 screenshots/
+
+# Prepared phase 3/4 data
+public/basemap/
+public/addresses.json
+public/labels.json
+public/trees.json
+public/trees/
+public/price-by-area.json
+
+public/layers.json
+public/parking.json
+public/parking-zones.json
+public/transit.json
+public/transit-routes.json
+public/landmarks.json
+# Collected Oikotie ads: never published (their terms and database rights).
+public/listings.json

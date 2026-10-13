@@ -18,9 +18,10 @@ export function gridPointToLocal([east, north, height]) {
   return FRAME.toLocal(geodeticToEcef(lon, lat, height));
 }
 
+export const N2000_LIMITATION = 'Heights are N2000 (above sea level) shown above a flat sea-level globe; there is no terrain model, so buildings on higher ground can appear to float slightly.';
 export const LIMITATIONS = [
   'Partial coverage: only the areas listed in coverage are modelled.',
-  'Heights are N2000 (above sea level) shown above a flat sea-level globe; there is no terrain model, so buildings on higher ground can appear to float slightly.',
+  N2000_LIMITATION,
   'Neutral colours; facade textures are not included.',
 ];
 

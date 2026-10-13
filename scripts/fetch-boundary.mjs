@@ -4,6 +4,7 @@
 // Output: public/map/helsinki-boundary.json   one merged Helsinki shape
 //         public/map/district-boundaries.json  the 60 districts with names
 //         data/raw/boundary/Kaupunginosajako.json  the untouched download
+//         data/raw/boundary/Maavesi_osa_alueet.json  148 sub-districts (used by the importer)
 //
 // Run:  npm run data:boundary
 import {mkdir, writeFile} from 'node:fs/promises';
@@ -76,5 +77,12 @@ await writeFile(new URL('district-boundaries.json', PUBLIC_MAP), JSON.stringify(
   })),
 }));
 
+// Sub-districts (osa-alueet), e.g. Kalasatama inside Sörnäinen. Some listing
+// sites (SATO) use these names. Fields: tunnus, nimi_fi, nimi_se, tyyppi.
+console.log('Downloading Helsinki sub-districts (Maavesi_osa_alueet)...');
+const subdistricts = await fetchAllFeatures({typeName: 'avoindata:Maavesi_osa_alueet', sortBy: 'tietopalvelu_id'});
+await writeFile(new URL('Maavesi_osa_alueet.json', RAW), JSON.stringify(subdistricts));
+
 console.log(`\nHelsinki boundary: ${download.features.length} districts merged into ${geometry.coordinates.length} piece(s), ${area.toFixed(1)} km².`);
+console.log(`Sub-districts: ${subdistricts.features.length}.`);
 console.log('Wrote public/map/helsinki-boundary.json and public/map/district-boundaries.json');

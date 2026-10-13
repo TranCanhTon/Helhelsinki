@@ -20,16 +20,27 @@ import {getJson, request} from './lib/http.mjs';
 import {readCityTile, ecefToGeodetic} from './lib/city-tiles.mjs';
 import {lonLatToGrid, gridToLonLat} from './lib/geo.mjs';
 import {loadBoundary} from './lib/boundary.mjs';
-import {buildRegisterIndex, joinRegister} from './lib/register-join.mjs';
-import {FRAME, LIMITATIONS} from './lib/tiles.mjs';
+import {buildRegisterIndex, joinRegister, yearFromDate, EMPTY_FACTS} from './lib/register-join.mjs';
+import {CLASS} from './lib/register-codes.mjs';
+import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import {FRAME, LIMITATIONS, N2000_LIMITATION} from './lib/tiles.mjs';
 import {publishBuildings} from './lib/publish-buildings.mjs';
-import {areaBbox, areaFromArgs, AREAS} from './config.mjs';
+import {areaBbox, areaFromArgs, areaInsideTest, areaDistrictOf, AREAS} from './config.mjs';
 
 export const CITY_LOD2_TILESET = 'https://kartta.hel.fi/3d/datasource-data/16fc3fd5-df6d-4f48-bfd5-9aeee430a02f/tileset.json';
 const CELL = 500;
+const GROUNDED_LIMITATION = 'There is no terrain model. Each building is lowered by its own lowest point (groundOffsetM) so it stands on the flat ground map; heightsN2000 keeps the source heights. On a slope the uphill side can sit slightly above the ground, and neighbouring buildings on different ground levels show steps.';
+
+// "Up" at a longitude/latitude: the direction heights are measured in (unit ECEF vector).
+const upAt = ([lon, lat]) => {
+  const r = Math.PI / 180;
+  return [Math.cos(lat * r) * Math.cos(lon * r), Math.cos(lat * r) * Math.sin(lon * r), Math.sin(lat * r)];
+};
 
 const area = areaFromArgs();
 const bbox = areaBbox(area);
+const insideArea = areaInsideTest(area);
+const districtOf = areaDistrictOf(area);
 const bundlePath = process.argv.find(a => a.startsWith('--bundle='))?.slice(9);
 const root = new URL('../', import.meta.url);
 const tileDir = new URL(`data/raw/buildings/${area}/city-tiles/`, root);
@@ -83,6 +94,36 @@ const register = existsSync(registerFile) ? JSON.parse(await readFile(registerFi
 const registerIndex = register ? buildRegisterIndex(register.features) : null;
 if (!register) console.warn('No register file; run npm run data:register -- --area=' + area);
 
+// Plan protection: match on the building number first, then by location.
+const protectedFile = new URL(`data/raw/register/${area}-protected.json`, root);
+const protectedAreas = existsSync(protectedFile) ? JSON.parse(await readFile(protectedFile, 'utf8')) : null;
+if (!protectedAreas) console.warn('No plan protection file; run npm run data:register -- --area=' + area);
+const protectedByNumber = new Map();
+for (const f of protectedAreas?.features ?? []) {
+  const number = String(f.properties.pys_raknro ?? '').trim();
+  if (number) protectedByNumber.set(number, f);
+}
+const protectionOf = (ratu, position) => {
+  const f = (ratu && protectedByNumber.get(ratu)) ||
+    protectedAreas?.features.find(p => p.geometry && booleanPointInPolygon(position, p));
+  if (!f) return null;
+  const p = f.properties;
+  const rule = [1, 2, 3, 4, 5, 6].map(i => p[i === 1 ? 'kaavaselitys' : `kaavaselitys${i}`]).filter(Boolean).join('').trim();
+  return {
+    marking: [p.s_merk, p.s_merk_2].filter(Boolean).join(', ') || null,
+    plan: p.kaava ?? null,
+    inForce: p.voimaantulo_pvm ?? null,
+    ruleFi: rule || null,
+    matchedBy: ratu && protectedByNumber.get(ratu) === f ? 'building number' : 'location',
+  };
+};
+
+// Sub-districts (e.g. Kalasatama), from npm run data:boundary.
+const subdistrictFile = new URL('data/raw/boundary/Maavesi_osa_alueet.json', root);
+const subdistricts = existsSync(subdistrictFile) ? JSON.parse(await readFile(subdistrictFile, 'utf8')).features : [];
+if (!subdistricts.length) console.warn('No sub-districts; run npm run data:boundary');
+const subdistrictOf = position => subdistricts.find(f => booleanPointInPolygon(position, f))?.properties ?? null;
+
 const found = new Map();
 const report = {duplicates: 0, outsideArea: 0, outsideHelsinki: 0, tiles: 0};
 for (const file of (await readdir(tileDir)).filter(f => f.endsWith('.b3dm')).sort()) {
@@ -106,12 +147,18 @@ for (const [id, {row, parts}] of found) {
   const lons = geodetic.map(g => g[0]), lats = geodetic.map(g => g[1]), hs = geodetic.map(g => g[2]);
   const position = [(Math.min(...lons) + Math.max(...lons)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
   const [east, north] = lonLatToGrid(position);
-  if (east < bbox[0] || east > bbox[2] || north < bbox[1] || north > bbox[3]) { report.outsideArea++; continue; }
+  // Our ground map lies at height 0 and there is no terrain, so a building drawn
+  // at its N2000 height floats above its footprint (median 17 m in the centre).
+  // Lower each building by its own lowest point so its base sits on the ground.
+  const ground = Math.min(...hs), top = Math.max(...hs);
+  const lowered = upAt(position).map(c => c * ground);
+  if (!insideArea(position)) { report.outsideArea++; continue; }
   if (!boundary.isInside(position)) { report.outsideHelsinki++; continue; }
+  const district = districtOf(position);
 
   const a = row.attributes ?? {};
   const ids = {ratu: Number(a.RATU) > 0 ? String(Number(a.RATU)) : null, vtjPrt: a.VTJ_PRT?.trim() || null};
-  let joined = registerIndex ? joinRegister(ids, registerIndex) : {registerJoin: 'register-not-loaded', address: null, addresses: [], addressSv: null, postcode: null, use: null};
+  let joined = registerIndex ? joinRegister(ids, registerIndex) : {registerJoin: 'register-not-loaded', address: null, addresses: [], addressSv: null, postcode: null, use: null, useEn: null, yearBuilt: null, facts: EMPTY_FACTS};
   if (!joined.address && a.Address?.Street) {
     // The city model carries an address too; use it only when the register has none.
     const address = [a.Address.Street, a.Address.HouseNumber].filter(Boolean).join(' ');
@@ -123,14 +170,28 @@ for (const [id, {row, parts}] of found) {
       buildingId: id,
       sourceIds: {gmlId: id, ...ids},
       position: position.map(v => Math.round(v * 1e7) / 1e7),
-      heightsN2000: {base: Math.round(Math.min(...hs) * 100) / 100, top: Math.round(Math.max(...hs) * 100) / 100},
+      // Source heights, kept as they are. The drawn building is lowered by groundOffsetM.
+      heightsN2000: {base: Math.round(ground * 100) / 100, top: Math.round(top * 100) / 100},
+      groundOffsetM: Math.round(ground * 100) / 100,
       ...joined,
+      // The city model carries a few facts of its own. The register wins when both have one.
+      yearBuilt: joined.yearBuilt ?? yearFromDate(a.yearOfConstruction),
+      yearSource: joined.yearBuilt ? 'register' : yearFromDate(a.yearOfConstruction) ? 'city 3D model' : null,
+      facts: {...joined.facts, floors: joined.facts.floors ?? (Number(a.storeysAboveGround) > 0 ? Number(a.storeysAboveGround) : null)},
+      // From the geometry: lowest to highest point. The model's measuredHeight agrees
+      // for 98% of buildings, but some are plainly wrong (0.9 m for 15 floors).
+      heightM: Math.round((top - ground) * 10) / 10,
+      classFi: a.class ?? null,
+      classEn: a.class ? CLASS[a.class] ?? null : null,
+      protection: protectionOf(ids.ratu, position),
+      district: district ? {id: district.id, nameFi: district.nameFi, nameSv: district.nameSv} : null,
+      subdistrict: (s => s ? {id: s.tunnus, nameFi: s.nimi_fi, nameSv: s.nimi_se} : null)(subdistrictOf(position)),
       lod: 2,
       buildingParts: parts.length > 1 ? parts.length : 0,
       geometrySource: 'helsinki-lod2-3dtiles',
     },
     meshes: parts.map(part => ({
-      positions: part.positions.map(p => FRAME.toLocal(p)),
+      positions: part.positions.map(p => FRAME.toLocal([p[0] - lowered[0], p[1] - lowered[1], p[2] - lowered[2]])),
       normals: part.normals.map(n => {
         const v = n ? FRAME.toLocalVector(n) : [0, 0, 1];
         const l = Math.hypot(...v) || 1;
@@ -149,16 +210,19 @@ await publishBuildings({
   dataset: {
     coverage: {
       areas: {[area]: {...AREAS[area], bbox3879: bbox}},
-      rule: 'A building is included when the centre of its bounding box is inside the area square and inside the Helsinki boundary.',
+      rule: 'A building is included when the centre of its bounding box is inside the area (a square, or the listed district shapes) and inside the Helsinki boundary.',
     },
     counts: {skipped: {duplicates: report.duplicates, outsideArea: report.outsideArea, outsideHelsinki: report.outsideHelsinki}},
     sources: {
       buildings: source,
       register: register ? {layer: 'avoindata:Rakennukset_alue_rekisteritiedot', retrievedAt: register.retrievedAt, license: 'City of Helsinki, CC BY 4.0'} : null,
+      planProtection: protectedAreas ? {layer: 'avoindata:Asemakaavoissa_suojellut_rakennukset_alue', retrievedAt: protectedAreas.retrievedAt, license: 'City of Helsinki, CC BY 4.0'} : null,
+      subdistricts: subdistricts.length ? {layer: 'avoindata:Maavesi_osa_alueet', license: 'City of Helsinki, CC BY 4.0'} : null,
       boundary: boundary.properties.source,
     },
     limitations: [
-      ...LIMITATIONS,
+      ...LIMITATIONS.filter(l => l !== N2000_LIMITATION),
+      GROUNDED_LIMITATION,
       'Geometry comes from the city\'s published LOD2 3D tiles (same city model as the CityGML service), because the CityGML WFS was unavailable.',
     ],
   },
