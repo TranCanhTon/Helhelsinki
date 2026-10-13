@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#101a30" />
+    <meta name="theme-color" content="#e6e4de" />
     <link rel="icon" href="/favicon.svg" />
     <title>Helsinki Lens</title>
   </head>
@@ -11,35 +11,41 @@
     <div id="app">
       <div id="scene"></div>
 
-      <header class="brand">
-        <span class="brand-mark">H</span>
-        <span class="brand-name">Helsinki Lens</span>
+      <header class="brand panel">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">Helsinki <span>Lens</span></span>
       </header>
 
-      <nav class="map-tools" aria-label="Map controls">
+      <section id="search" class="search panel" aria-label="Address search"></section>
+      <details class="neighbourhoods panel"><summary>Neighbourhoods · 3D coverage</summary><div id="neighbourhood-list"></div></details>
+      <div class="bottom-dock">
+        <div id="noise-switch" class="noise-switch panel" hidden></div>
+        <nav class="view-controls panel" aria-label="Map view">
+          <button data-view="overview" aria-pressed="true">Overview</button><button data-view="sale" aria-pressed="false">Price</button><button data-view="noise" aria-pressed="false">Noise</button><button data-view="parking" aria-pressed="false">Parking</button>
+        </nav>
+        <aside id="price-legend" class="price-legend panel" hidden></aside>
+        <span class="hint">Scroll to zoom · Shift + drag to rotate</span>
+      </div>
+      <div id="area-info" class="area-info panel" hidden role="status"></div>
+      <div id="data-status" role="status"></div>
+      <nav class="map-tools panel" aria-label="Map controls">
         <button id="tool-home" type="button" title="Reset view (Home)" aria-label="Reset view">⌂</button>
         <button id="tool-zoom-in" type="button" title="Zoom in (+)" aria-label="Zoom in">+</button>
         <button id="tool-zoom-out" type="button" title="Zoom out (−)" aria-label="Zoom out">−</button>
         <button id="tool-overhead" type="button" title="Overhead view" aria-label="Toggle overhead view">2D</button>
-        <button id="tool-rotate-left" type="button" title="Rotate left" aria-label="Rotate left">↶</button>
-        <button id="tool-rotate-right" type="button" title="Rotate right" aria-label="Rotate right">↷</button>
         <button id="tool-north" type="button" title="Face north" aria-label="Face north"><span id="compass">N</span></button>
+        <button id="tool-theme" type="button"></button>
       </nav>
 
-      <div class="map-caption">
-        <span class="scale-line"></span><span id="scale-label">100 m</span>
-        <span class="hint">Drag to move · Scroll to zoom · Shift + drag to rotate</span>
-      </div>
+      <div class="map-caption"><span class="scale-line"></span><span id="scale-label">100 m</span></div>
 
-      <aside id="building-card" class="building-card" hidden aria-live="polite"></aside>
+      <aside id="building-card" class="building-card panel" hidden aria-live="polite"></aside>
 
       <div id="loading" class="loading" role="status">
         <div class="spinner"></div>
         <strong>Helsinki Lens</strong>
         <span id="loading-text">Loading 3D buildings…</span>
       </div>
-
-      <footer class="credits">3D buildings and register © City of Helsinki · CC BY 4.0</footer>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

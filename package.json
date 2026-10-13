@@ -15,21 +15,36 @@
     "preview": "vite preview",
     "test": "node --test \"tests/**/*.test.mjs\"",
     "data:probe": "node scripts/probe-sources.mjs",
+    "data:probe:basemap": "node scripts/probe-basemap.mjs",
     "data:boundary": "node scripts/fetch-boundary.mjs",
     "data:buildings": "node scripts/fetch-buildings.mjs",
     "data:register": "node scripts/fetch-register.mjs",
     "data:convert": "node scripts/convert-buildings.mjs",
     "data:pilot": "npm run data:boundary && npm run data:buildings -- --area=pilot && npm run data:register -- --area=pilot && npm run data:convert -- --area=pilot",
     "check:picking": "node scripts/check-picking.mjs",
-    "data:city-tiles": "node scripts/import-city-tiles.mjs"
+    "data:city-tiles": "node scripts/import-city-tiles.mjs",
+    "data:basemap:fetch": "node scripts/fetch-basemap.mjs",
+    "data:basemap:build": "node scripts/build-basemap.mjs",
+    "data:context": "node scripts/prepare-context.mjs",
+    "data:prices": "node scripts/fetch-prices.mjs",
+    "data:report:basemap": "node scripts/report-basemap.mjs",
+    "check:phase34": "node scripts/check-phase34.mjs",
+    "data:noise": "node scripts/fetch-noise.mjs",
+    "data:parking": "node scripts/fetch-parking.mjs",
+    "data:transit": "node scripts/fetch-transit.mjs",
+    "data:landmarks": "node scripts/fetch-landmarks.mjs",
+    "data:listings": "node scripts/fetch-listings.mjs",
+    "data:listings:watch": "node scripts/fetch-listings.mjs --watch"
   },
   "dependencies": {
     "@turf/boolean-point-in-polygon": "7.2.0",
     "@xmldom/xmldom": "0.9.12",
     "cesium": "1.145.0",
     "earcut": "3.0.2",
+    "flatbush": "4.6.2",
     "polygon-clipping": "0.15.7",
-    "proj4": "2.22.0"
+    "proj4": "2.22.0",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "playwright-core": "1.56.1",
