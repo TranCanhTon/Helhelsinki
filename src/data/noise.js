@@ -75,13 +75,14 @@ export const isApartmentBuilding = record => /^(apartment building|small apartme
 
 // Why a building is noisy, in words, from its bands per source:
 // "Road traffic is the loudest source here (65 to 70 dB). Trams add 55 to 60 dB." or null.
+// The card passes Finnish words and sentence patterns in the same shape.
 const SOURCE_WORDS = {road: ['Road traffic is', 'road traffic'], rail: ['Trains are', 'trains'], metro: ['The metro is', 'the metro'], tram: ['Trams are', 'trams']};
-export function noiseReason(noise, bandOf) {
+export function noiseReason(noise, bandOf, {words = SOURCE_WORDS, label = bandLabel, loudest = '{who} the loudest source here ({band}).', also = 'Also {list}.'} = {}) {
   const heard = NOISE_MODES.map(m => [m.key, noise?.[m.key]]).filter(([, v]) => v !== null && v !== undefined).sort((a, b) => b[1] - a[1]);
   if (!heard.length) return null;
   const [[key, lo], ...rest] = heard;
-  const text = [`${SOURCE_WORDS[key][0]} the loudest source here (${bandLabel(bandOf(lo))}).`];
-  if (rest.length) text.push('Also ' + rest.map(([k, v]) => `${SOURCE_WORDS[k][1]} (${bandLabel(bandOf(v))})`).join(', ') + '.');
+  const text = [loudest.replace('{who}', words[key][0]).replace('{band}', label(bandOf(lo)))];
+  if (rest.length) text.push(also.replace('{list}', rest.map(([k, v]) => `${words[k][1]} (${label(bandOf(v))})`).join(', ')));
   return text.join(' ');
 }
 

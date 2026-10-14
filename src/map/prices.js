@@ -2,13 +2,14 @@ import * as Cesium from 'cesium';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import {loadJson} from '../data/load.js';
 import {colorAt} from './ramp.js';
+import {t,num} from '../ui/i18n.js';
 // Price view colours the ground, not the buildings (Ton, 14 Oct 2026): each postal
 // area is a see-through fill with a solid outline, on a smooth scale from the lowest
 // area (teal) to the highest (coral), so the buildings keep their photos. Colours
 // taken from Ton's image. An area without a value is not drawn: missing stays missing.
 export const PRICE_COLORS=['#59b9ae','#6fc1af','#85cab0','#9ecfad','#bad3a8','#d6d6a2','#ddc992','#e4bc82','#e3ab76','#d99670','#cf8169'];
 const FILL_ALPHA=0.5;
-export const priceValue=(value,units)=>value==null?'Unavailable':value.toLocaleString('en-GB',{maximumFractionDigits:units==='EUR/m²'||units==='€/month'?0:2})+' '+units;
+export const priceValue=(value,units)=>value==null?t('Unavailable'):num(value,{maximumFractionDigits:units==='EUR/m²'||units==='€/month'?0:2})+' '+t(units);
 const bboxOf=geometry=>{const b=[Infinity,Infinity,-Infinity,-Infinity];for(const poly of geometry.coordinates)for(const [x,y] of poly[0]){b[0]=Math.min(b[0],x);b[1]=Math.min(b[1],y);b[2]=Math.max(b[2],x);b[3]=Math.max(b[3],y);}return b;};
 const ring=r=>Cesium.Cartesian3.fromDegreesArray(r.slice(0,-1).flat());
 export async function loadPrices(viewer) {
@@ -56,8 +57,8 @@ export async function loadPrices(viewer) {
   range:metric=>rangeFor(metric),
   describe(metric){
    const m=data.metrics[metric];
-   if(metric==='rent'&&rentFromAds)return {title:'Rent · current ads',note:'Two-room flats · median asking rent per month · '+adsNote,units:'€/month'};
-   return {title:(metric==='sale'?'Sale':'Rent')+' · '+m.periodLabels[1]+(m.archived?' · archived':''),note:m.category+' · '+m.units,units:m.units};
+   if(metric==='rent'&&rentFromAds)return {title:t('Rent · current ads'),note:t('Two-room flats · median asking rent per month · {note}',{note:adsNote()}),units:'€/month'};
+   return {title:t(metric==='sale'?'Sale':'Rent')+' · '+m.periodLabels[1]+(m.archived?' · '+t('archived'):''),note:t(m.category)+' · '+t(m.units),units:m.units};
   },
   setRentFromAds(fn,note){rentFromAds=fn;adsNote=note;delete ranges.rent;if(current==='rent')draw();},
   // metric: 'sale' or 'rent' draws its areas; anything else clears the ground.

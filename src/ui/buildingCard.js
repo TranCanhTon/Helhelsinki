@@ -9,6 +9,7 @@ import {noiseSection} from './noiseCard.js';
 import {isApartmentBuilding} from '../data/noise.js';
 import {parkingSection} from './parkingCard.js';
 import {transitSection} from './transitCard.js';
+import {t, num} from './i18n.js';
 
 const el = (tag, className, textValue) => {
   const node = document.createElement(tag);
@@ -18,27 +19,29 @@ const el = (tag, className, textValue) => {
 };
 
 const titleCase = s => s ? s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase()) : s;
-const number = n => n === null || n === undefined ? null : n.toLocaleString('en-GB');
+const number = n => n === null || n === undefined ? null : num(n);
+// Register words (heating, frame, building type...) are stored in English; shown in the chosen language.
+const word = s => s == null ? s : t(s);
 
 function factsSection(record) {
   const f = record.facts ?? {};
   const rows = [
     ['Year built', record.yearBuilt],
     ['Floors', f.floors],
-    ['Height', record.heightM ? `${record.heightM.toLocaleString('en-GB')} m` : null],
+    ['Height', record.heightM ? `${num(record.heightM)} m` : null],
     ['Flats', number(f.flats)],
-    ['Business premises', f.businessPremises === 0 ? 'None' : number(f.businessPremises)],
+    ['Business premises', f.businessPremises === 0 ? t('None') : number(f.businessPremises)],
     ['Floor area', f.floorAreaM2 ? `${number(f.floorAreaM2)} m²` : null],
-    ['Heating', f.heating],
-    ['Heating fuel', f.fuel],
-    ['Frame', f.frame],
-    ['Facade', f.facade],
-    ['Elevator', f.elevator ? 'Yes' : null],
+    ['Heating', word(f.heating)],
+    ['Heating fuel', word(f.fuel)],
+    ['Frame', word(f.frame)],
+    ['Facade', word(f.facade)],
+    ['Elevator', f.elevator ? t('Yes') : null],
   ];
   const grid = el('dl', 'facts');
   for (const [label, value] of rows) {
     const cell = el('div', value === null || value === undefined ? 'fact is-missing' : 'fact');
-    cell.append(el('dt', null, label), el('dd', null, value ?? 'Not recorded'));
+    cell.append(el('dt', null, t(label)), el('dd', null, value ?? t('Not recorded')));
     grid.append(cell);
   }
   return grid;
@@ -46,15 +49,15 @@ function factsSection(record) {
 
 function protectionSection(protection) {
   const box = el('section', 'protection');
-  box.append(el('h3', null, 'Protected in the city plan'));
-  const meta = [protection.marking && `Marking ${protection.marking}`, protection.plan && `plan ${protection.plan}`,
-    protection.inForce && `in force since ${protection.inForce.slice(0, 4)}`].filter(Boolean).join(' · ');
+  box.append(el('h3', null, t('Protected in the city plan')));
+  const meta = [protection.marking && t('Marking {m}', {m: protection.marking}), protection.plan && t('plan {p}', {p: protection.plan}),
+    protection.inForce && t('in force since {y}', {y: protection.inForce.slice(0, 4)})].filter(Boolean).join(' · ');
   if (meta) box.append(el('p', 'protection-meta', meta));
   if (protection.ruleFi) {
     // Only state in English what the Finnish text says word for word.
-    if (/ei saa purkaa/i.test(protection.ruleFi)) box.append(el('p', 'protection-summary', 'The plan says it may not be demolished.'));
+    if (/ei saa purkaa/i.test(protection.ruleFi)) box.append(el('p', 'protection-summary', t('The plan says it may not be demolished.')));
     const details = el('details', 'protection-details');
-    details.append(el('summary', null, 'Full rule text (Finnish)'));
+    details.append(el('summary', null, t('Full rule text (Finnish)')));
     const rule = el('p', 'protection-rule', protection.ruleFi);
     rule.lang = 'fi';
     details.append(rule);
@@ -65,27 +68,27 @@ function protectionSection(protection) {
 
 function listingsSection(record) {
   const box = el('section', 'listings');
-  box.append(el('h3', null, 'Homes around here'));
-  box.append(el('p', 'note', 'Opens area searches. These links do not confirm a listing in this exact building. Copy the address to narrow the search.'));
+  box.append(el('h3', null, t('Homes around here')));
+  box.append(el('p', 'note', t('Opens area searches. These links do not confirm a listing in this exact building. Copy the address to narrow the search.')));
   const list = el('div', 'listing-buttons');
   for (const link of listingLinks(record)) {
     const a = el('a', 'listing');
     a.href = link.url;
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
-    a.append(el('span', 'listing-site', link.site), el('span', 'listing-what', `${link.kind} · ${link.area}`));
+    a.append(el('span', 'listing-site', link.site), el('span', 'listing-what', `${t(link.kind)} · ${link.area}`));
     list.append(a);
   }
-  const copy=el('button','copy-address','Copy address');copy.type='button';copy.onclick=async()=>{try{await navigator.clipboard.writeText(record.address + ', Helsinki');copy.textContent='Address copied';}catch{copy.textContent='Copy: '+record.address;}};
+  const copy=el('button','copy-address',t('Copy address'));copy.type='button';copy.onclick=async()=>{try{await navigator.clipboard.writeText(record.address + ', Helsinki');copy.textContent=t('Address copied');}catch{copy.textContent=t('Copy: {a}',{a:record.address});}};
   box.append(list,copy);
   return box;
 }
 
 function sourcesSection(record) {
   const details = el('details', 'sources');
-  details.append(el('summary', null, 'Sources & IDs'));
+  details.append(el('summary', null, t('Sources & IDs')));
   const ids = el('dl');
-  const add = (label, value) => ids.append(el('dt', null, label), el('dd', null, value ?? 'None'));
+  const add = (label, value) => ids.append(el('dt', null, t(label)), el('dd', null, value ?? t('None')));
   add('Model ID (gml:id)', record.sourceIds.gmlId);
   add('RATU', record.sourceIds.ratu);
   add('VTJ-PRT', record.sourceIds.vtjPrt);
@@ -94,7 +97,7 @@ function sourcesSection(record) {
   add('Plan protection matched by', record.protection?.matchedBy);
   add('Geometry', record.geometrySource);
   add('Tile / feature', `${record.tileContentUri} #${record.tileFeatureId}`);
-  details.append(ids, el('p', 'note', 'City of Helsinki 3D model, building register and detailed plans, CC BY 4.0. Height is the city model\'s measured height.'));
+  details.append(ids, el('p', 'note', t('City of Helsinki 3D model, building register and detailed plans, CC BY 4.0. Height is the city model\'s measured height.')));
   return details;
 }
 
@@ -124,38 +127,38 @@ export class BuildingCard {
 
     const header = el('header', 'card-header');
     const heading = el('div', 'card-heading');
-    heading.append(el('h2', null, record?.address ?? 'Building without a registered address'));
+    heading.append(el('h2', null, record?.address ?? t('Building without a registered address')));
     const place = [titleCase(record?.subdistrict?.nameFi), titleCase(record?.district?.nameFi), record?.postcode].filter(Boolean);
     const unique = place.filter((p, i) => place.indexOf(p) === i);
     if (unique.length) heading.append(el('p', 'card-place', unique.join(' · ')));
     const close = el('button', 'card-close', '×');
     close.type = 'button';
-    close.setAttribute('aria-label', 'Close building details');
+    close.setAttribute('aria-label', t('Close building details'));
     close.onclick = () => this.onClose();
     header.append(heading, close);
     card.append(header);
 
     if (!record) {
-      card.append(el('p', 'note', `This 3D shape (${buildingId}) has no record in the building list.`));
+      card.append(el('p', 'note', t('This 3D shape ({id}) has no record in the building list.', {id: buildingId})));
       card.hidden = false;
       return;
     }
 
     const tags = el('div', 'tags');
     const type = record.classEn ?? record.useEn ?? record.classFi ?? record.use;
-    if (type) tags.append(el('span', 'tag', type));
-    if (record.protection) tags.append(el('span', 'tag tag-protected', 'Protected'));
+    if (type) tags.append(el('span', 'tag', t(type)));
+    if (record.protection) tags.append(el('span', 'tag tag-protected', t('Protected')));
     if (tags.children.length) card.append(tags);
 
-    if (record.addresses?.length > 1) card.append(el('p', 'card-sub', `Also ${record.addresses.slice(1).join(', ')}`));
+    if (record.addresses?.length > 1) card.append(el('p', 'card-sub', t('Also {list}', {list: record.addresses.slice(1).join(', ')})));
     if (record.addressSv) {
-      const sv = el('p', 'card-sub', `På svenska: ${record.addressSv}`);
+      const sv = el('p', 'card-sub', t('På svenska: {a}', {a: record.addressSv}));
       sv.lang = 'sv';
       card.append(sv);
     }
 
     if (record.address) card.append(factsSection(record));
-    else card.append(el('p', 'note', 'This shape has no building ID in the city model, so there is no register data. Most such shapes are sheds, garages and yard buildings.'));
+    else card.append(el('p', 'note', t('This shape has no building ID in the city model, so there is no register data. Most such shapes are sheds, garages and yard buildings.')));
 
     const ads = adsSection(record, this.getListings());
     if (ads) card.append(ads);
@@ -172,7 +175,7 @@ export class BuildingCard {
     if(priceData){
       const sources=card.querySelector('.sources:last-child');
       for(const [metric,m] of Object.entries(priceData.metrics)){
-        const link=el('a',null,metric+' statistics · '+m.table+' · '+m.boundaryYear+' postal boundaries');
+        const link=el('a',null,t('{metric} statistics · {table} · {year} postal boundaries',{metric:t(metric),table:m.table,year:m.boundaryYear}));
         link.href=m.source;link.target='_blank';link.rel='noopener noreferrer';
         const p=el('p','note');p.append(link);sources.append(p);
       }
@@ -185,9 +188,9 @@ export class BuildingCard {
     this.current = null;
     this.el.replaceChildren();
     const header=el('header','card-header');
-    const close=el('button','card-close','×');close.type='button';close.setAttribute('aria-label','Close address details');close.onclick=this.onClose;
+    const close=el('button','card-close','×');close.type='button';close.setAttribute('aria-label',t('Close address details'));close.onclick=this.onClose;
     header.append(el('h2',null,row.address),close);this.el.append(header);
-    this.el.append(el('p','note','No linked 3D building'),el('p','card-sub',[row.addressSv,row.postcode].filter(Boolean).join(' · ')));
+    this.el.append(el('p','note',t('No linked 3D building')),el('p','card-sub',[row.addressSv,row.postcode].filter(Boolean).join(' · ')));
     this.el.append(pricesSection(row,this.getPrices(),this.getListings()));
     this.el.append(parkingSection(row.position,this.getParking()),transitSection(row.position,this.getTransit()));
     if(row.address)this.el.append(listingsSection(row));
@@ -195,10 +198,10 @@ export class BuildingCard {
   }
   showChoices(row,records,onSelect) {
     this.showAddress(row);
-    this.el.querySelector('.note').textContent='Several buildings share this exact register address. Choose a building:';
+    this.el.querySelector('.note').textContent=t('Several buildings share this exact register address. Choose a building:');
     const list=el('div','building-choices');
     for(const record of records){
-      const button=el('button',null,[record.address,record.classEn??record.useEn,record.sourceIds.ratu?'RATU '+record.sourceIds.ratu:record.buildingId].filter(Boolean).join(' · '));
+      const button=el('button',null,[record.address,word(record.classEn??record.useEn),record.sourceIds.ratu?'RATU '+record.sourceIds.ratu:record.buildingId].filter(Boolean).join(' · '));
       button.onclick=()=>onSelect(record.buildingId);list.append(button);
     }
     this.el.querySelector('.card-header').after(list);

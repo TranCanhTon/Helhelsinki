@@ -14,11 +14,13 @@ import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
 import {AddressSearch} from './ui/search.js';
+import {t,num,locale,setLang,translatePage} from './ui/i18n.js';
 import {readState,writeState} from './data/urlState.js';
 import './styles.css';
 const $=selector=>document.querySelector(selector);
 const HOME={lon:24.9480,lat:60.1835,heading:20,pitch:-40,range:1400};
 const initial=readState(location.search,HOME),state={...initial};
+setLang(state.lang);translatePage();
 const viewer=createViewer('scene');
 const frame=Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(HOME.lon,HOME.lat));
 const lightDirection=Cesium.Matrix4.multiplyByPointAsVector(frame,new Cesium.Cartesian3(0.6,0.5,-0.6),new Cesium.Cartesian3());
@@ -29,17 +31,17 @@ const nav=new Navigation(viewer,HOME,(camera,navigation)=>{
  $('#compass').style.transform='rotate('+(-camera.heading)+'deg)';
  $('#tool-overhead').textContent=camera.pitch<-80?'3D':'2D';
  const metres=navigation.metersPerPixel()*80;
- $('#scale-label').textContent=metres>=1000?(metres/1000).toFixed(1)+' km':Math.round(metres/10)*10+' m';
+ $('#scale-label').textContent=metres>=1000?num(metres/1000,{minimumFractionDigits:1,maximumFractionDigits:1})+' km':Math.round(metres/10)*10+' m';
  save();
 });
 Object.assign(nav.state,initial.camera);nav.apply();
 for(const [id,action] of Object.entries({'home':()=>nav.goHome(),'zoom-in':()=>nav.zoom(0.75),'zoom-out':()=>nav.zoom(1.33),'overhead':()=>nav.toggleOverhead(),'north':()=>nav.faceNorth()}))$('#tool-'+id).onclick=action;
 function unavailable(label,error,retry){
  console.warn(label,error);
- const row=document.createElement('div');row.className='data-error';row.textContent=label+' unavailable. ';
- const b=document.createElement('button');b.textContent='Retry';b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
+ const row=document.createElement('div');row.className='data-error';row.textContent=t('{label} unavailable. ',{label:t(label)});
+ const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
-let basemap,prices,noise,parking,transit,listings,buildings,card,marker,currentAddress=null;
+let basemap,prices,noise,parking,transit,listings,buildings,card,search,marker,currentAddress=null;
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
  catch(e){unavailable('Ground map',e,ground);}
@@ -48,7 +50,7 @@ async function priceLayer(){
  try{
   prices=await loadPrices(viewer);useAds();setMetric(state.metric);
   card?.refresh();
- }catch(e){$('#price-legend').textContent='Postal-area prices unavailable.';unavailable('Prices',e,priceLayer);}
+ }catch(e){$('#price-legend').textContent=t('Postal-area prices unavailable.');unavailable('Prices',e,priceLayer);}
 }
 // Current Oikotie ads (npm run data:listings). Checked again every 10 minutes,
 // so ads collected by the background job show up without a reload.
@@ -65,8 +67,10 @@ async function adsLayer(){
 }
 function useAds(){
  if(!prices||!listings)return;
- const time=new Date(listings.updatedAt).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
- prices.setRentFromAds(postcode=>listings.stats.get(postcode)?.groups['2'].rent??null,listings.ads.length.toLocaleString('en-GB')+' Oikotie ads, '+time);
+ const ads=listings;
+ // The note is worked out when shown, so it follows the language switch.
+ const note=()=>t('{n} Oikotie ads, {time}',{n:num(ads.ads.length),time:new Date(ads.updatedAt).toLocaleString(locale(),{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})});
+ prices.setRentFromAds(postcode=>ads.stats.get(postcode)?.groups['2'].rent??null,note);
 }
 async function noiseLayer(){
  try{noise=await loadNoise();noise.setMode(state.noiseMode);if(state.metric==='noise')setMetric('noise');card?.refresh();}
@@ -92,24 +96,33 @@ function setMetric(metric){
  parking?.setVisible(metric==='parking');
  if(metric==='parking'){
   buildings?.setColoring(null);
-  if(parking)parkingLegend(legend,parking);else legend.textContent='Parking data is still loading or unavailable.';
+  if(parking)parkingLegend(legend,parking);else legend.textContent=t('Parking data is still loading or unavailable.');
   $('#area-info').hidden=true;save();return;
  }
  if(metric==='noise'){
   buildings?.setColoring(noise?id=>noise.colorOf(buildings.records.get(id)):null,'#c2622f');
   legend.replaceChildren();
-  if(noise)noiseLegend(legend,$('#noise-switch'),noise,setNoiseMode);else legend.textContent='Noise data is still loading or unavailable.';
+  if(noise)noiseLegend(legend,$('#noise-switch'),noise,setNoiseMode);else legend.textContent=t('Noise data is still loading or unavailable.');
   $('#area-info').hidden=true;save();return;
  }
  // Price view colours the postal areas on the ground; the buildings keep their photos (Ton, 14 Oct 2026).
  buildings?.setColoring(null);
  if(prices&&metric!=='overview'){
-  const [lo,hi]=prices.range(metric),fmt=v=>Math.round(v).toLocaleString('en-GB');
+  const [lo,hi]=prices.range(metric),fmt=v=>num(Math.round(v));
   legendGradient(legend,{colors:PRICE_COLORS,start:fmt(lo),end:fmt(hi)});
  }
  $('#area-info').hidden=true;save();
 }
 for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>setMetric(b.dataset.view);
+// English / Finnish switch in the tool bar (Ton, 14 Oct 2026). The button shows the language you switch to.
+function paintLang(){
+ const b=$('#tool-lang');b.textContent=state.lang==='fi'?'EN':'FI';b.title=state.lang==='fi'?'In English':'Suomeksi';b.setAttribute('aria-label',b.title);
+}
+$('#tool-lang').onclick=()=>{
+ state.lang=state.lang==='fi'?'en':'fi';setLang(state.lang);translatePage();paintLang();
+ search?.translate();neighbourhoodList();setMetric(state.metric);card?.refresh();nav.apply();
+};
+paintLang();
 function clearSelection(){
  state.building=null;currentAddress=null;buildings?.setSelected(null);card?.hide();
  if(marker)viewer.entities.remove(marker);marker=null;viewer.scene.requestRender();save();
@@ -147,7 +160,7 @@ function showInfo(text){const node=$('#area-info');node.hidden=!text;if(text)nod
 async function start(){
  buildings=await loadBuildings(viewer);
  card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit);
- const search=new AddressSearch($('#search'),selectAddress);
+ search=new AddressSearch($('#search'),selectAddress);
  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
  handler.setInputAction(click=>{
   if(nav.dragged)return;
@@ -178,11 +191,16 @@ async function start(){
  parkingLayer();
  transitLayer();
  adsLayer();setInterval(adsLayer,10*60*1000);
+ neighbourhoodList();
+}
+// Districts by building count; redrawn when the language (number format) changes.
+function neighbourhoodList(){
+ if(!buildings)return;
  const counts=new Map();
  for(const r of buildings.manifest){const d=r.district;if(d){const entry=counts.get(d.id)??{...d,count:0};entry.count++;counts.set(d.id,entry);}}
- const content=$('#neighbourhood-list');
+ const content=$('#neighbourhood-list');content.replaceChildren();
  for(const d of [...counts.values()].sort((a,b)=>b.count-a.count)){
-  const b=document.createElement('button');b.textContent=d.nameFi.toLocaleLowerCase('fi')+' · '+d.count.toLocaleString('en-GB');
+  const b=document.createElement('button');b.textContent=d.nameFi.toLocaleLowerCase('fi')+' · '+num(d.count);
   b.onclick=()=>{const rows=buildings.manifest.filter(r=>r.district?.id===d.id);nav.flyTo([rows.reduce((s,r)=>s+r.position[0],0)/rows.length,rows.reduce((s,r)=>s+r.position[1],0)/rows.length],1800);};content.append(b);
  }
 }

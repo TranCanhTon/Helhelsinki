@@ -16,24 +16,25 @@
         <span class="brand-name">Helsinki <span>Lens</span></span>
       </header>
 
-      <section id="search" class="search panel" aria-label="Address search"></section>
+      <section id="search" class="search panel" aria-label="Address search" data-i18n-label="Address search"></section>
       <details class="neighbourhoods panel"><summary>Neighbourhoods · 3D coverage</summary><div id="neighbourhood-list"></div></details>
       <div class="bottom-dock">
         <div id="noise-switch" class="noise-switch panel" hidden></div>
-        <nav class="view-controls panel" aria-label="Map view">
-          <button data-view="overview" aria-pressed="true">Overview</button><button data-view="sale" aria-pressed="false">Price</button><button data-view="noise" aria-pressed="false">Noise</button><button data-view="parking" aria-pressed="false">Parking</button>
+        <nav class="view-controls panel" aria-label="Map view" data-i18n-label="Map view">
+          <button data-view="overview" aria-pressed="true" data-i18n="Overview">Overview</button><button data-view="sale" aria-pressed="false" data-i18n="Price">Price</button><button data-view="noise" aria-pressed="false" data-i18n="Noise">Noise</button><button data-view="parking" aria-pressed="false" data-i18n="Parking">Parking</button>
         </nav>
         <aside id="price-legend" class="price-legend panel" hidden></aside>
-        <span class="hint">Scroll to zoom · Shift + drag to rotate</span>
+        <span class="hint" data-i18n="Scroll to zoom · Shift + drag to rotate">Scroll to zoom · Shift + drag to rotate</span>
       </div>
       <div id="area-info" class="area-info panel" hidden role="status"></div>
       <div id="data-status" role="status"></div>
-      <nav class="map-tools panel" aria-label="Map controls">
-        <button id="tool-home" type="button" title="Reset view (Home)" aria-label="Reset view">⌂</button>
-        <button id="tool-zoom-in" type="button" title="Zoom in (+)" aria-label="Zoom in">+</button>
-        <button id="tool-zoom-out" type="button" title="Zoom out (−)" aria-label="Zoom out">−</button>
-        <button id="tool-overhead" type="button" title="Overhead view" aria-label="Toggle overhead view">2D</button>
-        <button id="tool-north" type="button" title="Face north" aria-label="Face north"><span id="compass">N</span></button>
+      <nav class="map-tools panel" aria-label="Map controls" data-i18n-label="Map controls">
+        <button id="tool-home" type="button" title="Reset view (Home)" aria-label="Reset view" data-i18n-title="Reset view (Home)" data-i18n-label="Reset view">⌂</button>
+        <button id="tool-zoom-in" type="button" title="Zoom in (+)" aria-label="Zoom in" data-i18n-title="Zoom in (+)" data-i18n-label="Zoom in">+</button>
+        <button id="tool-zoom-out" type="button" title="Zoom out (−)" aria-label="Zoom out" data-i18n-title="Zoom out (−)" data-i18n-label="Zoom out">−</button>
+        <button id="tool-overhead" type="button" title="Overhead view" aria-label="Toggle overhead view" data-i18n-title="Overhead view" data-i18n-label="Toggle overhead view">2D</button>
+        <button id="tool-north" type="button" title="Face north" aria-label="Face north" data-i18n-title="Face north" data-i18n-label="Face north"><span id="compass">N</span></button>
+        <button id="tool-lang" class="tool-lang" type="button"></button>
       </nav>
 
       <div class="map-caption"><span class="scale-line"></span><span id="scale-label">100 m</span></div>

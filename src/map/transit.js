@@ -5,6 +5,7 @@ import {nearestStops, perHourText, MODE_KEYS} from '../data/transit.js';
 import {metresBetween} from '../data/parking.js';
 import {screenFinder} from './screenPick.js';
 import {stopPin, MODE_COLORS, SQUARE_MODES} from './pinIcons.js';
+import {t} from '../ui/i18n.js';
 export {MODE_COLORS, SQUARE_MODES};
 
 // Stop pins on the main map (data:transit), in every view, once the scale bar reads
@@ -71,7 +72,7 @@ export async function loadTransit(viewer, nav, homes) {
    if (i < 0) return null;
    const p = pins[i], byMode = new Map();
    for (const l of p.lines) byMode.set(l.mode, [...(byMode.get(l.mode) ?? []), l.short]);
-   const list = [...byMode].map(([mode, short]) => `${data.modes.find(m => m.key === mode).label} ${short.join(' ')}`).join(' · ');
+   const list = [...byMode].map(([mode, short]) => `${t(data.modes.find(m => m.key === mode).label)} ${short.join(' ')}`).join(' · ');
    return {text: `${[...new Set(p.stops.map(s => s.name))].join(' / ')} · ${list}`};
   },
  };
