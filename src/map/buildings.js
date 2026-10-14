@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import {decodeIndex, detailFile} from '../data/buildingIndex.js';
-import {loadJson} from '../data/load.js';
+import {loadJson, dataUrl} from '../data/load.js';
 
 // Loads the prepared 3D buildings and the short index that describes them.
 //
@@ -25,7 +25,7 @@ export const TEXTURED_URL = 'https://kartta.hel.fi/3d/datasource-data/e5e7158a-5
 // the highest building base in each 10 m cell, so a building may sink a little but
 // never floats.
 export async function groundShader() {
-  const [meta, bytes] = await Promise.all([loadJson('/ground-grid.json'), fetch('/ground-grid.bin').then(r => {
+  const [meta, bytes] = await Promise.all([loadJson('/ground-grid.json'), fetch(dataUrl('/ground-grid.bin')).then(r => {
     if (!r.ok) throw new Error('Ground grid unavailable. Run npm run data:ground');
     return r.arrayBuffer();
   })]);
@@ -80,22 +80,27 @@ const SELECTED = '#c2622f';  // copper
 const SELECTED_ON_PRICES = '#1d2826';  // dark ink, stands out from blue and red
 
 export async function loadBuildings(viewer) {
-  // Before any data is prepared these files don't exist. Vite then answers
-  // with index.html instead of a 404, so check for that first and say what to do.
-  const probe = await fetch('/tileset/tileset.json');
-  if (!probe.ok || !(probe.headers.get('content-type') ?? '').includes('json')) {
-    throw new Error('No 3D buildings have been prepared yet. Run npm run data:pilot (or data:convert with a CityGML file), then reload.');
-  }
   const [indexResponse, textured] = await Promise.all([
-    fetch('/buildings-index.json'),
+    fetch(dataUrl('/buildings-index.json')),
     // A city server that does not answer must not hold up the map: grey after 8 s.
     Promise.race([loadTextured(), new Promise((_, reject) => setTimeout(() => reject(new Error('no answer in 8 s')), 8000))])
       .catch(error => { console.warn('Textured buildings unavailable, using the grey ones', error); return null; }),
   ]);
-  const tileset = textured ?? await Cesium.Cesium3DTileset.fromUrl('/tileset/tileset.json', {
-    cacheBytes: 256 * 1024 * 1024,   // keep at most ~256 MB of tiles in memory
-  });
-  if (!indexResponse.ok || !(indexResponse.headers.get('content-type') ?? '').includes('json')) throw new Error(`Building list could not load (HTTP ${indexResponse.status}). Run npm run data:split`);
+  // The grey buildings (373 MB) are only the fallback: the public site does not carry them.
+  // A missing file comes back as a 404 or as index.html, so check for JSON.
+  const isJson = r => r.ok && (r.headers.get('content-type') ?? '').includes('json');
+  if (!isJson(indexResponse)) {
+    console.error('Missing buildings-index.json. Locally: npm run data:split. Public site: npm run data:upload.');
+    throw new Error('Map data is missing on this server (buildings-index.json)');
+  }
+  let tileset = textured;
+  if (!tileset) {
+    if (!isJson(await fetch('/tileset/tileset.json').catch(() => ({ok: false, headers: new Headers()})))) {
+      console.error('No textured buildings (city server or ground-grid files) and no grey fallback. Locally: npm run data:ground, data:pilot.');
+      throw new Error('Map data is missing on this server (3D buildings)');
+    }
+    tileset = await Cesium.Cesium3DTileset.fromUrl('/tileset/tileset.json', {cacheBytes: 256 * 1024 * 1024});
+  }
   const manifest = decodeIndex(await indexResponse.json());
   const records = new Map(manifest.map(record => [record.buildingId, record]));
 
@@ -104,7 +109,7 @@ export async function loadBuildings(viewer) {
   const detail = async buildingId => {
     const uri = records.get(buildingId)?.tileContentUri;
     if (!uri) return null;
-    if (!details.has(uri)) details.set(uri, fetch('/buildings/' + detailFile(uri)).then(r => {
+    if (!details.has(uri)) details.set(uri, fetch(dataUrl('/buildings/' + detailFile(uri))).then(r => {
       if (!r.ok) throw new Error(`Building details could not load (HTTP ${r.status})`);
       return r.json();
     }).then(list => new Map(list.map(r => [r.buildingId, r]))).catch(error => { details.delete(uri); throw error; }));

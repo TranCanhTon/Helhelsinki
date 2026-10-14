@@ -19,7 +19,7 @@ import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
 import {nearestPlaces} from './data/places.js';
-import {loadJson} from './data/load.js';
+import {loadJson,dataUrl} from './data/load.js';
 import {AddressSearch} from './ui/search.js';
 import {createLanding} from './ui/landing.js';
 import {t,num,locale,setLang,translatePage} from './ui/i18n.js';
@@ -70,7 +70,7 @@ async function priceLayer(){
 // so ads collected by the background job show up without a reload.
 async function adsLayer(){
  try{
-  const response=await fetch('/listings.json',{cache:'no-cache'});
+  const response=await fetch(dataUrl('/listings.json'),{cache:'no-cache'});
   if(!response.ok||!(response.headers.get('content-type')??'').includes('json'))return;
   const data=await response.json();
   if(listings?.updatedAt===data.updatedAt)return;
