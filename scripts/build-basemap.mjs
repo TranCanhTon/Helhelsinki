@@ -8,6 +8,7 @@
 //   base    zoom 10-15 for all of Helsinki (down to about 2.4 m per pixel)
 //   detail  zoom 16-17 for the central area only (about 0.6 m per pixel)
 // Everything outside the Helsinki boundary is one flat "outside" colour.
+// Roads get an asphalt grain from zoom 15 up (scripts/lib/asphalt.mjs), a look only.
 //
 // For each tile we pick the shapes that touch it (spatial index), convert
 // lon/lat to tile pixels, write an SVG drawing in style order, and let sharp
@@ -22,6 +23,7 @@ import polygonClipping from 'polygon-clipping';
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import {loadBoundary} from './lib/boundary.mjs';
 import {CLASSES, THEMES} from './lib/basemap-style.mjs';
+import {asphaltPattern} from './lib/asphalt.mjs';
 import {AREAS} from './config.mjs';
 import {datasetSection} from './lib/prepare.mjs';
 
@@ -34,6 +36,9 @@ const arg = name => process.argv.find(a => a.startsWith(`--${name}=`))?.slice(na
 const themes = ['dusk'];
 const maxZoom = Number(arg('max-zoom') ?? 17);
 const LEVELS = {base: {min: 10, max: 15}, detail: {min: 16, max: 17}};
+// Road texture (Ton, 14 Oct 2026) from this zoom up; below it roads are too thin to show it.
+const TEXTURE_MIN_ZOOM = 15;
+const ASPHALT = await asphaltPattern('asphalt');
 
 // ---- Web Mercator -------------------------------------------------------
 // mx, my in 0..1 for the whole world; pixel = m * 256 * 2^z.
@@ -163,13 +168,16 @@ function tileSvg(x, y, z, theme) {
         if (casing > 0) body += `<path d="${d}" fill="${colors[cls.outlineColor]}" stroke="${colors[cls.outlineColor]}" stroke-width="${casing.toFixed(2)}" stroke-linejoin="round" fill-rule="evenodd"/>`;
         const inner = casing > 0 ? ` stroke="${colors[cls.fill]}" stroke-width="${(casing * 0.5).toFixed(2)}" stroke-linejoin="round"` : '';
         body += `<path d="${d}" fill="${colors[cls.fill]}"${inner} fill-rule="evenodd"/>`;
+        if (cls.texture && z >= TEXTURE_MIN_ZOOM) body += `<path d="${d}" fill="url(#asphalt)" fill-rule="evenodd"/>`;
       }
     }
   }
-  const clipDef = clip ? `<defs><clipPath id="h"><path d="${clip}" clip-rule="evenodd"/></clipPath></defs>` : '';
+  const clipPath = clip ? `<clipPath id="h"><path d="${clip}" clip-rule="evenodd"/></clipPath>` : '';
+  const texture = clip !== null && z >= TEXTURE_MIN_ZOOM ? ASPHALT : '';
+  const defs = clipPath || texture ? `<defs>${clipPath}${texture}</defs>` : '';
   const group = clip ? `<g clip-path="url(#h)">${body}</g>` : body;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${TILE}" height="${TILE}" viewBox="0 0 ${TILE} ${TILE}">` +
-    `<rect width="${TILE}" height="${TILE}" fill="${colors.outside}"/>${clipDef}${group}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${TILE}" height="${TILE}" viewBox="0 0 ${TILE} ${TILE}">` +
+    `<rect width="${TILE}" height="${TILE}" fill="${colors.outside}"/>${defs}${group}</svg>`;
 }
 
 // ---- Render all tiles ---------------------------------------------------
@@ -258,6 +266,7 @@ const meta = {
     'Drawn from City of Helsinki open data (CC BY 4.0); only the area inside the Helsinki boundary is drawn.',
     'Planned roads, underground rail and metro, tunnels and power lines are not drawn.',
     'Tram tracks are not in these layers and are not drawn.',
+    `Roads from zoom ${TEXTURE_MIN_ZOOM} up carry a drawn asphalt grain; it is a look only, not data.`,
   ],
 };
 await writeFile(new URL('basemap.json', STAGING), JSON.stringify(meta, null, 2));

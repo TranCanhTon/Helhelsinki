@@ -21,6 +21,7 @@ const ALL_STREETS = [...MAIN, ...COLLECTOR, ...MOTORWAY, ...RESIDENTIAL, 'Pysäk
 // width(z) is in pixels at zoom z, for lines and for the extra outline that
 // keeps big roads visible when zoomed out (where their real width is < 1 px).
 const grow = (atZ12, atZ17) => z => atZ12 * (atZ17 / atZ12) ** ((Math.min(17, Math.max(12, z)) - 12) / 5);
+// texture: true lays the asphalt grain over the fill (build-basemap.mjs).
 // Extra road casing in pixels: widest zoomed out, gone by zoom 15 where the
 // street's real width is wide enough on its own.
 const fade = px => z => (z >= 15 ? 0 : px * (15 - z) / 5);
@@ -35,15 +36,15 @@ export const CLASSES = [
   {id: 'water', test: guide('meri', 'joki', 'lampi', 'allas'), fill: 'water'},
   {id: 'squares', test: (l, p) => guide('aukio')(l, p) || street('Tori', 'Katuaukio')(l, p), fill: 'square', minZoom: 14},
   {id: 'paths', test: street('Kevyt liikenne', 'Kevyt liikenne, t/h', 'Erillinen kev.liik.väylä'), fill: 'path', minZoom: 15},
-  {id: 'parking', test: street('Pysäköintialue'), fill: 'parking', minZoom: 15},
-  {id: 'streets-residential', test: street(...RESIDENTIAL), fill: 'street', minZoom: 13},
-  {id: 'streets-collector', test: street(...COLLECTOR), fill: 'collector', outline: fade(1.4), outlineColor: 'outlineCollector', minZoom: 12},
-  {id: 'streets-main', test: street(...MAIN), fill: 'main', outline: fade(2.6), outlineColor: 'outlineMain', minZoom: 11},
-  {id: 'streets-motorway', test: street(...MOTORWAY), fill: 'motorway', outline: fade(3.2), outlineColor: 'outlineMotorway', minZoom: 10},
+  {id: 'parking', test: street('Pysäköintialue'), fill: 'parking', texture: true, minZoom: 15},
+  {id: 'streets-residential', test: street(...RESIDENTIAL), fill: 'street', texture: true, minZoom: 13},
+  {id: 'streets-collector', test: street(...COLLECTOR), fill: 'collector', outline: fade(1.4), outlineColor: 'outlineCollector', texture: true, minZoom: 12},
+  {id: 'streets-main', test: street(...MAIN), fill: 'main', outline: fade(2.6), outlineColor: 'outlineMain', texture: true, minZoom: 11},
+  {id: 'streets-motorway', test: street(...MOTORWAY), fill: 'motorway', outline: fade(3.2), outlineColor: 'outlineMotorway', texture: true, minZoom: 10},
   {id: 'bridges', test: guide('silta'), fill: 'bridge', minZoom: 13},
   // Central area, zoomed in: the driving surface on top of the street area, so sidewalks show.
-  {id: 'lanes', test: lane(...RESIDENTIAL, 'Pysäköintialue'), fill: 'lane', minZoom: 16},
-  {id: 'lanes-big', test: lane(...MAIN, ...COLLECTOR, ...MOTORWAY), fill: 'laneBig', minZoom: 16},
+  {id: 'lanes', test: lane(...RESIDENTIAL, 'Pysäköintialue'), fill: 'lane', texture: true, minZoom: 16},
+  {id: 'lanes-big', test: lane(...MAIN, ...COLLECTOR, ...MOTORWAY), fill: 'laneBig', texture: true, minZoom: 16},
   {id: 'piers', test: line('rantalaituri'), stroke: 'pier', width: grow(0.6, 2.5), minZoom: 14},
   {id: 'light-rail', test: line('pikaraitiotie'), stroke: 'rail', width: grow(0.8, 2.5), minZoom: 12},
   {id: 'metro', test: line('metrorata'), stroke: 'metro', width: grow(1, 3), minZoom: 11},
