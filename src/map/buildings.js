@@ -1,11 +1,14 @@
 import * as Cesium from 'cesium';
+import {decodeIndex, detailFile} from '../data/buildingIndex.js';
 
-// Loads the prepared 3D buildings and the manifest that describes them.
+// Loads the prepared 3D buildings and the short index that describes them.
 //
-// tileset.json lists the tile files and where they sit. Cesium downloads
-// only the tiles in view and drops ones far away when memory gets tight.
-// buildings-manifest.json has one record per building; clicking a building
-// gives us its buildingId, which we look up in the manifest.
+// tileset.json lists the tile files and where they sit. Cesium downloads the tiles in
+// view, also when zoomed out (Ton removed a 2.5 km limit, 13 Oct 2026), and drops
+// ones out of view when memory gets tight.
+// buildings-index.json has a short row per building (position, type, district,
+// noise...); the full record of a building loads with its tile's detail file
+// when a card opens (detail(id)).
 
 const NEUTRAL = '#f3f0ea';   // warm white
 const SELECTED = '#c2622f';  // copper
@@ -18,16 +21,27 @@ export async function loadBuildings(viewer) {
   if (!probe.ok || !(probe.headers.get('content-type') ?? '').includes('json')) {
     throw new Error('No 3D buildings have been prepared yet. Run npm run data:pilot (or data:convert with a CityGML file), then reload.');
   }
-  const [manifestResponse, tileset] = await Promise.all([
-    fetch('/buildings-manifest.json'),
+  const [indexResponse, tileset] = await Promise.all([
+    fetch('/buildings-index.json'),
     Cesium.Cesium3DTileset.fromUrl('/tileset/tileset.json', {
-      maximumScreenSpaceError: 8,
       cacheBytes: 256 * 1024 * 1024,   // keep at most ~256 MB of tiles in memory
     }),
   ]);
-  if (!manifestResponse.ok) throw new Error(`Building list could not load (HTTP ${manifestResponse.status})`);
-  const manifest = await manifestResponse.json();
+  if (!indexResponse.ok || !(indexResponse.headers.get('content-type') ?? '').includes('json')) throw new Error(`Building list could not load (HTTP ${indexResponse.status}). Run npm run data:split`);
+  const manifest = decodeIndex(await indexResponse.json());
   const records = new Map(manifest.map(record => [record.buildingId, record]));
+
+  // Full records, one file per tile, fetched once.
+  const details = new Map();
+  const detail = async buildingId => {
+    const uri = records.get(buildingId)?.tileContentUri;
+    if (!uri) return null;
+    if (!details.has(uri)) details.set(uri, fetch('/buildings/' + detailFile(uri)).then(r => {
+      if (!r.ok) throw new Error(`Building details could not load (HTTP ${r.status})`);
+      return r.json();
+    }).then(list => new Map(list.map(r => [r.buildingId, r]))).catch(error => { details.delete(uri); throw error; }));
+    return (await details.get(uri)).get(buildingId) ?? null;
+  };
 
   viewer.scene.primitives.add(tileset);
   // Same as the ground (createViewer.js): keep drawing until the tiles in view are in.
@@ -66,5 +80,5 @@ export async function loadBuildings(viewer) {
     return {buildingId: id, record: records.get(id) ?? null};
   };
 
-  return {tileset, manifest, records, pick, setSelected, setColoring, get selected() { return selected; }};
+  return {tileset, manifest, records, detail, pick, setSelected, setColoring, get selected() { return selected; }};
 }

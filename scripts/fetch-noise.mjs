@@ -3,10 +3,11 @@
 // 1. Downloads the four Lden layers from the city WFS (all pages, checked).
 // 2. Checks every band record; a broken record stops the script.
 // 3. Per building and mode: the loudest band at its centre or within 10 m (src/data/noise.js).
-// 4. Writes the bands into buildings-manifest.json and the method into layers.json.
+// 4. Writes the bands into buildings-manifest.json (and the map's building index) and the method into layers.json.
 // Run again after data:city-tiles, which rewrites the manifest.
 import {fetchAllFeatures} from './lib/wfs.mjs';
-import {cached, readJson, publishJson, datasetSection} from './lib/prepare.mjs';
+import {cached, readJson, publishJson, datasetSection, ROOT} from './lib/prepare.mjs';
+import {writeBuildingFiles} from './lib/split-buildings.mjs';
 import {NOISE_MODES, bandProblem, bandIndex, withAll, bandList, loudestNear, WALL_M} from '../src/data/noise.js';
 
 const modes = [];
@@ -30,6 +31,7 @@ for (const record of manifest) {
   for (const [key, value] of Object.entries(record.noise)) if (value !== null) counts[key]++;
 }
 await publishJson('public/buildings-manifest.json', manifest);
+await writeBuildingFiles(ROOT, manifest);
 
 // One band list for the legend: every band any mode uses.
 const allBands = new Map();

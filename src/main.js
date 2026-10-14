@@ -48,7 +48,7 @@ async function ground(){
 async function priceLayer(){
  try{
   prices=await loadPrices(viewer,buildings.manifest);useAds();setMetric(state.metric);
-  if(state.building)card.show(state.building,buildings.records.get(state.building));
+  card?.refresh();
  }catch(e){$('#price-legend').textContent='Postal-area prices unavailable.';unavailable('Prices',e,priceLayer);}
 }
 // Current Oikotie ads (npm run data:listings). Checked again every 10 minutes,
@@ -130,10 +130,16 @@ function clearSelection(){
  state.building=null;currentAddress=null;buildings?.setSelected(null);card?.hide();
  if(marker)viewer.entities.remove(marker);marker=null;viewer.scene.requestRender();save();
 }
-function selectBuilding(id,fly=true){
+// The full record comes with its tile's detail file; the card opens when it is in.
+async function selectBuilding(id,fly=true){
  const record=buildings.records.get(id);if(!record)return;
- clearSelection();state.building=id;buildings.setSelected(id);card.show(id,record);
+ clearSelection();state.building=id;buildings.setSelected(id);
  if(fly)nav.flyTo(record.position,420);save();
+ try{
+  const full=await buildings.detail(id);
+  if(!full)throw new Error('Building '+id+' is missing from its detail file. Run npm run data:split');
+  if(state.building===id)card.show(id,full);
+ }catch(e){if(state.building===id)unavailable('Building details',e,()=>selectBuilding(id,false));}
 }
 function selectAddress(row){
  clearSelection();currentAddress=row;

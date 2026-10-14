@@ -2,28 +2,34 @@
 // and only then copies them into public/. Used by both building sources:
 // the CityGML converter and the city-tiles importer.
 //
+// Give either `items` (all at once) or `cells` (an async list of [cell, items], one
+// 500 m cell at a time, so the whole city never has to be in memory).
 // Each item: {
 //   record: manifest fields (buildingId, position, ...),
-//   cell:   tile key such as "50994-13345" (500 m grid cell),
+//   cell:   tile key such as "50994-13345" (500 m grid cell; only needed with `items`),
 //   meshes: [{positions: [[e,n,u]...], normals: [[e,n,u]...], indices: [...]}]  local metres
 // }
 import {readFile, writeFile, mkdir, rm, cp} from 'node:fs/promises';
 import {encodeB3dm} from './b3dm.mjs';
 import {FRAME, ORIGIN, toGltfAxes, boxFromMinMax, validateTileset} from './tiles.mjs';
+import {writeBuildingFiles} from './split-buildings.mjs';
 
-export async function publishBuildings({root, items, boundary, dataset}) {
+function groupByCell(items) {
+  const cells = new Map();
+  for (const item of items) { if (!cells.has(item.cell)) cells.set(item.cell, []); cells.get(item.cell).push(item); }
+  return [...cells].sort(([a], [b]) => a.localeCompare(b));
+}
+
+export async function publishBuildings({root, items, cells, boundary, dataset}) {
   const staging = new URL('data/staging/', root);
   const stagingTiles = new URL('tileset/', staging);
   await rm(staging, {recursive: true, force: true});
   await mkdir(stagingTiles, {recursive: true});
 
-  const cells = new Map();
-  for (const item of items) { if (!cells.has(item.cell)) cells.set(item.cell, []); cells.get(item.cell).push(item); }
-
-  const manifest = [], children = [];
+  const manifest = [], children = [], problems = [];
   const allMin = [Infinity, Infinity, Infinity], allMax = [-Infinity, -Infinity, -Infinity];
   let triangles = 0, tileBytes = 0, empty = 0;
-  for (const [cell, cellItems] of [...cells].sort(([a], [b]) => a.localeCompare(b))) {
+  for await (const [cell, cellItems] of cells ?? groupByCell(items)) {
     const positions = [], normals = [], batchIds = [], indices = [];
     const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
     const tileContentUri = `${cell}.b3dm`;
@@ -52,14 +58,23 @@ export async function publishBuildings({root, items, boundary, dataset}) {
       {positions: Float32Array.from(positions), normals: Float32Array.from(normals), batchIds: Uint32Array.from(batchIds), indices: Uint32Array.from(indices)},
       {buildingId: tileRecords.map(r => r.buildingId)},
     );
-    await writeFile(new URL(tileContentUri, stagingTiles), tile);
+    const url = new URL(tileContentUri, stagingTiles);
+    await writeFile(url, tile);
     tileBytes += tile.length;
     for (let k = 0; k < 3; k++) { allMin[k] = Math.min(allMin[k], min[k]); allMax[k] = Math.max(allMax[k], max[k]); }
-    children.push({boundingVolume: {box: boxFromMinMax(min, max)}, geometricError: 0, content: {uri: tileContentUri}});
+    const child = {boundingVolume: {box: boxFromMinMax(min, max)}, geometricError: 0, content: {uri: tileContentUri}};
+    // Check the tile as written to disk now, so no tile has to stay in memory.
+    const written = await readFile(url);
+    problems.push(...validateTileset({tileset: {root: {children: [child]}}, manifest: tileRecords, readTile: () => written, isInside: boundary.isInside}));
+    children.push(child);
     manifest.push(...tileRecords);
     console.log(`  tile ${tileContentUri}: ${tileRecords.length} buildings, ${(tile.length / 1024).toFixed(0)} KB`);
   }
   if (!manifest.length) throw new Error('No buildings with geometry to publish');
+  // Across tiles: every building exactly once.
+  const ids = new Set();
+  for (const r of manifest) { if (ids.has(r.buildingId)) problems.push(`duplicate buildingId ${r.buildingId}`); ids.add(r.buildingId); }
+  if (problems.length) throw new Error('Validation failed; public/ was NOT changed:\n' + problems.slice(0, 30).join('\n'));
 
   const tileset = {
     asset: {version: '1.0', gltfUpAxis: 'Y', copyright: 'City of Helsinki, CC BY 4.0'},
@@ -67,12 +82,6 @@ export async function publishBuildings({root, items, boundary, dataset}) {
     root: {transform: FRAME.matrix, boundingVolume: {box: boxFromMinMax(allMin, allMax, 5)}, geometricError: 500, refine: 'ADD', children},
   };
   await writeFile(new URL('tileset.json', stagingTiles), JSON.stringify(tileset));
-
-  // Re-read every tile and compare against the manifest before publishing.
-  const tileCache = new Map();
-  for (const child of children) tileCache.set(child.content.uri, await readFile(new URL(child.content.uri, stagingTiles)));
-  const problems = validateTileset({tileset, manifest, readTile: uri => tileCache.get(uri), isInside: boundary.isInside});
-  if (problems.length) throw new Error('Validation failed; public/ was NOT changed:\n' + problems.slice(0, 30).join('\n'));
 
   // Keep sections other scripts own (addresses, labels, trees, prices, basemap).
   const previous = await readFile(new URL('public/dataset.json', root), 'utf8').then(JSON.parse, () => ({}));
@@ -98,6 +107,7 @@ export async function publishBuildings({root, items, boundary, dataset}) {
   await cp(stagingTiles, new URL('tileset/', publicDir), {recursive: true});
   await cp(new URL('buildings-manifest.json', staging), new URL('buildings-manifest.json', publicDir));
   await cp(new URL('dataset.json', staging), new URL('dataset.json', publicDir));
+  await writeBuildingFiles(root, manifest);
 
   console.log(`\nPublished ${manifest.length} buildings in ${children.length} tile(s), ${triangles} triangles, ${(tileBytes / 1024 / 1024).toFixed(2)} MB.`);
   console.log(`With an address: ${fullDataset.counts.withAddress}/${manifest.length}.`);

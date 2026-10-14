@@ -22,6 +22,8 @@ Thumbs.db
 # we decide how to publish prepared data when the app is deployed.
 public/tileset/
 public/buildings-manifest.json
+public/buildings-index.json
+public/buildings/
 public/dataset.json
 public/map/
 screenshots/

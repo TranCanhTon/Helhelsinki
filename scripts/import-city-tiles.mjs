@@ -22,7 +22,7 @@ import {lonLatToGrid, gridToLonLat} from './lib/geo.mjs';
 import {loadBoundary} from './lib/boundary.mjs';
 import {buildRegisterIndex, joinRegister, yearFromDate, EMPTY_FACTS} from './lib/register-join.mjs';
 import {CLASS} from './lib/register-codes.mjs';
-import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
+import {pointFinder} from './lib/point-finder.mjs';
 import {FRAME, LIMITATIONS, N2000_LIMITATION} from './lib/tiles.mjs';
 import {publishBuildings} from './lib/publish-buildings.mjs';
 import {areaBbox, areaFromArgs, areaInsideTest, areaDistrictOf, AREAS} from './config.mjs';
@@ -90,6 +90,10 @@ if (bundlePath) {
 await writeFile(new URL('source.json', tileDir), JSON.stringify(source, null, 2));
 
 // ---- 3. Buildings out of the tiles --------------------------------------
+// Two passes, so the whole city fits in memory. Pass 1 reads every city tile but
+// keeps only what each building is and where it stands; its shape is dropped with
+// the tile. Pass 2 builds our 500 m cells one at a time and reads the shapes again
+// from the few city tiles each cell needs.
 const register = existsSync(registerFile) ? JSON.parse(await readFile(registerFile, 'utf8')) : null;
 const registerIndex = register ? buildRegisterIndex(register.features) : null;
 if (!register) console.warn('No register file; run npm run data:register -- --area=' + area);
@@ -103,9 +107,9 @@ for (const f of protectedAreas?.features ?? []) {
   const number = String(f.properties.pys_raknro ?? '').trim();
   if (number) protectedByNumber.set(number, f);
 }
+const protectedAt = pointFinder(protectedAreas?.features ?? []);
 const protectionOf = (ratu, position) => {
-  const f = (ratu && protectedByNumber.get(ratu)) ||
-    protectedAreas?.features.find(p => p.geometry && booleanPointInPolygon(position, p));
+  const f = (ratu && protectedByNumber.get(ratu)) || protectedAt(position);
   if (!f) return null;
   const p = f.properties;
   const rule = [1, 2, 3, 4, 5, 6].map(i => p[i === 1 ? 'kaavaselitys' : `kaavaselitys${i}`]).filter(Boolean).join('').trim();
@@ -122,38 +126,46 @@ const protectionOf = (ratu, position) => {
 const subdistrictFile = new URL('data/raw/boundary/Maavesi_osa_alueet.json', root);
 const subdistricts = existsSync(subdistrictFile) ? JSON.parse(await readFile(subdistrictFile, 'utf8')).features : [];
 if (!subdistricts.length) console.warn('No sub-districts; run npm run data:boundary');
-const subdistrictOf = position => subdistricts.find(f => booleanPointInPolygon(position, f))?.properties ?? null;
+const subdistrictAt = pointFinder(subdistricts);
+const subdistrictOf = position => subdistrictAt(position)?.properties ?? null;
 
+// Building parts point to their parent row; they belong to the parent building.
+const rootRow = (rows, batchId) => { let row = rows[batchId]; while (row.parent >= 0) row = rows[row.parent]; return row; };
+const files = (await readdir(tileDir)).filter(f => f.endsWith('.b3dm')).sort();
+
+// Pass 1: per building its source tile, ground, top and footprint box.
 const found = new Map();
 const report = {duplicates: 0, outsideArea: 0, outsideHelsinki: 0, tiles: 0};
-for (const file of (await readdir(tileDir)).filter(f => f.endsWith('.b3dm')).sort()) {
+for (const file of files) {
   const {rows, buildings} = readCityTile(await readFile(new URL(file, tileDir)));
   report.tiles++;
   for (const [batchId, geometry] of buildings) {
-    // Building parts point to their parent row; merge them into the parent building.
-    let row = rows[batchId];
-    while (row.parent >= 0) row = rows[row.parent];
-    const entry = found.get(row.id) ?? {row, parts: [], file};
+    const row = rootRow(rows, batchId);
+    const entry = found.get(row.id) ?? {row, file, parts: 0, ground: Infinity, top: -Infinity, box: [Infinity, Infinity, -Infinity, -Infinity]};
     // The same building in a second tile would be drawn twice: keep the first copy.
     if (entry.file !== file) { report.duplicates++; continue; }
-    entry.parts.push(geometry);
+    entry.parts++;
+    for (const p of geometry.positions) {
+      const [lon, lat, h] = ecefToGeodetic(p);
+      entry.ground = Math.min(entry.ground, h); entry.top = Math.max(entry.top, h);
+      entry.box[0] = Math.min(entry.box[0], lon); entry.box[1] = Math.min(entry.box[1], lat);
+      entry.box[2] = Math.max(entry.box[2], lon); entry.box[3] = Math.max(entry.box[3], lat);
+    }
     found.set(row.id, entry);
   }
+  if (report.tiles % 100 === 0) console.log(`  read ${report.tiles} / ${files.length} city tiles`);
 }
 
-const items = [];
-for (const [id, {row, parts}] of found) {
-  const geodetic = parts.flatMap(p => p.positions.map(ecefToGeodetic));
-  const lons = geodetic.map(g => g[0]), lats = geodetic.map(g => g[1]), hs = geodetic.map(g => g[2]);
-  const position = [(Math.min(...lons) + Math.max(...lons)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
+const keep = [];
+for (const [id, {row, file, parts, ground, top, box}] of found) {
+  const position = [(box[0] + box[2]) / 2, (box[1] + box[3]) / 2];
+  if (!insideArea(position)) { report.outsideArea++; continue; }
+  if (!boundary.isInside(position)) { report.outsideHelsinki++; continue; }
   const [east, north] = lonLatToGrid(position);
   // Our ground map lies at height 0 and there is no terrain, so a building drawn
   // at its N2000 height floats above its footprint (median 17 m in the centre).
   // Lower each building by its own lowest point so its base sits on the ground.
-  const ground = Math.min(...hs), top = Math.max(...hs);
   const lowered = upAt(position).map(c => c * ground);
-  if (!insideArea(position)) { report.outsideArea++; continue; }
-  if (!boundary.isInside(position)) { report.outsideHelsinki++; continue; }
   const district = districtOf(position);
 
   const a = row.attributes ?? {};
@@ -164,48 +176,76 @@ for (const [id, {row, parts}] of found) {
     const address = [a.Address.Street, a.Address.HouseNumber].filter(Boolean).join(' ');
     joined = {...joined, registerJoin: `${joined.registerJoin}; address from city model`, address, addresses: [address], postcode: a.Address.PostalCode ?? null};
   }
-  items.push({
-    cell: `${Math.floor(east / CELL)}-${Math.floor(north / CELL)}`,
-    record: {
-      buildingId: id,
-      sourceIds: {gmlId: id, ...ids},
-      position: position.map(v => Math.round(v * 1e7) / 1e7),
-      // Source heights, kept as they are. The drawn building is lowered by groundOffsetM.
-      heightsN2000: {base: Math.round(ground * 100) / 100, top: Math.round(top * 100) / 100},
-      groundOffsetM: Math.round(ground * 100) / 100,
-      ...joined,
-      // The city model carries a few facts of its own. The register wins when both have one.
-      yearBuilt: joined.yearBuilt ?? yearFromDate(a.yearOfConstruction),
-      yearSource: joined.yearBuilt ? 'register' : yearFromDate(a.yearOfConstruction) ? 'city 3D model' : null,
-      facts: {...joined.facts, floors: joined.facts.floors ?? (Number(a.storeysAboveGround) > 0 ? Number(a.storeysAboveGround) : null)},
-      // From the geometry: lowest to highest point. The model's measuredHeight agrees
-      // for 98% of buildings, but some are plainly wrong (0.9 m for 15 floors).
-      heightM: Math.round((top - ground) * 10) / 10,
-      classFi: a.class ?? null,
-      classEn: a.class ? CLASS[a.class] ?? null : null,
-      protection: protectionOf(ids.ratu, position),
-      district: district ? {id: district.id, nameFi: district.nameFi, nameSv: district.nameSv} : null,
-      subdistrict: (s => s ? {id: s.tunnus, nameFi: s.nimi_fi, nameSv: s.nimi_se} : null)(subdistrictOf(position)),
-      lod: 2,
-      buildingParts: parts.length > 1 ? parts.length : 0,
-      geometrySource: 'helsinki-lod2-3dtiles',
-    },
-    meshes: parts.map(part => ({
-      positions: part.positions.map(p => FRAME.toLocal([p[0] - lowered[0], p[1] - lowered[1], p[2] - lowered[2]])),
-      normals: part.normals.map(n => {
-        const v = n ? FRAME.toLocalVector(n) : [0, 0, 1];
-        const l = Math.hypot(...v) || 1;
-        return v.map(c => c / l);
-      }),
-      indices: part.triangles.flat(),
-    })),
-  });
+  keep.push({id, file, lowered, cell: `${Math.floor(east / CELL)}-${Math.floor(north / CELL)}`, record: {
+    buildingId: id,
+    sourceIds: {gmlId: id, ...ids},
+    position: position.map(v => Math.round(v * 1e7) / 1e7),
+    // Source heights, kept as they are. The drawn building is lowered by groundOffsetM.
+    heightsN2000: {base: Math.round(ground * 100) / 100, top: Math.round(top * 100) / 100},
+    groundOffsetM: Math.round(ground * 100) / 100,
+    ...joined,
+    // The city model carries a few facts of its own. The register wins when both have one.
+    yearBuilt: joined.yearBuilt ?? yearFromDate(a.yearOfConstruction),
+    yearSource: joined.yearBuilt ? 'register' : yearFromDate(a.yearOfConstruction) ? 'city 3D model' : null,
+    facts: {...joined.facts, floors: joined.facts.floors ?? (Number(a.storeysAboveGround) > 0 ? Number(a.storeysAboveGround) : null)},
+    // From the geometry: lowest to highest point. The model's measuredHeight agrees
+    // for 98% of buildings, but some are plainly wrong (0.9 m for 15 floors).
+    heightM: Math.round((top - ground) * 10) / 10,
+    classFi: a.class ?? null,
+    classEn: a.class ? CLASS[a.class] ?? null : null,
+    protection: protectionOf(ids.ratu, position),
+    district: district ? {id: district.id, nameFi: district.nameFi, nameSv: district.nameSv} : null,
+    subdistrict: (s => s ? {id: s.tunnus, nameFi: s.nimi_fi, nameSv: s.nimi_se} : null)(subdistrictOf(position)),
+    lod: 2,
+    buildingParts: parts > 1 ? parts : 0,
+    geometrySource: 'helsinki-lod2-3dtiles',
+  }});
 }
-console.log(`${found.size} buildings in ${report.tiles} tiles (${report.duplicates} duplicate copies skipped); ${items.length} inside area "${area}" and Helsinki (outside area: ${report.outsideArea}, outside Helsinki: ${report.outsideHelsinki}).`);
+found.clear();
+console.log(`${keep.length + report.outsideArea + report.outsideHelsinki} buildings in ${report.tiles} tiles (${report.duplicates} duplicate copies skipped); ${keep.length} inside area "${area}" and Helsinki (outside area: ${report.outsideArea}, outside Helsinki: ${report.outsideHelsinki}).`);
+
+// Pass 2: shapes again, one cell at a time. The last TILE_CACHE city tiles stay decoded.
+const TILE_CACHE = 24;
+const decoded = new Map();
+let decodes = 0;
+const shapesIn = async file => {
+  if (decoded.has(file)) { const v = decoded.get(file); decoded.delete(file); decoded.set(file, v); return v; }
+  const {rows, buildings} = readCityTile(await readFile(new URL(file, tileDir)));
+  decodes++;
+  const byBuilding = new Map();
+  for (const [batchId, geometry] of buildings) {
+    const id = rootRow(rows, batchId).id;
+    if (!byBuilding.has(id)) byBuilding.set(id, []);
+    byBuilding.get(id).push(geometry);
+  }
+  decoded.set(file, byBuilding);
+  if (decoded.size > TILE_CACHE) decoded.delete(decoded.keys().next().value);
+  return byBuilding;
+};
+const byCell = new Map();
+for (const k of keep) { if (!byCell.has(k.cell)) byCell.set(k.cell, []); byCell.get(k.cell).push(k); }
+async function* cells() {
+  for (const [cell, list] of [...byCell].sort(([a], [b]) => a.localeCompare(b))) {
+    const items = [];
+    for (const {id, file, lowered, record} of list) {
+      const parts = (await shapesIn(file)).get(id);
+      items.push({record, meshes: parts.map(part => ({
+        positions: part.positions.map(p => FRAME.toLocal([p[0] - lowered[0], p[1] - lowered[1], p[2] - lowered[2]])),
+        normals: part.normals.map(n => {
+          const v = n ? FRAME.toLocalVector(n) : [0, 0, 1];
+          const l = Math.hypot(...v) || 1;
+          return v.map(c => c / l);
+        }),
+        indices: part.triangles.flat(),
+      }))});
+    }
+    yield [cell, items];
+  }
+}
 
 await publishBuildings({
   root,
-  items,
+  cells: cells(),
   boundary,
   dataset: {
     coverage: {
@@ -227,3 +267,4 @@ await publishBuildings({
     ],
   },
 });
+console.log(`City tiles decoded in pass 2: ${decodes}.`);
