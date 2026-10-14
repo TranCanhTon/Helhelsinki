@@ -1,0 +1,138 @@
+{
+  "generatedAt": "2026-10-14T10:46:05.191Z",
+  "tileSize": 256,
+  "tilingScheme": "Web Mercator (EPSG:3857), XYZ",
+  "format": "webp",
+  "themes": [
+    "dusk"
+  ],
+  "levels": {
+    "base": {
+      "min": 10,
+      "max": 15,
+      "rectangle": [
+        24.78280556,
+        59.92249326,
+        25.25449667,
+        60.29783944
+      ]
+    },
+    "detail": {
+      "min": 16,
+      "max": 17,
+      "rectangle": [
+        24.90153972,
+        60.16899734,
+        25.003972870000002,
+        60.22999817
+      ]
+    }
+  },
+  "tiles": {
+    "dusk/10": 6,
+    "dusk/11": 20,
+    "dusk/12": 70,
+    "dusk/13": 216,
+    "dusk/14": 805,
+    "dusk/15": 3036,
+    "dusk/16": 437,
+    "dusk/17": 1710
+  },
+  "bytes": 10401440,
+  "shapes": {
+    "parks": 4697,
+    "fields": 760,
+    "squares": 1606,
+    "blocks": 6459,
+    "forest": 3070,
+    "industry": 654,
+    "bridges": 241,
+    "water": 298,
+    "land": 327,
+    "lanes-big": 2245,
+    "lanes": 1592,
+    "railway": 112,
+    "metro": 44,
+    "piers": 724,
+    "light-rail": 12,
+    "streets-residential": 3787,
+    "streets-collector": 780,
+    "paths": 1689,
+    "parking": 201,
+    "streets-main": 303,
+    "streets-motorway": 96
+  },
+  "alignment": {
+    "buildingsChecked": 52342,
+    "notOnLandShape": 3,
+    "insideWaterShape": 640,
+    "examplesNotOnLand": [
+      "Liuskaluoto 2",
+      "Merikasarmin laituri 3",
+      "Vasikkasaari"
+    ],
+    "examplesInWater": [
+      "Nahkahousut 2",
+      "Katajaluoto",
+      "Läntinen Pihlajasaari 86",
+      "Läntinen Pihlajasaari 87",
+      "Läntinen Pihlajasaari 155"
+    ]
+  },
+  "sources": [
+    {
+      "name": "green",
+      "layer": "avoindata:YLRE_Viheralue_alue",
+      "scope": "helsinki",
+      "retrievedAt": "2026-10-12T11:06:52.591Z",
+      "license": "City of Helsinki, CC BY 4.0",
+      "features": 4697
+    },
+    {
+      "name": "guide",
+      "layer": "avoindata:Opaskartta_alue",
+      "scope": "helsinki",
+      "retrievedAt": "2026-10-12T11:06:44.547Z",
+      "license": "City of Helsinki, CC BY 4.0",
+      "features": 15274
+    },
+    {
+      "name": "land",
+      "layer": "avoindata:Maavesi_maa_alueet_yleistetty",
+      "scope": "helsinki",
+      "retrievedAt": "2026-10-12T11:06:38.525Z",
+      "license": "City of Helsinki, CC BY 4.0",
+      "features": 327
+    },
+    {
+      "name": "lanes",
+      "layer": "avoindata:YLRE_Katu_ja_viherosat_ajorata_alue",
+      "scope": "central",
+      "retrievedAt": "2026-10-12T11:06:56.481Z",
+      "license": "City of Helsinki, CC BY 4.0",
+      "features": 6925
+    },
+    {
+      "name": "lines",
+      "layer": "avoindata:Opaskartta_muuviiva",
+      "scope": "helsinki",
+      "retrievedAt": "2026-10-12T11:06:45.142Z",
+      "license": "City of Helsinki, CC BY 4.0",
+      "features": 2245
+    },
+    {
+      "name": "streets",
+      "layer": "avoindata:YLRE_Katualue_alue",
+      "scope": "helsinki",
+      "retrievedAt": "2026-10-12T11:06:48.970Z",
+      "license": "City of Helsinki, CC BY 4.0",
+      "features": 7751
+    }
+  ],
+  "notes": [
+    "Drawn from City of Helsinki open data (CC BY 4.0); only the area inside the Helsinki boundary is drawn.",
+    "Planned roads, underground rail and metro, tunnels and power lines are not drawn.",
+    "Tram tracks are not in these layers and are not drawn.",
+    "Roads from zoom 15 up carry a drawn asphalt grain; it is a look only, not data."
+  ]
+}
