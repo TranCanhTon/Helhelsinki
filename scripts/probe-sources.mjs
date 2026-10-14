@@ -17,7 +17,6 @@ const CITYGML_WFS = 'https://kartta.hel.fi/3d/citydb-wfs/wfs';
 const STATFIN = 'https://pxdata.stat.fi/PxWeb/api/v1/en/';
 const POSTAL_WFS = 'https://geo.stat.fi/geoserver/postialue/wfs';
 const HSL_GTFS = 'https://infopalvelut.storage.hsldev.com/gtfs/hsl.zip';
-const OVERPASS = process.env.OVERPASS_URL || 'https://overpass-api.de/api/interpreter';
 const PERMIT_FIELDS_PDF = 'https://www.hel.fi/static/hkr/wfs/Maankayttoluvat_ja_sopimukset_ominaisuustiedot.pdf';
 
 // City of Helsinki open WFS layers we expect to use, grouped by feature.
@@ -167,20 +166,7 @@ await check('hsl', 'GTFS zip size and date (no download)', async () => {
   };
 });
 
-// ---- 6. OpenStreetMap landmarks (Overpass) -----------------------------
-await check('overpass', 'find Helsinki Cathedral', async () => {
-  const query = '[out:json][timeout:25];nwr["name"="Helsingin tuomiokirkko"](60.16,24.94,60.18,24.96);out center tags 3;';
-  const response = await request(OVERPASS, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: 'data=' + encodeURIComponent(query),
-  });
-  const data = await response.json();
-  await save('overpass/sample.json', data);
-  return {elements: data.elements?.length ?? 0, first: data.elements?.[0] ? `${data.elements[0].type}/${data.elements[0].id}` : null, dataTimestamp: data.osm3s?.timestamp_osm_base};
-});
-
-// ---- 7. Field description PDF for the construction permit layers -------
+// ---- 6. Field description PDF for the construction permit layers -------
 await check('helsinki-permits', 'download field description PDF', async () => {
   const response = await request(PERMIT_FIELDS_PDF);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);

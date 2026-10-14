@@ -43,6 +43,5 @@ public/parking.json
 public/parking-zones.json
 public/transit.json
 public/transit-routes.json
-public/landmarks.json
 # Collected Oikotie ads: never published (their terms and database rights).
 public/listings.json

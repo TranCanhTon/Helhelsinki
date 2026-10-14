@@ -99,7 +99,7 @@ function sourcesSection(record) {
 }
 
 export class BuildingCard {
-  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getLandmarks = () => null) {
+  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null) {
     this.el = container;
     this.onClose = onClose;
     this.getPrices = getPrices;
@@ -107,7 +107,6 @@ export class BuildingCard {
     this.getNoise = getNoise;
     this.getParking = getParking;
     this.getTransit = getTransit;
-    this.getLandmarks = getLandmarks;
   }
 
   // Redraw the open card after prices or ads change, keeping the scroll position.
@@ -125,10 +124,7 @@ export class BuildingCard {
 
     const header = el('header', 'card-header');
     const heading = el('div', 'card-heading');
-    // A landmark's building shows the landmark's name, with the address under it.
-    const landmark = this.getLandmarks()?.at(buildingId);
-    heading.append(el('h2', null, landmark?.name ?? record?.address ?? 'Building without a registered address'));
-    if (landmark && record?.address) heading.append(el('p', 'card-address', record.address));
+    heading.append(el('h2', null, record?.address ?? 'Building without a registered address'));
     const place = [titleCase(record?.subdistrict?.nameFi), titleCase(record?.district?.nameFi), record?.postcode].filter(Boolean);
     const unique = place.filter((p, i) => place.indexOf(p) === i);
     if (unique.length) heading.append(el('p', 'card-place', unique.join(' · ')));

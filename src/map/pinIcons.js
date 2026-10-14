@@ -59,18 +59,3 @@ export function stopPin(modes) {
  cache.set(key, pin);
  return pin;
 }
-
-// Landmark: dark navy disc, thin gold ring, gold diamond in the middle.
-let landmark = null;
-export function landmarkPin() {
- if (landmark) return landmark;
- const size = 30, scale = 2, canvas = document.createElement('canvas');
- canvas.width = canvas.height = size * scale;
- const ctx = canvas.getContext('2d'), c = size / 2;
- ctx.scale(scale, scale);
- ctx.fillStyle = '#14353e'; ctx.beginPath(); ctx.arc(c, c, c - 1, 0, Math.PI * 2); ctx.fill();
- ctx.strokeStyle = '#e7d4a1'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(c, c, c - 1.7, 0, Math.PI * 2); ctx.stroke();
- ctx.fillStyle = '#e7d4a1'; ctx.beginPath(); ctx.moveTo(c, c - 4.5); ctx.lineTo(c + 6, c); ctx.lineTo(c, c + 4.5); ctx.lineTo(c - 6, c); ctx.closePath(); ctx.fill();
- landmark = {image: canvas.toDataURL(), width: size, height: size};
- return landmark;
-}

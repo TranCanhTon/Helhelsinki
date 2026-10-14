@@ -11,7 +11,6 @@ import {loadParking} from './map/parking.js';
 import {loadTransit} from './map/transit.js';
 import {parkingLegend} from './ui/parkingCard.js';
 import {legendGradient} from './ui/legend.js';
-import {loadLandmarks} from './map/landmarks.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
 import {AddressSearch} from './ui/search.js';
@@ -40,7 +39,7 @@ function unavailable(label,error,retry){
  const row=document.createElement('div');row.className='data-error';row.textContent=label+' unavailable. ';
  const b=document.createElement('button');b.textContent='Retry';b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
-let basemap,prices,noise,parking,transit,landmarks,listings,buildings,card,marker,currentAddress=null;
+let basemap,prices,noise,parking,transit,listings,buildings,card,marker,currentAddress=null;
 async function ground(){
  try{basemap=await loadBasemap(viewer);basemap.setTheme(state.theme);}
  catch(e){unavailable('Ground map',e,ground);}
@@ -83,10 +82,6 @@ async function transitLayer(){
   const homes=buildings.manifest.filter(r=>/apartment|detached house|row house|residential/i.test(r.classEn??r.useEn??'')).map(r=>r.position);
   transit=await loadTransit(viewer,nav,homes);card?.refresh();
  }catch(e){unavailable('Public transport',e,transitLayer);}
-}
-async function landmarkLayer(){
- try{landmarks=await loadLandmarks(viewer,nav);card?.refresh();}
- catch(e){unavailable('Landmarks',e,landmarkLayer);}
 }
 function setNoiseMode(mode){noise.setMode(mode);state.noiseMode=noise.mode;setMetric('noise');}
 function setMetric(metric){
@@ -162,13 +157,11 @@ const layerPick=position=>transit?.pick(position)??null;
 function showInfo(text){const node=$('#area-info');node.hidden=!text;if(text)node.textContent=text;}
 async function start(){
  buildings=await loadBuildings(viewer);
- card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>landmarks);
+ card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit);
  const search=new AddressSearch($('#search'),selectAddress);
  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
  handler.setInputAction(click=>{
   if(nav.dragged)return;
-  const landmark=landmarks?.pick(click.position);
-  if(landmark){nav.flyTo(landmark.position,250);return;}
   const spot=layerPick(click.position);
   if(spot){showInfo(spot.text);if(spot.zoomTo)nav.flyTo(spot.zoomTo,Math.max(150,nav.state.range/3));return;}
   const hit=buildings.pick(click.position);
@@ -196,7 +189,6 @@ async function start(){
  noiseLayer();
  parkingLayer();
  transitLayer();
- landmarkLayer();
  adsLayer();setInterval(adsLayer,10*60*1000);
  const counts=new Map();
  for(const r of buildings.manifest){const d=r.district;if(d){const entry=counts.get(d.id)??{...d,count:0};entry.count++;counts.set(d.id,entry);}}

@@ -292,5 +292,4 @@ button { font: inherit; color: inherit; }
 .legend-gradient { display:block;width:420px;height:8px;border-radius:999px; }
 .legend-end { color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap; }
 .noise-switch { padding:4px; }
-.card-address { margin:4px 0 0;font-size:14.5px;font-weight:550; }
 .noise-reason { margin:0 0 8px;font-size:13.5px;line-height:1.45; }
