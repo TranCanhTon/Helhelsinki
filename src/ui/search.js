@@ -20,7 +20,7 @@ export class AddressSearch {
   }
   // Placeholder and label in the chosen language; open results are redrawn.
   translate() {
-    this.input.placeholder=t('Street and number · katu / gata');this.input.setAttribute('aria-label',t('Helsinki address'));
+    this.input.placeholder=t('Street and number');this.input.setAttribute('aria-label',t('Helsinki address'));
     if(this.rows&&this.input.value.trim())this.run();
   }
   async load() {

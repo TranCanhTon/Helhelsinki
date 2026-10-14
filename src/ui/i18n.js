@@ -59,7 +59,7 @@ const FI = {
   'The map could not load: {message}. Click to try again.': 'Kartta ei latautunut: {message}. Yritä uudelleen klikkaamalla.',
 
   // Search
-  'Street and number · katu / gata': 'Katu ja numero · street / gata',
+  'Street and number': 'Katu ja numero',
   'Helsinki address': 'Helsingin osoite',
   'Loading official addresses…': 'Ladataan virallisia osoitteita…',
   'Addresses unavailable. ': 'Osoitteet eivät ole saatavilla. ',
