@@ -10,7 +10,7 @@
   "scripts": {
     "predev": "node scripts/copy-cesium.mjs",
     "dev": "vite",
-    "prebuild": "node scripts/copy-cesium.mjs",
+    "prebuild": "node scripts/copy-cesium.mjs && node scripts/fetch-data.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test \"tests/**/*.test.mjs\"",
@@ -34,7 +34,7 @@
     "data:transit": "node scripts/fetch-transit.mjs",
     "data:construction": "node scripts/fetch-construction.mjs",
     "data:places": "node scripts/fetch-places.mjs",
-    "data:upload": "node scripts/upload-data.mjs",
+    "data:pack": "node scripts/pack-data.mjs",
     "build:train": "node scripts/build-train-model.mjs",
     "data:split": "node scripts/split-buildings.mjs",
     "data:ground": "node scripts/build-ground-grid.mjs",

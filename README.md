@@ -48,6 +48,22 @@ Do not run publishing data commands simultaneously: they update the shared `data
 
 The original CityGML route (`data:buildings`, `data:convert`, `data:pilot`) remains available. The city-tiles import is the existing fallback when the CityGML service is unavailable.
 
+## Publishing the data (Vercel)
+
+The prepared data is made on this computer and stays git-ignored (about 640 MB: raw downloads, the Oikotie ads, files only the scripts use). The public site needs only what the browser loads: 8,371 files, 521 MB (grey tiles 389 MB, building details 92 MB, building index 10 MB, ground map 10 MB, addresses 10 MB, the rest 9 MB). Visitors normally download about 100 MB of it; the grey tiles are only a fallback when the city's textured buildings do not load.
+
+- `npm run data:pack` copies those files into `data/snapshot/`, checks they come from one preparation run (every building ID in the index, its grey tile and its detail file, and search addresses pointing at known buildings), leaves out `listings.json` and the ads part of `dataset.json`, stores the folder as one git commit outside any branch and pushes it to GitHub as `refs/daroad-data/<time>`. It writes `deploy/data-snapshot.json`, which pins that commit. `--dry` only checks.
+- `npm run build` (also on Vercel) runs `scripts/fetch-data.mjs` first: with no data in `public/` it fetches exactly the pinned commit, checks the file count and puts it in `public/`, so a clean checkout builds the complete site and a deployment never mixes two runs. A computer with its own data in `public/` keeps it (`DATA_SNAPSHOT=fetch` replaces it with the snapshot).
+- `vercel.json`: data files are revalidated on every visit (`max-age=0, must-revalidate`), so after a deploy browsers do not keep old files; the hashed code bundles are cached for a year.
+- Normal clones do not download the snapshots (they are not branches). Old snapshots stay on GitHub; files that did not change are stored once.
+
+Refresh after new data (in `D:\HelsinkiMap\helhelsinki`):
+
+1. Run the data commands you need (table above), then `npm test`.
+2. `npm run data:pack` (about 3 minutes; pushes the snapshot).
+3. Commit `deploy/data-snapshot.json` and push `main`. Vercel builds with the new snapshot.
+4. Check `https://helhelsinki.vercel.app/buildings-index.json` and `/tileset/tileset.json` answer 200 with JSON.
+
 ## What the data means
 
 - **Search:** official Helsinki address points, including Swedish aliases and house-number suffixes. Exact normalized Finnish register addresses link to models. No nearest-building guessing. Search covers Helsinki; 3D coverage is all of Helsinki.
@@ -76,5 +92,5 @@ The ground map is sharpest (zoom 16 to 17) in the central major district only; e
 Desktop is the current target; no phone app or dedicated phone-layout pass was added. Browser performance is recorded at 1440×900 using headless Chrome/SwiftShader and should not be read as hardware-GPU performance.
 
 
-Prepared data and screenshots remain local and ignored by git. No deployment or commit is part of this continuation.
+Prepared data and screenshots remain local and ignored by git; the public site gets its data from the pinned snapshot (Publishing the data, above).
 

@@ -7,6 +7,9 @@ public/cesium/
 # Raw downloads from the data sources. Never committed; they can be fetched again.
 data/raw/
 data/staging/
+# The snapshot folder and its temporary index (npm run data:pack).
+data/snapshot/
+data/.snapshot-index
 
 # Secrets
 .env
