@@ -34,6 +34,7 @@
     "data:transit": "node scripts/fetch-transit.mjs",
     "data:landmarks": "node scripts/fetch-landmarks.mjs",
     "data:split": "node scripts/split-buildings.mjs",
+    "data:ground": "node scripts/build-ground-grid.mjs",
     "data:listings": "node scripts/fetch-listings.mjs",
     "data:listings:watch": "node scripts/fetch-listings.mjs --watch"
   },

@@ -24,6 +24,8 @@ public/tileset/
 public/buildings-manifest.json
 public/buildings-index.json
 public/buildings/
+public/ground-grid.bin
+public/ground-grid.json
 public/dataset.json
 public/map/
 screenshots/
