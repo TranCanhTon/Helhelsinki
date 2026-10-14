@@ -182,16 +182,19 @@ button { font: inherit; color: inherit; }
 .landing-text { margin: 18px 0 0; max-width: 440px; font-family: var(--mono); font-weight: 700; font-size: 15.5px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
 .landing-hook, .landing-text, .landing-cue { text-shadow: 0 1px 12px var(--ground), 0 0 2px var(--ground); }
 
-/* Scroll cue: a mouse with its wheel rolling down, and the words under it. */
+/* Click cue: a mouse with its left button flashing, and the words under it. */
 .landing-cue { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 34px; font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 0.06em; color: var(--muted); }
 .mouse { position: relative; width: 24px; height: 38px; border: 2px solid currentColor; border-radius: 13px; opacity: 0.5; transition: opacity 0.4s, color 0.4s; }
 .mouse i { position: absolute; left: 50%; top: 7px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: currentColor; }
 .is-ready .landing-cue { color: var(--ink); }
 .is-ready .mouse { opacity: 1; color: var(--copper); }
-.is-ready .mouse i { animation: wheel 1.6s cubic-bezier(.5, 0, .5, 1) infinite; }
+.mouse::before { content: ''; position: absolute; left: 1px; top: 1px; width: 6px; height: 12px; border-radius: 9px 1px 1px 1px; background: currentColor; opacity: 0; }
+.is-ready .mouse { animation: press 1.6s ease-out infinite; }
+.is-ready .mouse::before { animation: click 1.6s ease-out infinite; }
 .landing:not(.is-ready) #landing-status::after { content: ''; animation: dots 1.2s steps(4) infinite; }
 .landing.is-failed .landing-cue { color: var(--copper); max-width: 420px; line-height: 1.5; }
-@keyframes wheel { 0% { opacity: 0; transform: translateY(-3px); } 30% { opacity: 1; } 80% { opacity: 0; transform: translateY(12px); } 100% { opacity: 0; } }
+@keyframes click { 0%, 55% { opacity: 0; } 60% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes press { 0%, 55% { transform: none; } 60% { transform: translateY(1px) scale(0.95); } 75%, 100% { transform: none; } }
 @keyframes dots { from { opacity: 1; } }
 
 /* Coming in: the parts rise in one after another. */
@@ -218,7 +221,7 @@ button { font: inherit; color: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .spinner, .mouse i, .landing-inner > * { animation: none; }
+  .spinner, .mouse, .mouse::before, .landing-inner > * { animation: none; }
 }
 
 /* Phase 3/4 desktop controls, retaining the existing copper/granite palette. */

@@ -55,7 +55,7 @@ const FI = {
   'Found a flat to rent in Helsinki? Check the rent, noise, parking and transport around it before the viewing.':
     'Löysitkö vuokra-asunnon Helsingistä? Tarkista vuokrataso, melu, pysäköinti ja joukkoliikenne ennen näyttöä.',
   'loading the map…': 'kartta latautuu…',
-  'scroll to dive in': 'vieritä alas',
+  'click anywhere to dive in': 'klikkaa mistä tahansa',
   'The map could not load: {message}. Click to try again.': 'Kartta ei latautunut: {message}. Yritä uudelleen klikkaamalla.',
 
   // Search
