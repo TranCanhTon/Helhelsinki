@@ -23,6 +23,7 @@ import '@fontsource/syne/800.css';
 import '@fontsource/courier-prime/700.css';
 import '@fontsource/instrument-serif/400.css';
 import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource-variable/work-sans/wght.css';
 import './styles.css';
 const $=selector=>document.querySelector(selector);
 const HOME={lon:24.9480,lat:60.1835,heading:20,pitch:-40,range:1400};

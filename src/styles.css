@@ -18,10 +18,12 @@
   --radius-small: 10px;
   --shadow: 0 1px 2px rgba(29, 40, 38, 0.08), 0 12px 32px rgba(29, 40, 38, 0.16);
   /* Fonts (Ton, 14 Oct 2026), all bundled, no font requests: Syne ExtraBold for
-     the name, Courier Prime Bold for the landing text, Instrument Serif for
-     everything else. Instrument Serif has one weight, so no fake bold. */
+     the name, Courier Prime Bold for the landing text, Work Sans for the
+     building card text (easier to read small), Instrument Serif for everything
+     else. Instrument Serif has one weight, so no fake bold. */
   --serif: 'Instrument Serif', Georgia, serif;
   --sans: var(--serif);
+  --card: 'Work Sans Variable', 'Segoe UI', sans-serif;
   --mono: 'Courier Prime', 'Courier New', monospace;
   --display: 'Syne', var(--serif);
   --edge: 24px;   /* space between the panels and the window edge */
@@ -95,6 +97,7 @@ button { font: inherit; color: inherit; }
   padding: 0 22px 20px;
   z-index: 2;
   scrollbar-width: none;
+  font-family: var(--card);
 }
 .building-card[hidden] { display: none; }
 .card-header {
@@ -104,7 +107,10 @@ button { font: inherit; color: inherit; }
   background: var(--panel-solid);
   border-bottom: 1px solid var(--line);
 }
-.card-header h2 { margin: 0; font-size: 23px; line-height: 1.2; letter-spacing: -0.01em; }
+.card-header h2 { margin: 0; font-family: var(--serif); font-size: 23px; line-height: 1.2; letter-spacing: -0.01em; }
+.card-title { display: flex; align-items: center; gap: 6px; }
+.copy-address { flex: none; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.copy-address:hover { color: var(--verdigris-ink); background: var(--verdigris-soft); }
 .card-place { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; }
 .card-close {
   flex: none; width: 32px; height: 32px; border-radius: 50%;
@@ -144,25 +150,6 @@ button { font: inherit; color: inherit; }
 .protection-details { margin-top: 8px; }
 .protection-details summary { cursor: pointer; font-size: 12.5px; color: #8d4220; font-weight: 600; }
 .protection-rule { margin: 6px 0 0; font-size: 13px; line-height: 1.45; }
-
-.listing-buttons { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
-.listing {
-  display: flex; flex-direction: column; gap: 1px;
-  padding: 9px 12px; border-radius: var(--radius-small);
-  border: 1px solid var(--line); background: var(--panel-solid);
-  color: var(--ink); text-decoration: none;
-  transition: border-color 0.12s, background 0.12s;
-}
-.listing:hover { border-color: var(--verdigris); background: var(--verdigris-soft); }
-.listing-site { font-weight: 700; font-size: 14px; }
-.listing-site::after { content: ' ↗'; color: var(--verdigris); font-weight: 400; }
-.listing-what { font-size: 12.5px; color: var(--muted); }
-
-.sources { margin-top: 20px; padding-top: 12px; border-top: 1px solid var(--line); }
-.sources summary { cursor: pointer; color: var(--verdigris-ink); font-size: 13.5px; font-weight: 600; }
-.sources dl { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; margin: 12px 0 0; font-size: 12.5px; }
-.sources dt { color: var(--muted); }
-.sources dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 
 /* Landing: covers the map while it loads, then the name moves to its corner.
    The text sits in the upper part so the city below stays in view.
@@ -271,7 +258,6 @@ button { font: inherit; color: inherit; }
 /* Language switch: the code of the language you switch to. */
 .map-tools .tool-lang { font-size:15px;letter-spacing:0.04em; }
 .area-info { position:absolute;left:50%;top:var(--edge);transform:translateX(-50%);padding:12px 18px;font-size:13px;line-height:1.45;max-width:520px;z-index:3; }
-.price-row { padding:10px 0;border-bottom:1px solid var(--line); }
 .rent-groups { display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:8px 0 4px;font-size:13px; }
 .rent-groups dt { color:var(--muted); }
 .rent-groups dd { margin:0;font-weight:600; }
@@ -285,7 +271,7 @@ button { font: inherit; color: inherit; }
 .ad-compare.is-below { color:#2c5fa8; }
 .ad-compare.is-above { color:#f0a08a; }
 .ad-compare.is-below { color:#8db8e0; }
-.copy-address,.building-choices button { border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);padding:9px 12px;cursor:pointer;margin-top:8px; }
+.building-choices button { border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);padding:9px 12px;cursor:pointer;margin-top:8px; }
 .building-choices button { display:block;text-align:left;width:100%;font-size:13px; }
 .place-labels { position:absolute;inset:0;pointer-events:none;overflow:hidden; }
 .place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-size:15px;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
@@ -299,14 +285,6 @@ button { font: inherit; color: inherit; }
 .noise-mode-switch button { border:0;background:transparent;padding:8px 16px 9px;border-radius:var(--radius-small);cursor:pointer;font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);text-align:left; }
 .noise-mode-switch button:hover { background:var(--verdigris-soft); }
 .noise-mode-switch [aria-pressed=true],.noise-mode-switch [aria-pressed=true]:hover { background:var(--verdigris);color:white; }
-.noise { padding:12px 0; }
-.noise-modes { display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:0 0 6px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-small);overflow:hidden; }
-.noise-mode { padding:8px 12px;background:var(--panel-solid); }
-.noise-mode:first-child { grid-column:1 / -1; }
-.noise-mode dt { font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600; }
-.noise-mode dd { margin:2px 0 0;font-weight:600; }
-.noise-mode.is-missing dd { color:var(--faint);font-weight:400; }
-
 /* Parking and transit: legend keys and card sections. */
 .price-legend.is-keys { padding-bottom:8px; }
 .legend-keys { display:flex;flex-wrap:wrap;gap:6px 14px; }
@@ -333,7 +311,6 @@ button { font: inherit; color: inherit; }
 .legend-gradient { display:block;width:420px;height:8px;border-radius:999px; }
 .legend-end { color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap; }
 .noise-switch { position:absolute;left:var(--edge);bottom:calc(var(--edge) + 32px + var(--gap));padding:6px;z-index:3; }
-.noise-reason { margin:0 0 8px;font-size:13.5px;line-height:1.45; }
 
 /* Construction: card list. */
 .construction-summary { margin:0 0 6px;font-size:13.5px;line-height:1.45; }
@@ -345,6 +322,7 @@ button { font: inherit; color: inherit; }
 .work-level i { flex:none;width:10px;height:10px;border-radius:2px;box-shadow:0 0 0 1.5px var(--panel-solid); }
 .work-kind { flex:1;font-size:14px;font-weight:600; }
 .work-distance { color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap; }
-.work-when,.work-where,.work-purpose { margin:3px 0 0 88px;font-size:13px;line-height:1.4; }
+.work-when,.work-where { margin:3px 0 0 88px;font-size:13px;line-height:1.4; }
 .work-where { color:var(--muted);overflow-wrap:anywhere; }
-.work-purpose { font-size:12px;color:var(--muted);font-style:italic;overflow-wrap:anywhere; }
+
+.card-credit { margin:22px 0 0;font-size:11px;line-height:1.4;color:var(--faint); }

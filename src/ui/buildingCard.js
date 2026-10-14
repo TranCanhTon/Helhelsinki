@@ -1,12 +1,12 @@
 // The panel that opens when you click a building.
 //
-// Sections: address header, key facts, prices, noise, construction, street parking, public
-// transport, plan protection, listing links and "Sources & IDs". Missing values
-// say "Not recorded", never zero.
-import {listingLinks} from './listings.js';
-import {pricesSection, adsSection} from './pricesCard.js';
-import {noiseSection} from './noiseCard.js';
-import {isApartmentBuilding} from '../data/noise.js';
+// Kept short (Ton, 14 Oct 2026): address header with a copy button, the rental ads in
+// this building (when there are any), the key facts with noise, average rent,
+// construction within 50 m, street parking, public transport and plan protection.
+// No explaining notes. Missing values say "Not recorded", never zero.
+import {rentSection, adsSection} from './pricesCard.js';
+import {bandText} from './noiseCard.js';
+import {isApartmentBuilding, NOISE_MODES} from '../data/noise.js';
 import {parkingSection} from './parkingCard.js';
 import {transitSection} from './transitCard.js';
 import {constructionSection} from './constructionCard.js';
@@ -21,24 +21,31 @@ const el = (tag, className, textValue) => {
 
 const titleCase = s => s ? s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase()) : s;
 const number = n => n === null || n === undefined ? null : num(n);
-// Register words (heating, frame, building type...) are stored in English; shown in the chosen language.
+// Register words (building type...) are stored in English; shown in the chosen language.
 const word = s => s == null ? s : t(s);
 
-function factsSection(record) {
+// "65 to 70 dB, road traffic": the loudest modelled band at the building and its source.
+const NOISE_SOURCE = {road: 'road traffic', rail: 'trains', metro: 'metro', tram: 'trams'};
+function noiseText(record, noise) {
+  if (!noise || !record.noise) return null;
+  const all = noise.band(noise.bandOf(record, 'all'));
+  if (!all) return t('Under 45 dB');
+  const [loudest] = NOISE_MODES.map(m => m.key).filter(k => record.noise[k] != null).sort((a, b) => record.noise[b] - record.noise[a]);
+  return bandText(all) + (loudest ? ', ' + t(NOISE_SOURCE[loudest]) : '');
+}
+
+function factsSection(record, noise) {
   const f = record.facts ?? {};
   const rows = [
     ['Year built', record.yearBuilt],
     ['Floors', f.floors],
     ['Height', record.heightM ? `${num(record.heightM)} m` : null],
     ['Flats', number(f.flats)],
-    ['Business premises', f.businessPremises === 0 ? t('None') : number(f.businessPremises)],
     ['Floor area', f.floorAreaM2 ? `${number(f.floorAreaM2)} m²` : null],
-    ['Heating', word(f.heating)],
-    ['Heating fuel', word(f.fuel)],
-    ['Frame', word(f.frame)],
-    ['Facade', word(f.facade)],
     ['Elevator', f.elevator ? t('Yes') : null],
   ];
+  // Noise for apartment buildings only, as in the Noise view.
+  if (isApartmentBuilding(record)) rows.push(['Noise', noiseText(record, noise)]);
   const grid = el('dl', 'facts');
   for (const [label, value] of rows) {
     const cell = el('div', value === null || value === undefined ? 'fact is-missing' : 'fact');
@@ -67,40 +74,32 @@ function protectionSection(protection) {
   return box;
 }
 
-function listingsSection(record) {
-  const box = el('section', 'listings');
-  box.append(el('h3', null, t('Homes around here')));
-  box.append(el('p', 'note', t('Opens area searches. These links do not confirm a listing in this exact building. Copy the address to narrow the search.')));
-  const list = el('div', 'listing-buttons');
-  for (const link of listingLinks(record)) {
-    const a = el('a', 'listing');
-    a.href = link.url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.append(el('span', 'listing-site', link.site), el('span', 'listing-what', `${t(link.kind)} · ${link.area}`));
-    list.append(a);
-  }
-  const copy=el('button','copy-address',t('Copy address'));copy.type='button';copy.onclick=async()=>{try{await navigator.clipboard.writeText(record.address + ', Helsinki');copy.textContent=t('Address copied');}catch{copy.textContent=t('Copy: {a}',{a:record.address});}};
-  box.append(list,copy);
-  return box;
+// Small copy button next to the title; a tick shows for a moment once copied.
+const COPY = '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5"/></svg>';
+const TICK = '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+function copyButton(address) {
+  const b = el('button', 'copy-address');
+  b.type = 'button';
+  b.innerHTML = COPY;
+  b.title = t('Copy address');
+  b.setAttribute('aria-label', b.title);
+  b.onclick = async () => {
+    try { await navigator.clipboard.writeText(address + ', Helsinki'); } catch { return; }
+    b.innerHTML = TICK; b.title = t('Address copied'); b.setAttribute('aria-label', b.title);
+    setTimeout(() => { b.innerHTML = COPY; b.title = t('Copy address'); b.setAttribute('aria-label', b.title); }, 1600);
+  };
+  return b;
 }
 
-function sourcesSection(record) {
-  const details = el('details', 'sources');
-  details.append(el('summary', null, t('Sources & IDs')));
-  const ids = el('dl');
-  const add = (label, value) => ids.append(el('dt', null, t(label)), el('dd', null, value ?? t('None')));
-  add('Model ID (gml:id)', record.sourceIds.gmlId);
-  add('RATU', record.sourceIds.ratu);
-  add('VTJ-PRT', record.sourceIds.vtjPrt);
-  add('Register link', record.registerJoin);
-  add('Year built from', record.yearSource);
-  add('Plan protection matched by', record.protection?.matchedBy);
-  add('Geometry', record.geometrySource);
-  add('Tile / feature', `${record.tileContentUri} #${record.tileFeatureId}`);
-  details.append(ids, el('p', 'note', t('City of Helsinki 3D model, building register and detailed plans, CC BY 4.0. Height is the city model\'s measured height.')));
-  return details;
+function titleRow(text, address) {
+  const row = el('div', 'card-title');
+  row.append(el('h2', null, text));
+  if (address) row.append(copyButton(address));
+  return row;
 }
+
+// One line at the end naming the data sources, which their licences ask for.
+const credit = () => el('p', 'card-credit', t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie'));
 
 export class BuildingCard {
   constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getConstruction = () => null) {
@@ -122,6 +121,16 @@ export class BuildingCard {
     this.el.scrollTop = top;
   }
 
+  // Sections about the surroundings, the same for a building and a bare address.
+  surroundings(row) {
+    return [
+      rentSection(row, this.getPrices(), this.getListings()),
+      constructionSection(row.position, this.getConstruction()),
+      parkingSection(row.position, this.getParking()),
+      transitSection(row.position, this.getTransit()),
+    ];
+  }
+
   show(buildingId, record) {
     this.current = [buildingId, record];
     const card = this.el;
@@ -129,7 +138,7 @@ export class BuildingCard {
 
     const header = el('header', 'card-header');
     const heading = el('div', 'card-heading');
-    heading.append(el('h2', null, record?.address ?? t('Building without a registered address')));
+    heading.append(titleRow(record?.address ?? t('Building without a registered address'), record?.address));
     const place = [titleCase(record?.subdistrict?.nameFi), titleCase(record?.district?.nameFi), record?.postcode].filter(Boolean);
     const unique = place.filter((p, i) => place.indexOf(p) === i);
     if (unique.length) heading.append(el('p', 'card-place', unique.join(' · ')));
@@ -141,7 +150,7 @@ export class BuildingCard {
     card.append(header);
 
     if (!record) {
-      card.append(el('p', 'note', t('This 3D shape ({id}) has no record in the building list.', {id: buildingId})));
+      card.append(el('p', 'note', t('No record for this 3D shape.')));
       card.hidden = false;
       return;
     }
@@ -159,28 +168,15 @@ export class BuildingCard {
       card.append(sv);
     }
 
-    if (record.address) card.append(factsSection(record));
-    else card.append(el('p', 'note', t('This shape has no building ID in the city model, so there is no register data. Most such shapes are sheds, garages and yard buildings.')));
-
+    // Current rental ads in this building first, then the facts.
     const ads = adsSection(record, this.getListings());
     if (ads) card.append(ads);
-    card.append(pricesSection(record, this.getPrices(), this.getListings()));
-    if (isApartmentBuilding(record)) card.append(noiseSection(record, this.getNoise()));
-    card.append(constructionSection(record.position, this.getConstruction()));
-    card.append(parkingSection(record.position, this.getParking()));
-    card.append(transitSection(record.position, this.getTransit()));
+    if (record.address) card.append(factsSection(record, this.getNoise()));
+    else card.append(el('p', 'note', t('No register data.')));
+
+    card.append(...this.surroundings(record));
     if (record.protection) card.append(protectionSection(record.protection));
-    if (record.address) card.append(listingsSection(record));
-    card.append(sourcesSection(record));
-    const priceData=this.getPrices()?.data;
-    if(priceData){
-      const sources=card.querySelector('.sources:last-child');
-      for(const [metric,m] of Object.entries(priceData.metrics)){
-        const link=el('a',null,t('{metric} statistics · {table} · {year} postal boundaries',{metric:t(metric),table:m.table,year:m.boundaryYear}));
-        link.href=m.source;link.target='_blank';link.rel='noopener noreferrer';
-        const p=el('p','note');p.append(link);sources.append(p);
-      }
-    }
+    card.append(credit());
     card.hidden = false;
     card.scrollTop = 0;
   }
@@ -190,11 +186,9 @@ export class BuildingCard {
     this.el.replaceChildren();
     const header=el('header','card-header');
     const close=el('button','card-close','×');close.type='button';close.setAttribute('aria-label',t('Close address details'));close.onclick=this.onClose;
-    header.append(el('h2',null,row.address),close);this.el.append(header);
+    header.append(titleRow(row.address,row.address),close);this.el.append(header);
     this.el.append(el('p','note',t('No linked 3D building')),el('p','card-sub',[row.addressSv,row.postcode].filter(Boolean).join(' · ')));
-    this.el.append(pricesSection(row,this.getPrices(),this.getListings()));
-    this.el.append(constructionSection(row.position,this.getConstruction()),parkingSection(row.position,this.getParking()),transitSection(row.position,this.getTransit()));
-    if(row.address)this.el.append(listingsSection(row));
+    this.el.append(...this.surroundings(row),credit());
     this.el.hidden=false;this.el.scrollTop=0;
   }
   showChoices(row,records,onSelect) {

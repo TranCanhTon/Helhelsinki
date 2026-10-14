@@ -125,7 +125,19 @@ const FI = {
   'sale': 'myynti',
   'rent': 'vuokra',
 
-  // Building card
+  // Building card, short version (Ton, 14 Oct 2026)
+  'Under 45 dB': 'Alle 45 dB',
+  'road traffic': 'tieliikenne',
+  'trains': 'junat',
+  'metro': 'metro',
+  'trams': 'raitiovaunut',
+  'Average rent': 'Keskivuokra',
+  'Loading…': 'Ladataan…',
+  'No data': 'Ei tietoa',
+  'Per m²': 'Neliöltä',
+  'No register data.': 'Ei rekisteritietoja.',
+  'No record for this 3D shape.': 'Tälle 3D-muodolle ei ole tietoja.',
+  'Data: City of Helsinki, HSL, Statistics Finland, Oikotie': 'Tiedot: Helsingin kaupunki, HSL, Tilastokeskus, Oikotie',
   'Year built': 'Rakennusvuosi',
   'Floors': 'Kerroksia',
   'Height': 'Korkeus',

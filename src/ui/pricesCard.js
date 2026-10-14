@@ -1,5 +1,5 @@
 import {priceValue} from '../map/prices.js';
-import {ROOM_GROUPS,MIN_ADS,groupOf,perM2} from '../data/listings.js';
+import {ROOM_GROUPS,groupOf,perM2} from '../data/listings.js';
 import {t,num,locale,getLang} from './i18n.js';
 const el=(tag,className,text)=>{const n=document.createElement(tag);if(className)n.className=className;if(text!=null)n.textContent=text;return n;};
 // "€765" in English, "765 €" in Finnish.
@@ -7,40 +7,21 @@ const euro=s=>getLang()==='fi'?s+' €':'€'+s;
 const euros=v=>euro(num(Math.round(v)));
 const when=iso=>new Date(iso).toLocaleDateString(locale(),{day:'numeric',month:'short'});
 
-// Rent per month in the area right now, from current ads. The official
-// Statistics Finland figure is per m² only, so it is a footnote here.
-function rentBlock(area,m,listings){
- const row=el('div','price-row');
- row.append(el('strong',null,t('Rent per month · current ads')));
- const s=area&&listings?.stats.get(area.postcode);
- if(!listings)row.append(el('p','note',t('Current ads are not loaded yet. Run npm run data:listings.')));
- else if(!s)row.append(el('p','note',area?t('No current Oikotie ads in {area}.',{area:area.postcode+' '+area.name}):t('No current Oikotie ads in this area.')));
- else{
-  const grid=el('dl','rent-groups');
-  for(const g of ROOM_GROUPS){
-   const v=s.groups[g.key];
-   grid.append(el('dt',null,t(g.label)),el('dd',null,v.rent!=null?t('{v} / month',{v:euros(v.rent)}):v.count?t('Too few ads ({n})',{n:v.count}):t('No ads')));
-  }
-  row.append(grid,el('p','note',t('Median asking rent in {n} current Oikotie ads in {area} (at least {min} ads per size). Updated {time}.',{n:s.count,area:area.postcode+' '+area.name,min:MIN_ADS,time:new Date(listings.updatedAt).toLocaleString(locale(),{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})})));
- }
- if(area?.values[1]!=null)row.append(el('p','note',t('Official average: {v} (Statistics Finland, {period}, two-room flats).',{v:priceValue(area.values[1],m.units),period:m.periodLabels[1]+(m.archived?', '+t('archived'):'')})));
- return row;
-}
-
-export function pricesSection(record,prices,listings){
+// Card section (Ton, 14 Oct 2026): average rent per month in the building's postal
+// area by flat size, the median asking rent of current Oikotie ads (at least MIN_ADS
+// ads per size). Without ads for the area: the official average per m² (Statistics Finland).
+export function rentSection(record,prices,listings){
  const section=el('section','postal-prices');
- section.append(el('h3',null,t('Prices in this postal area')));
- if(!prices){section.append(el('p','note',t('Price data unavailable or still loading.')));return section;}
- for(const metric of ['sale','rent']){
-  const m=prices.data.metrics[metric],a=prices.areaAt(metric,record.position);
-  if(metric==='rent'){section.append(rentBlock(a,m,listings));continue;}
-  const row=el('div','price-row');
-  row.append(el('strong',null,t('Sale · {v}',{v:priceValue(a?.values[1],m.units)})));
-  row.append(el('p','note',[m.periodLabels[1],a?a.postcode+' '+a.name:t('No matching postal area'),a?.changePercent!=null?t('{p}% vs previous quarter',{p:(a.changePercent>=0?'+':'')+num(a.changePercent,{minimumFractionDigits:1,maximumFractionDigits:1})}):null].filter(Boolean).join(' · ')));
-  row.append(el('p','note',t('{category} · Statistics Finland',{category:t(m.category)})));
-  section.append(row);
+ section.append(el('h3',null,t('Average rent')));
+ if(!prices){section.append(el('p','note',t('Loading…')));return section;}
+ const area=prices.areaAt('rent',record.position),s=area&&listings?.stats.get(area.postcode);
+ const grid=el('dl','rent-groups');
+ if(s)for(const g of ROOM_GROUPS){
+  const v=s.groups[g.key];
+  grid.append(el('dt',null,t(g.label)),el('dd',null,v.rent!=null?t('{v} / month',{v:euros(v.rent)}):t('No data')));
  }
- section.append(el('p','note',t('Area figures, not a valuation of this building.')));
+ else grid.append(el('dt',null,t('Per m²')),el('dd',null,area?.values[1]!=null?priceValue(area.values[1],prices.data.metrics.rent.units):t('No data')));
+ section.append(grid);
  return section;
 }
 
@@ -62,6 +43,5 @@ export function adsSection(record,listings){
   a.append(el('span','note',t('Ad updated {date} · open on Oikotie ↗',{date:when(ad.lastmod)})));
   box.append(a);
  }
- box.append(el('p','note',t('Asking rents from Oikotie, matched by exact street address.')));
  return box;
 }

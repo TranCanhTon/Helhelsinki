@@ -33,7 +33,6 @@ export function parkingSection(point,parking){
  section.append(zones);
  const other=Object.entries(near.other).map(([type,n])=>t('{n} {what}',{n:num(n),what:t(PARKING_TYPES[type].short)}));
  if(other.length)section.append(el('p','note',t('Other places mapped: {list}.',{list:other.join(', ')})));
- section.append(el('p','note',t('The city\'s estimate from its street parking map ({updated}), counted in a straight line from the building. Not free spaces right now. Yard and garage parking are not included. Zone borders are approximate. Hours and rules vary: check the signs. City of Helsinki, CC BY 4.0.',{updated:parking.data.source.updated})));
  return section;
 }
 
