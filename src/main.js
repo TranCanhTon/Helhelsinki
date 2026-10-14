@@ -6,10 +6,12 @@ import {loadBasemap} from './map/basemap.js';
 import {loadLabels} from './map/context.js';
 import {loadPrices,priceValue,PRICE_COLORS} from './map/prices.js';
 import {loadNoise} from './map/noise.js';
-import {noiseLegend} from './ui/noiseCard.js';
+import {noiseLegend,noiseSwitch} from './ui/noiseCard.js';
 import {loadParking} from './map/parking.js';
 import {loadTransit} from './map/transit.js';
 import {parkingLegend} from './ui/parkingCard.js';
+import {loadConstruction} from './map/construction.js';
+import {constructionLegend} from './ui/constructionCard.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
@@ -41,7 +43,7 @@ function unavailable(label,error,retry){
  const row=document.createElement('div');row.className='data-error';row.textContent=t('{label} unavailable. ',{label:t(label)});
  const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
-let basemap,prices,noise,parking,transit,listings,buildings,card,search,marker,currentAddress=null;
+let basemap,prices,noise,parking,construction,transit,listings,buildings,card,search,marker,currentAddress=null;
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
  catch(e){unavailable('Ground map',e,ground);}
@@ -80,6 +82,11 @@ async function parkingLayer(){
  try{parking=await loadParking(viewer);if(state.metric==='parking')setMetric('parking');card?.refresh();}
  catch(e){unavailable('Parking',e,parkingLayer);}
 }
+// Construction work (data:construction): areas under Noise > Construction, list on the card.
+async function constructionLayer(){
+ try{construction=await loadConstruction(viewer);if(state.metric==='noise')setMetric('noise');card?.refresh();}
+ catch(e){unavailable('Construction',e,constructionLayer);}
+}
 async function transitLayer(){
  try{
   // Homes: the stop pins only show near residential buildings.
@@ -87,22 +94,29 @@ async function transitLayer(){
   transit=await loadTransit(viewer,nav,homes);card?.refresh();
  }catch(e){unavailable('Public transport',e,transitLayer);}
 }
-function setNoiseMode(mode){noise.setMode(mode);state.noiseMode=noise.mode;setMetric('noise');}
+// Construction sits in the noise switch but is not a noise source: buildings stay plain.
+function setNoiseMode(mode){
+ if(mode==='construction')state.noiseMode=mode;else{noise?.setMode(mode);state.noiseMode=noise?.mode??'all';}
+ setMetric('noise');
+}
 function setMetric(metric){
  state.metric=metric;viewer.canvas.style.cursor='';
  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===metric)));
  prices?.setMetric(metric);
  const legend=$('#price-legend');legend.hidden=metric==='overview';$('#noise-switch').hidden=metric!=='noise';
- parking?.setVisible(metric==='parking');
+ parking?.setVisible(metric==='parking');construction?.setVisible(metric==='noise'&&state.noiseMode==='construction');
  if(metric==='parking'){
   buildings?.setColoring(null);
   if(parking)parkingLegend(legend,parking);else legend.textContent=t('Parking data is still loading or unavailable.');
   $('#area-info').hidden=true;save();return;
  }
  if(metric==='noise'){
-  buildings?.setColoring(noise?id=>noise.colorOf(buildings.records.get(id)):null,'#c2622f');
+  const work=state.noiseMode==='construction';
+  buildings?.setColoring(noise&&!work?id=>noise.colorOf(buildings.records.get(id)):null,'#c2622f');
+  noiseSwitch($('#noise-switch'),state.noiseMode,setNoiseMode);
   legend.replaceChildren();
-  if(noise)noiseLegend(legend,$('#noise-switch'),noise,setNoiseMode);else legend.textContent=t('Noise data is still loading or unavailable.');
+  if(work){if(construction)constructionLegend(legend,construction);else legend.textContent=t('Construction data is still loading or unavailable.');}
+  else if(noise)noiseLegend(legend,noise);else legend.textContent=t('Noise data is still loading or unavailable.');
   $('#area-info').hidden=true;save();return;
  }
  // Price view colours the postal areas on the ground; the buildings keep their photos (Ton, 14 Oct 2026).
@@ -159,7 +173,7 @@ const layerPick=position=>transit?.pick(position)??null;
 function showInfo(text){const node=$('#area-info');node.hidden=!text;if(text)node.textContent=text;}
 async function start(){
  buildings=await loadBuildings(viewer);
- card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit);
+ card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction);
  search=new AddressSearch($('#search'),selectAddress);
  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
  handler.setInputAction(click=>{
@@ -183,12 +197,13 @@ async function start(){
  if(state.building && buildings.records.has(state.building))selectBuilding(state.building,false);else state.building=null;
  canWrite=true;save();
  $('#loading').hidden=true;
- window.__lens={Cesium,viewer,nav,buildings,card,search,selectAddress,selectBuilding,setMetric,get prices(){return prices;},get listings(){return listings;},get noise(){return noise;},get parking(){return parking;},get transit(){return transit;},ready:true};
+ window.__lens={Cesium,viewer,nav,buildings,card,search,selectAddress,selectBuilding,setMetric,get prices(){return prices;},get listings(){return listings;},get noise(){return noise;},get parking(){return parking;},get construction(){return construction;},get transit(){return transit;},ready:true};
  ground();
  loadLabels(viewer,nav).catch(e=>unavailable('Place labels',e,()=>loadLabels(viewer,nav)));
  priceLayer();
  noiseLayer();
  parkingLayer();
+ constructionLayer();
  transitLayer();
  adsLayer();setInterval(adsLayer,10*60*1000);
  neighbourhoodList();

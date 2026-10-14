@@ -39,6 +39,7 @@ public/price-by-area.json
 public/layers.json
 public/parking.json
 public/parking-zones.json
+public/construction.json
 public/transit.json
 public/transit-routes.json
 # Collected Oikotie ads: never published (their terms and database rights).

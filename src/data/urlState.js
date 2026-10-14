@@ -8,7 +8,7 @@ export function readState(search,home) {
  }
  return {camera,building:params.get('building'),lang:params.get('lang')==='fi'?'fi':'en',
  metric:['sale','noise','parking'].includes(params.get('view'))?params.get('view'):'overview',
- noiseMode:['road','rail','metro','tram'].includes(params.get('noise'))?params.get('noise'):'all'};
+ noiseMode:['road','rail','metro','tram','construction'].includes(params.get('noise'))?params.get('noise'):'all'};
 }
 export function writeState(state,camera) {
  const url=new URL(location.href),p=url.searchParams;

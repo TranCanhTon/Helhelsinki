@@ -29,14 +29,19 @@ export function noiseSection(record,noise){
  return section;
 }
 
-// Noise view: the colour bar in the legend, the source switch in its own panel.
-export function noiseLegend(container,switchPanel,noise,onMode){
+// Noise view: the colour bar in the legend.
+export function noiseLegend(container,noise){
  const bands=noise.meta.bands;
  legendGradient(container,{colors:NOISE_SCALE,start:String(bands[0].lo),end:bands.at(-1).lo+'+'});
+}
+
+// The noise sources plus Construction (Ton, 13 Oct 2026), stacked on the left of the map.
+export const NOISE_SWITCH_MODES=[...NOISE_VIEW_MODES,{key:'construction',label:'Construction'}];
+export function noiseSwitch(panel,current,onMode){
  const modes=el('div','noise-mode-switch');modes.setAttribute('role','group');modes.setAttribute('aria-label',t('Noise source'));
- for(const mode of NOISE_VIEW_MODES){
-  const b=el('button',null,t(mode.label));b.type='button';b.setAttribute('aria-pressed',String(noise.mode===mode.key));
+ for(const mode of NOISE_SWITCH_MODES){
+  const b=el('button',null,t(mode.label));b.type='button';b.setAttribute('aria-pressed',String(current===mode.key));
   b.onclick=()=>onMode(mode.key);modes.append(b);
  }
- switchPanel.replaceChildren(modes);
+ panel.replaceChildren(modes);
 }

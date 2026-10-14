@@ -250,9 +250,11 @@ button { font: inherit; color: inherit; }
 .data-error button { cursor:pointer; }
 [hidden] { display:none !important; }
 
-.noise-mode-switch { display:flex;gap:2px;padding:2px;border-radius:7px;background:var(--line); }
-.noise-mode-switch button { border:0;background:transparent;padding:4px 8px;border-radius:5px;cursor:pointer;font-size:12px;color:var(--ink); }
-.noise-mode-switch [aria-pressed=true] { background:var(--panel-solid);font-weight:650; }
+/* Noise sources and Construction: stacked on the left, above the scale bar, like the map tools on the right. */
+.noise-mode-switch { display:flex;flex-direction:column;gap:2px; }
+.noise-mode-switch button { border:0;background:transparent;padding:8px 14px;border-radius:var(--radius-small);cursor:pointer;font-size:13px;color:var(--ink);text-align:left; }
+.noise-mode-switch button:hover { background:var(--verdigris-soft); }
+.noise-mode-switch [aria-pressed=true],.noise-mode-switch [aria-pressed=true]:hover { background:var(--verdigris);color:white; }
 .noise { padding:12px 0; }
 .noise-modes { display:grid;grid-template-columns:1fr 1fr;gap:1px;margin:0 0 6px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius-small);overflow:hidden; }
 .noise-mode { padding:8px 12px;background:var(--panel-solid); }
@@ -286,5 +288,19 @@ button { font: inherit; color: inherit; }
 .price-legend.is-gradient { flex-wrap:nowrap;gap:12px;padding:10px 16px; }
 .legend-gradient { display:block;width:420px;height:8px;border-radius:999px; }
 .legend-end { color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap; }
-.noise-switch { padding:4px; }
+.noise-switch { position:absolute;left:18px;bottom:58px;padding:5px;z-index:3; }
 .noise-reason { margin:0 0 8px;font-size:13.5px;line-height:1.45; }
+
+/* Construction: card list. */
+.construction-summary { margin:0 0 6px;font-size:13.5px;line-height:1.45; }
+.construction-list { list-style:none;margin:0 0 6px;padding:0; }
+.construction-work { padding:9px 0;border-bottom:1px solid var(--line); }
+.construction-work:first-child { padding-top:2px; }
+.work-head { display:flex;align-items:baseline;gap:10px; }
+.work-level { display:flex;align-items:center;gap:6px;flex:none;width:78px;font-size:11.5px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.04em; }
+.work-level i { flex:none;width:10px;height:10px;border-radius:2px;box-shadow:0 0 0 1.5px var(--panel-solid); }
+.work-kind { flex:1;font-size:14px;font-weight:600; }
+.work-distance { color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap; }
+.work-when,.work-where,.work-purpose { margin:3px 0 0 88px;font-size:13px;line-height:1.4; }
+.work-where { color:var(--muted);overflow-wrap:anywhere; }
+.work-purpose { font-size:12px;color:var(--muted);font-style:italic;overflow-wrap:anywhere; }

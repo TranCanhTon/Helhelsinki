@@ -1,6 +1,6 @@
 // The panel that opens when you click a building.
 //
-// Sections: address header, key facts, prices, noise, street parking, public
+// Sections: address header, key facts, prices, noise, construction, street parking, public
 // transport, plan protection, listing links and "Sources & IDs". Missing values
 // say "Not recorded", never zero.
 import {listingLinks} from './listings.js';
@@ -9,6 +9,7 @@ import {noiseSection} from './noiseCard.js';
 import {isApartmentBuilding} from '../data/noise.js';
 import {parkingSection} from './parkingCard.js';
 import {transitSection} from './transitCard.js';
+import {constructionSection} from './constructionCard.js';
 import {t, num} from './i18n.js';
 
 const el = (tag, className, textValue) => {
@@ -102,7 +103,7 @@ function sourcesSection(record) {
 }
 
 export class BuildingCard {
-  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null) {
+  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getConstruction = () => null) {
     this.el = container;
     this.onClose = onClose;
     this.getPrices = getPrices;
@@ -110,6 +111,7 @@ export class BuildingCard {
     this.getNoise = getNoise;
     this.getParking = getParking;
     this.getTransit = getTransit;
+    this.getConstruction = getConstruction;
   }
 
   // Redraw the open card after prices or ads change, keeping the scroll position.
@@ -164,13 +166,12 @@ export class BuildingCard {
     if (ads) card.append(ads);
     card.append(pricesSection(record, this.getPrices(), this.getListings()));
     if (isApartmentBuilding(record)) card.append(noiseSection(record, this.getNoise()));
+    card.append(constructionSection(record.position, this.getConstruction()));
     card.append(parkingSection(record.position, this.getParking()));
     card.append(transitSection(record.position, this.getTransit()));
     if (record.protection) card.append(protectionSection(record.protection));
     if (record.address) card.append(listingsSection(record));
-    const later=el('details','sources');later.append(el('summary',null,'More about the surroundings'));
-    later.append(el('p','note','Construction data will be added in a later phase.'));
-    card.append(later,sourcesSection(record));
+    card.append(sourcesSection(record));
     const priceData=this.getPrices()?.data;
     if(priceData){
       const sources=card.querySelector('.sources:last-child');
@@ -192,7 +193,7 @@ export class BuildingCard {
     header.append(el('h2',null,row.address),close);this.el.append(header);
     this.el.append(el('p','note',t('No linked 3D building')),el('p','card-sub',[row.addressSv,row.postcode].filter(Boolean).join(' · ')));
     this.el.append(pricesSection(row,this.getPrices(),this.getListings()));
-    this.el.append(parkingSection(row.position,this.getParking()),transitSection(row.position,this.getTransit()));
+    this.el.append(constructionSection(row.position,this.getConstruction()),parkingSection(row.position,this.getParking()),transitSection(row.position,this.getTransit()));
     if(row.address)this.el.append(listingsSection(row));
     this.el.hidden=false;this.el.scrollTop=0;
   }

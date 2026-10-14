@@ -32,6 +32,7 @@
     "data:noise": "node scripts/fetch-noise.mjs",
     "data:parking": "node scripts/fetch-parking.mjs",
     "data:transit": "node scripts/fetch-transit.mjs",
+    "data:construction": "node scripts/fetch-construction.mjs",
     "data:split": "node scripts/split-buildings.mjs",
     "data:ground": "node scripts/build-ground-grid.mjs",
     "data:listings": "node scripts/fetch-listings.mjs",
