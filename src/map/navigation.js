@@ -85,10 +85,10 @@ export class Navigation {
   goHome() { this.flyTo([this.home.lon, this.home.lat], this.home.range, {heading: this.home.heading, pitch: this.home.pitch}); }
 
   // Smooth move to a point. Respects "reduce motion" settings by jumping instead.
-  flyTo([lon, lat], range = this.state.range, extra = {}) {
+  flyTo([lon, lat], range = this.state.range, extra = {}, ms = 900) {
     this.cancelFlight();
     const start = {...this.state}, end = {...start, lon, lat, range, ...extra};
-    const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900;
+    const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms;
     const began = performance.now();
     const step = now => {
       const t = duration ? Math.min(1, (now - began) / duration) : 1;

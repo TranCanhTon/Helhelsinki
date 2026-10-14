@@ -10,7 +10,7 @@ export async function loadLabels(viewer,nav) {
  const rows=await loadJson('/labels.json');
  const index=new Flatbush(rows.length);rows.forEach(r=>index.add(r.position[0],r.position[1],r.position[0],r.position[1]));index.finish();
  const host=document.createElement('div');host.className='place-labels';host.setAttribute('aria-hidden','true');document.querySelector('#app').append(host);
- const pool=[];const measure=document.createElement('canvas').getContext('2d');measure.font='600 12px Segoe UI';
+ const pool=[];const measure=document.createElement('canvas').getContext('2d');measure.font='15px "Instrument Serif"';
  let last='',lastTime=0,timer;
  // The map only redraws on request, so panels opening or closing must ask for
  // a redraw to move labels out from under them.

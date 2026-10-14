@@ -16,8 +16,13 @@ import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
 import {AddressSearch} from './ui/search.js';
+import {createLanding} from './ui/landing.js';
 import {t,num,locale,setLang,translatePage} from './ui/i18n.js';
 import {readState,writeState} from './data/urlState.js';
+import '@fontsource/syne/800.css';
+import '@fontsource/courier-prime/700.css';
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
 import './styles.css';
 const $=selector=>document.querySelector(selector);
 const HOME={lon:24.9480,lat:60.1835,heading:20,pitch:-40,range:1400};
@@ -171,6 +176,8 @@ function areaInfo(hit){
 // Stop pin under the pointer (pins show in every view when zoomed in).
 const layerPick=position=>transit?.pick(position)??null;
 function showInfo(text){const node=$('#area-info');node.hidden=!text;if(text)node.textContent=text;}
+// The URL only follows the camera after the landing, not its slow turn.
+const landing=createLanding(nav,()=>{canWrite=true;save();});
 async function start(){
  buildings=await loadBuildings(viewer);
  card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction);
@@ -195,8 +202,7 @@ async function start(){
  },Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&e.target.id!=='address-query')clearSelection();});
  if(state.building && buildings.records.has(state.building))selectBuilding(state.building,false);else state.building=null;
- canWrite=true;save();
- $('#loading').hidden=true;
+ landing.ready();
  window.__lens={Cesium,viewer,nav,buildings,card,search,selectAddress,selectBuilding,setMetric,get prices(){return prices;},get listings(){return listings;},get noise(){return noise;},get parking(){return parking;},get construction(){return construction;},get transit(){return transit;},ready:true};
  ground();
  loadLabels(viewer,nav).catch(e=>unavailable('Place labels',e,()=>loadLabels(viewer,nav)));
@@ -220,8 +226,7 @@ function neighbourhoodList(){
  }
 }
 start().catch(error=>{
- console.error(error);$('#loading-text').textContent='The 3D buildings could not load: '+error.message;
- const retry=document.createElement('button');retry.className='retry';retry.textContent='Try again';retry.onclick=()=>location.reload();$('#loading').append(retry);$('.spinner')?.remove();
+ console.error(error);landing.failed(error.message);
  window.__lens={viewer,nav,ready:true,error:error.message};
 });
 

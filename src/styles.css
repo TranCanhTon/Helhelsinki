@@ -1,4 +1,4 @@
-/* Helsinki Lens: "Copper and granite", dark only (Ton removed day mode, 14 Oct 2026).
+/* daroad: "Copper and granite", dark only (Ton removed day mode, 14 Oct 2026).
    Colours taken from the city: grey granite, the verdigris of copper roofs,
    and bright copper for whatever you have selected. Desktop layout. */
 :root {
@@ -14,11 +14,18 @@
   --verdigris-soft: #2c4438;
   --copper: #c2622f;
   --copper-soft: #49352a;
-  --radius: 14px;
-  --radius-small: 9px;
-  --shadow: 0 1px 2px rgba(29, 40, 38, 0.08), 0 10px 30px rgba(29, 40, 38, 0.14);
-  --sans: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  --display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --radius: 16px;
+  --radius-small: 10px;
+  --shadow: 0 1px 2px rgba(29, 40, 38, 0.08), 0 12px 32px rgba(29, 40, 38, 0.16);
+  /* Fonts (Ton, 14 Oct 2026), all bundled, no font requests: Syne ExtraBold for
+     the name, Courier Prime Bold for the landing text, Instrument Serif for
+     everything else. Instrument Serif has one weight, so no fake bold. */
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: var(--serif);
+  --mono: 'Courier Prime', 'Courier New', monospace;
+  --display: 'Syne', var(--serif);
+  --edge: 24px;   /* space between the panels and the window edge */
+  --gap: 14px;    /* space between panels */
 }
 
 * { box-sizing: border-box; }
@@ -30,7 +37,9 @@ html, body, #app {
   background: var(--ground);
   color: var(--ink);
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 400;
+  font-synthesis: none;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -51,37 +60,28 @@ button { font: inherit; color: inherit; }
   box-shadow: var(--shadow);
 }
 
-/* Brand */
-.brand {
-  position: absolute; top: 18px; left: 18px;
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 14px 8px 10px;
-  pointer-events: none;
-}
-.brand-mark {
-  width: 26px; height: 26px; border-radius: 7px;
-  background: linear-gradient(135deg, var(--verdigris) 0 55%, var(--copper) 55% 100%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-}
-.brand-name { font-family: var(--display); font-size: 17px; font-weight: 650; letter-spacing: -0.01em; }
-.brand-name span { color: var(--verdigris-ink); font-weight: 500; }
+/* Brand: the name daroad is the logo, no box behind it. Sized in em so the big
+   landing name can scale onto this one. */
+.brand { position: absolute; top: var(--edge); left: calc(var(--edge) + 2px); pointer-events: none; z-index: 3; }
+.brand-lockup { display: block; font-size: 30px; line-height: 1; transform-origin: 0 0; }
+.brand-name { font-family: var(--display); font-size: 1em; font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; text-shadow: 0 1px 14px var(--ground), 0 0 3px var(--ground); }
 
 /* Map tools */
 .map-tools {
-  position: absolute; right: 18px; bottom: 18px;
-  display: flex; flex-direction: column; gap: 2px; padding: 5px;
+  position: absolute; right: var(--edge); bottom: var(--edge);
+  display: flex; flex-direction: column; gap: 4px; padding: 6px;
 }
 .map-tools button {
-  width: 38px; height: 38px; border: 0; border-radius: var(--radius-small);
+  width: 40px; height: 40px; border: 0; border-radius: var(--radius-small);
   background: transparent; cursor: pointer; font-size: 17px; color: var(--ink);
 }
 .map-tools button:hover { background: var(--verdigris-soft); color: var(--verdigris-ink); }
 #compass { display: inline-block; color: var(--copper); font-weight: 700; font-size: 13px; transition: transform 0.1s; }
 
 .map-caption {
-  position: absolute; left: 18px; bottom: 18px;
+  position: absolute; left: var(--edge); bottom: var(--edge);
   display: flex; align-items: center; gap: 10px;
-  padding: 5px 10px; border-radius: 8px;
+  padding: 6px 12px; border-radius: 999px;
   background: var(--panel); backdrop-filter: blur(10px);
   font-size: 12px; color: var(--muted);
 }
@@ -90,21 +90,21 @@ button { font: inherit; color: inherit; }
 
 /* Building card */
 .building-card {
-  position: absolute; top: 84px; right: 70px;
-  width: 420px; max-height: calc(100% - 102px); overflow-y: auto;
-  padding: 0 20px 18px;
+  position: absolute; top: 96px; right: 80px;
+  width: 420px; max-height: calc(100% - 96px - var(--edge)); overflow-y: auto;
+  padding: 0 22px 20px;
   z-index: 2;
-  scrollbar-width: thin;
+  scrollbar-width: none;
 }
 .building-card[hidden] { display: none; }
 .card-header {
   position: sticky; top: 0; z-index: 1;
   display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-  margin: 0 -20px; padding: 18px 20px 12px;
+  margin: 0 -22px; padding: 20px 22px 14px;
   background: var(--panel-solid);
   border-bottom: 1px solid var(--line);
 }
-.card-header h2 { margin: 0; font-family: var(--display); font-weight: 650; font-size: 23px; line-height: 1.2; letter-spacing: -0.015em; }
+.card-header h2 { margin: 0; font-size: 23px; line-height: 1.2; letter-spacing: -0.01em; }
 .card-place { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; }
 .card-close {
   flex: none; width: 32px; height: 32px; border-radius: 50%;
@@ -164,58 +164,99 @@ button { font: inherit; color: inherit; }
 .sources dt { color: var(--muted); }
 .sources dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 
-/* Loading */
-.loading {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-  background: var(--ground); text-align: center; padding: 20px;
+/* Landing: covers the map while it loads, then the name moves to its corner.
+   The text sits in the upper part so the city below stays in view.
+   The backdrop sits in ::before so it can fade on its own while the name stays solid. */
+.landing { position: absolute; inset: 0; z-index: 10; display: grid; justify-items: center; align-content: start; padding: 11vh 40px 40px; }
+.landing.is-ready { cursor: pointer; }
+.landing::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ground) 82%, transparent) 0%, color-mix(in srgb, var(--ground) 62%, transparent) 42%, transparent 72%);
+  transition: opacity 0.9s 0.2s ease;
 }
-.loading[hidden] { display: none; }
-.loading strong { font-family: var(--display); font-size: 24px; font-weight: 650; }
-.loading span { color: var(--muted); max-width: 460px; }
+.landing-inner { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 660px; }
+.landing-title { margin: 0 0 14px; font-weight: 400; }
+.landing-brand { font-size: min(112px, 8vw); will-change: transform; }
+.landing-hook { margin: 0; font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.1; color: var(--ink); text-wrap: balance; }
+.landing-hook em { color: var(--copper); }
+.landing-text { margin: 18px 0 0; max-width: 440px; font-family: var(--mono); font-weight: 700; font-size: 15.5px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+.landing-hook, .landing-text, .landing-cue { text-shadow: 0 1px 12px var(--ground), 0 0 2px var(--ground); }
+
+/* Scroll cue: a mouse with its wheel rolling down, and the words under it. */
+.landing-cue { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 34px; font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 0.06em; color: var(--muted); }
+.mouse { position: relative; width: 24px; height: 38px; border: 2px solid currentColor; border-radius: 13px; opacity: 0.5; transition: opacity 0.4s, color 0.4s; }
+.mouse i { position: absolute; left: 50%; top: 7px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: currentColor; }
+.is-ready .landing-cue { color: var(--ink); }
+.is-ready .mouse { opacity: 1; color: var(--copper); }
+.is-ready .mouse i { animation: wheel 1.6s cubic-bezier(.5, 0, .5, 1) infinite; }
+.landing:not(.is-ready) #landing-status::after { content: ''; animation: dots 1.2s steps(4) infinite; }
+.landing.is-failed .landing-cue { color: var(--copper); max-width: 420px; line-height: 1.5; }
+@keyframes wheel { 0% { opacity: 0; transform: translateY(-3px); } 30% { opacity: 1; } 80% { opacity: 0; transform: translateY(12px); } 100% { opacity: 0; } }
+@keyframes dots { from { opacity: 1; } }
+
+/* Coming in: the parts rise in one after another. */
+.landing-inner > * { animation: rise 0.9s cubic-bezier(.2, .7, .2, 1) backwards; }
+.landing-inner > :nth-child(2) { animation-delay: 0.12s; }
+.landing-inner > :nth-child(3) { animation-delay: 0.22s; }
+.landing-inner > :nth-child(4) { animation-delay: 0.32s; }
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+
+/* Going: text fades, backdrop fades, the name keeps full colour while it moves. */
+.landing-inner > :not(.landing-title) { transition: opacity 0.3s, transform 0.3s; }
+.is-leaving .landing { pointer-events: none; }
+.is-leaving .landing::before { opacity: 0; }
+.is-leaving .landing-inner > :not(.landing-title) { opacity: 0; transform: translateY(10px); }
+/* While landing: the corner name waits for the big one, the other panels stay hidden. */
+.is-landing .brand .brand-lockup { visibility: hidden; }
+.is-landing :is(.panel:not(.brand), .map-caption, .hint) { opacity: 0; pointer-events: none; }
+:is(.panel:not(.brand), .map-caption, .hint) { transition: opacity 0.5s 0.1s; }
 .spinner {
   width: 32px; height: 32px; border-radius: 50%;
   border: 3px solid var(--line); border-top-color: var(--verdigris);
   animation: spin 1s linear infinite;
 }
-.retry {
-  margin-top: 8px; padding: 9px 18px; border-radius: 999px;
-  border: 1px solid var(--verdigris); background: transparent; color: var(--verdigris-ink); cursor: pointer;
-}
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .spinner { animation: none; }
+  .spinner, .mouse i, .landing-inner > * { animation: none; }
 }
 
 /* Phase 3/4 desktop controls, retaining the existing copper/granite palette. */
-.search { position:absolute;top:18px;right:18px;width:360px;padding:6px;z-index:4;background:color-mix(in srgb,var(--panel-solid) 55%,transparent); }
-.search input { width:100%;font:inherit;padding:10px 12px;border:0;border-radius:9px;background:transparent;color:var(--ink); }
+.search { position:absolute;top:var(--edge);right:var(--edge);width:400px;padding:6px;z-index:4; }
+/* Magnifier icon in the field, painted in the theme's muted colour. */
+.search::before { content:'';position:absolute;left:20px;top:21px;width:16px;height:16px;background:var(--muted);pointer-events:none;
+ -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='7' cy='7' r='5.2' fill='none' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M11 11l3.6 3.6' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='7' cy='7' r='5.2' fill='none' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M11 11l3.6 3.6' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; }
+.search input { width:100%;font:inherit;font-size:14.5px;padding:12px 14px 12px 40px;border:0;border-radius:var(--radius-small);background:transparent;color:var(--ink); }
 .search input::placeholder { color:var(--muted); }
 .search input:focus-visible { outline:none; }
 .search:focus-within { background:var(--panel); }
-#address-results { margin-top:8px;max-height:460px;overflow:auto; }
-#address-results button { display:block;text-align:left;width:100%;padding:11px 8px;background:transparent;border:0;border-bottom:1px solid var(--line);cursor:pointer; }
+#address-results { scrollbar-width:none;margin-top:6px;padding:4px 0 2px;border-top:1px solid var(--line);max-height:460px;overflow:auto; }
+#address-results button { display:block;text-align:left;width:100%;padding:11px 12px;background:transparent;border:0;border-bottom:1px solid var(--line);cursor:pointer; }
 #address-results button:hover,#address-results [aria-selected=true] { background:var(--verdigris-soft);border-radius:6px; }
 #address-results strong,#address-results span { display:block; }
 #address-results span { margin-top:4px;font-size:12px;color:var(--muted);line-height:1.4; }
-.search-status { font-size:12px;margin:6px 0 0;color:var(--muted); }
+.search-status { font-size:12.5px;margin:4px 12px 8px;color:var(--muted); }
 .search-status:empty { display:none; }
-.neighbourhoods { position:absolute;top:76px;left:18px;width:250px;padding:12px; }
-.neighbourhoods summary { font-size:12px;font-weight:650;cursor:pointer; }
-#neighbourhood-list { max-height:260px;overflow:auto;margin-top:10px; }
-#neighbourhood-list button { display:block;width:100%;padding:7px 3px;text-transform:capitalize;text-align:left;border:0;background:transparent;cursor:pointer;font-size:13px; }
+.neighbourhoods { position:absolute;top:calc(var(--edge) + 36px + var(--gap));left:var(--edge);width:270px;padding:0; }
+.neighbourhoods summary { padding:10px 16px 11px;font-family:var(--serif);font-size:17px;font-weight:400;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px; }
+.neighbourhoods summary::-webkit-details-marker { display:none; }
+.neighbourhoods summary::after { content:'';width:7px;height:7px;border:solid var(--muted);border-width:0 1.6px 1.6px 0;transform:translateY(-2px) rotate(45deg);transition:transform .2s; }
+.neighbourhoods[open] summary::after { transform:translateY(2px) rotate(-135deg); }
+#neighbourhood-list { max-height:300px;overflow:auto;scrollbar-width:none;padding:4px 8px 8px;border-top:1px solid var(--line); }
+#neighbourhood-list button { display:block;width:100%;padding:8px 8px;border-radius:8px;text-transform:capitalize;text-align:left;border:0;background:transparent;cursor:pointer;font-size:13.5px; }
 #neighbourhood-list button:hover { color:var(--verdigris-ink);background:var(--verdigris-soft); }
-.bottom-dock { position:absolute;left:50%;bottom:14px;transform:translateX(-50%);max-width:calc(100% - 160px);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:3;pointer-events:none; }
+.bottom-dock { position:absolute;left:50%;bottom:var(--edge);transform:translateX(-50%);max-width:calc(100% - 200px);display:flex;flex-direction:column;align-items:center;gap:var(--gap);z-index:3;pointer-events:none; }
 .bottom-dock > * { pointer-events:auto; }
 /* With a building card open, the map tools hide and the card takes their place. */
 #app:has(.building-card:not([hidden])) .map-tools { display:none; }
-#app:has(.building-card:not([hidden])) .building-card { right:18px; }
-.hint { padding:4px 10px;border-radius:8px;background:var(--panel);backdrop-filter:blur(10px);font-size:12px;color:var(--muted); }
-.view-controls { display:flex;gap:3px;padding:5px; }
-.view-controls button { border:0;background:transparent;padding:10px 13px;border-radius:8px;cursor:pointer;font-size:13px; }
-.view-controls [aria-pressed=true] { background:var(--verdigris);color:white; }
-.price-legend { display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 16px;padding:8px 14px 18px;font-size:12px; }
+#app:has(.building-card:not([hidden])) .building-card { right:var(--edge); }
+.hint { padding:5px 12px;border-radius:999px;background:var(--panel);backdrop-filter:blur(10px);font-size:12px;color:var(--muted); }
+.view-controls { display:flex;gap:4px;padding:6px;border-radius:999px; }
+.view-controls button { border:0;background:transparent;padding:8px 20px 9px;border-radius:999px;cursor:pointer;font-family:var(--serif);font-size:17px;font-weight:400;line-height:1.2;color:var(--muted);transition:background .15s,color .15s; }
+.view-controls button:hover { color:var(--ink);background:var(--verdigris-soft); }
+.view-controls [aria-pressed=true],.view-controls [aria-pressed=true]:hover { background:var(--verdigris);color:white; }
+.price-legend { display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 16px;padding:10px 18px 20px;font-size:12px; }
 .legend-head { display:flex;align-items:center;gap:10px;white-space:nowrap; }
 .legend-bar { display:flex;gap:2px; }
 .legend-seg { position:relative;width:40px;height:10px;border-radius:3px; }
@@ -226,7 +267,7 @@ button { font: inherit; color: inherit; }
 .legend-missing i { width:14px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--line); }
 /* Language switch: the code of the language you switch to. */
 .map-tools .tool-lang { font-size:15px;letter-spacing:0.04em; }
-.area-info { position:absolute;left:50%;top:18px;transform:translateX(-50%);padding:10px 15px;font-size:12px;max-width:520px;z-index:3; }
+.area-info { position:absolute;left:50%;top:var(--edge);transform:translateX(-50%);padding:12px 18px;font-size:13px;line-height:1.45;max-width:520px;z-index:3; }
 .price-row { padding:10px 0;border-bottom:1px solid var(--line); }
 .rent-groups { display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:8px 0 4px;font-size:13px; }
 .rent-groups dt { color:var(--muted); }
@@ -244,15 +285,15 @@ button { font: inherit; color: inherit; }
 .copy-address,.building-choices button { border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);padding:9px 12px;cursor:pointer;margin-top:8px; }
 .building-choices button { display:block;text-align:left;width:100%;font-size:13px; }
 .place-labels { position:absolute;inset:0;pointer-events:none;overflow:hidden; }
-.place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-size:12px;font-weight:600;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
-#data-status { position:absolute;left:18px;top:130px;max-width:330px;font-size:12px;z-index:5; }
-.data-error { padding:8px;background:var(--panel-solid);border:1px solid var(--line);border-radius:8px;margin-bottom:5px; }
+.place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-size:15px;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
+#data-status { position:absolute;left:var(--edge);top:calc(var(--edge) + 36px + 46px + 2 * var(--gap));max-width:330px;font-size:12.5px;z-index:5; }
+.data-error { padding:10px 12px;background:var(--panel-solid);border:1px solid var(--line);border-radius:var(--radius-small);margin-bottom:8px; }
 .data-error button { cursor:pointer; }
 [hidden] { display:none !important; }
 
 /* Noise sources and Construction: stacked on the left, above the scale bar, like the map tools on the right. */
-.noise-mode-switch { display:flex;flex-direction:column;gap:2px; }
-.noise-mode-switch button { border:0;background:transparent;padding:8px 14px;border-radius:var(--radius-small);cursor:pointer;font-size:13px;color:var(--ink);text-align:left; }
+.noise-mode-switch { display:flex;flex-direction:column;gap:4px; }
+.noise-mode-switch button { border:0;background:transparent;padding:8px 16px 9px;border-radius:var(--radius-small);cursor:pointer;font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);text-align:left; }
 .noise-mode-switch button:hover { background:var(--verdigris-soft); }
 .noise-mode-switch [aria-pressed=true],.noise-mode-switch [aria-pressed=true]:hover { background:var(--verdigris);color:white; }
 .noise { padding:12px 0; }
@@ -285,10 +326,10 @@ button { font: inherit; color: inherit; }
 .stop-lines b { font-weight:600;color:var(--muted); }
 .stop-departures { margin:2px 0 0 18px;font-size:12.5px;color:var(--muted); }
 /* Price, noise and parking legends: one smooth colour bar, ends marked. */
-.price-legend.is-gradient { flex-wrap:nowrap;gap:12px;padding:10px 16px; }
+.price-legend.is-gradient { flex-wrap:nowrap;gap:14px;padding:12px 20px;border-radius:999px; }
 .legend-gradient { display:block;width:420px;height:8px;border-radius:999px; }
 .legend-end { color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap; }
-.noise-switch { position:absolute;left:18px;bottom:58px;padding:5px;z-index:3; }
+.noise-switch { position:absolute;left:var(--edge);bottom:calc(var(--edge) + 32px + var(--gap));padding:6px;z-index:3; }
 .noise-reason { margin:0 0 8px;font-size:13.5px;line-height:1.45; }
 
 /* Construction: card list. */
