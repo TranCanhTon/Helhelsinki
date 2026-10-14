@@ -12,6 +12,8 @@ import {loadTransit} from './map/transit.js';
 import {parkingLegend} from './ui/parkingCard.js';
 import {loadConstruction} from './map/construction.js';
 import {constructionLegend} from './ui/constructionCard.js';
+import {createSunShadows} from './map/sun.js';
+import {createSunPanel} from './ui/sunPanel.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
@@ -39,6 +41,7 @@ let urlTimer,canWrite=false;
 const save=()=>{if(!canWrite)return;clearTimeout(urlTimer);urlTimer=setTimeout(()=>writeState(state,nav.state),250);};
 const nav=new Navigation(viewer,HOME,(camera,navigation)=>{
  $('#compass').style.transform='rotate('+(-camera.heading)+'deg)';
+ $('#sun-dial').style.setProperty('--heading',camera.heading.toFixed(1));
  $('#tool-overhead').textContent=camera.pitch<-80?'3D':'2D';
  const metres=navigation.metersPerPixel()*80;
  $('#scale-label').textContent=metres>=1000?num(metres/1000,{minimumFractionDigits:1,maximumFractionDigits:1})+' km':Math.round(metres/10)*10+' m';
@@ -51,7 +54,7 @@ function unavailable(label,error,retry){
  const row=document.createElement('div');row.className='data-error';row.textContent=t('{label} unavailable. ',{label:t(label)});
  const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
-let basemap,prices,noise,parking,construction,transit,places,listings,buildings,card,search,marker,currentAddress=null;
+let basemap,prices,noise,parking,construction,transit,places,listings,buildings,sun,sunPanel,card,search,marker,currentAddress=null;
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
  catch(e){unavailable('Ground map',e,ground);}
@@ -119,8 +122,14 @@ function setMetric(metric){
  state.metric=metric;viewer.canvas.style.cursor='';
  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===metric)));
  prices?.setMetric(metric);
- const legend=$('#price-legend');legend.hidden=metric==='overview';$('#noise-switch').hidden=metric!=='noise';
+ const legend=$('#price-legend');legend.hidden=metric==='overview'||metric==='sun';$('#noise-switch').hidden=metric!=='noise';
  parking?.setVisible(metric==='parking');construction?.setVisible(metric==='noise'&&state.noiseMode==='construction');
+ // Sun: shadows and the sun's light only while this tab is open.
+ const sunny=metric==='sun'&&!!sun;sun?.setOn(sunny);$('#sun-panel').hidden=!sunny;$('#sun-dial').hidden=!sunny;
+ if(metric==='sun'){
+  buildings?.setColoring(null);sunPanel?.show();
+  $('#area-info').hidden=true;save();return;
+ }
  if(metric==='parking'){
   buildings?.setColoring(null);
   if(parking)parkingLegend(legend,parking);else legend.textContent=t('Parking data is still loading or unavailable.');
@@ -191,6 +200,8 @@ function showInfo(text){const node=$('#area-info');node.hidden=!text;if(text)nod
 const landing=createLanding(nav,()=>{canWrite=true;save();});
 async function start(){
  buildings=await loadBuildings(viewer);
+ sun=createSunShadows(viewer,buildings.tileset);sunPanel=createSunPanel($('#sun-panel'),$('#sun-dial'),sun);
+ if(state.metric==='sun')setMetric('sun');
  card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction,()=>places);
  search=new AddressSearch($('#search'),selectAddress);
  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);

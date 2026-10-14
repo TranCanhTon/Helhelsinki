@@ -7,7 +7,7 @@ export function readState(search,home) {
    Object.assign(camera,{lon,lat,heading,pitch,range});
  }
  return {camera,building:params.get('building'),lang:params.get('lang')==='fi'?'fi':'en',
- metric:['sale','noise','parking'].includes(params.get('view'))?params.get('view'):'overview',
+ metric:['sale','noise','parking','sun'].includes(params.get('view'))?params.get('view'):'overview',
  noiseMode:['road','rail','metro','tram','construction'].includes(params.get('noise'))?params.get('noise'):'all'};
 }
 export function writeState(state,camera) {
