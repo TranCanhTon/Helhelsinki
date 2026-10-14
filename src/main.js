@@ -14,6 +14,7 @@ import {loadConstruction} from './map/construction.js';
 import {constructionLegend} from './ui/constructionCard.js';
 import {createSunShadows} from './map/sun.js';
 import {createSunPanel} from './ui/sunPanel.js';
+import {loadStationTrains} from './map/stationTrains.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
@@ -233,6 +234,8 @@ async function start(){
  parkingLayer();
  constructionLayer();
  placesLayer();
+ // Parked trains at the Central Station: preview only (?trains=1) until Ton says yes.
+ if(new URLSearchParams(location.search).get('trains')==='1')loadStationTrains(viewer).catch(e=>console.warn('Parked trains unavailable',e));
  transitLayer();
  adsLayer();setInterval(adsLayer,10*60*1000);
  neighbourhoodList();
