@@ -34,8 +34,6 @@ screenshots/
 public/basemap/
 public/addresses.json
 public/labels.json
-public/trees.json
-public/trees/
 public/price-by-area.json
 
 public/layers.json

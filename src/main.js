@@ -3,7 +3,7 @@ import {createViewer} from './map/createViewer.js';
 import {Navigation} from './map/navigation.js';
 import {loadBuildings} from './map/buildings.js';
 import {loadBasemap} from './map/basemap.js';
-import {loadLabels,loadTrees} from './map/context.js';
+import {loadLabels} from './map/context.js';
 import {loadPrices,priceValue,PRICE_COLORS} from './map/prices.js';
 import {loadNoise} from './map/noise.js';
 import {noiseLegend} from './ui/noiseCard.js';
@@ -184,7 +184,6 @@ async function start(){
  window.__lens={Cesium,viewer,nav,buildings,card,search,selectAddress,selectBuilding,setMetric,get prices(){return prices;},get listings(){return listings;},get noise(){return noise;},get parking(){return parking;},get transit(){return transit;},ready:true};
  ground();
  loadLabels(viewer,nav).catch(e=>unavailable('Place labels',e,()=>loadLabels(viewer,nav)));
- loadTrees(viewer,nav).catch(e=>unavailable('Trees',e,()=>loadTrees(viewer,nav)));
  priceLayer();
  noiseLayer();
  parkingLayer();
