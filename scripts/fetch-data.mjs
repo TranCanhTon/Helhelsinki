@@ -7,10 +7,9 @@
 //
 // On a computer that already has its own data in public/ nothing is fetched; set
 // DATA_SNAPSHOT=fetch to replace it with the snapshot anyway.
-import {readFile, rm, mkdir, rename, readdir, stat} from 'node:fs/promises';
+import {readFile, rm, mkdir, rename, readdir, stat, cp} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url)), PUBLIC = ROOT + 'public/';
@@ -20,7 +19,8 @@ if (have && process.env.DATA_SNAPSHOT !== 'fetch') {
   console.log('Map data already in public/ (this computer\'s own). DATA_SNAPSHOT=fetch uses the published snapshot instead.');
   process.exit(0);
 }
-const work = join(tmpdir(), 'daroad-data-' + pin.commit.slice(0, 12)), files = join(work, 'files');
+// Unpacked inside the project: on Vercel the temp folder is another disk, and files cannot be moved across disks.
+const work = join(ROOT, '.data-fetch'), files = join(work, 'files');
 const git = (...args) => execFileSync('git', args, {cwd: work, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit']}).trim();
 await rm(work, {recursive: true, force: true});
 await mkdir(files, {recursive: true});
@@ -37,7 +37,7 @@ await walk(files);
 if (count !== pin.files) throw new Error(`snapshot has ${count} files, expected ${pin.files}`);
 for (const name of await readdir(files)) {
   await rm(PUBLIC + name, {recursive: true, force: true});
-  await rename(join(files, name), PUBLIC + name);
+  await rename(join(files, name), PUBLIC + name).catch(async () => { await cp(join(files, name), PUBLIC + name, {recursive: true}); });
 }
 await rm(work, {recursive: true, force: true});
 console.log(`map data ${pin.ref} in public/ (${count} files)`);

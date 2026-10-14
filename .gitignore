@@ -10,6 +10,8 @@ data/staging/
 # The snapshot folder and its temporary index (npm run data:pack).
 data/snapshot/
 data/.snapshot-index
+# Where npm run build unpacks the map data snapshot (scripts/fetch-data.mjs).
+.data-fetch/
 
 # Secrets
 .env
