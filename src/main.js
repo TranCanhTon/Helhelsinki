@@ -46,7 +46,7 @@ async function ground(){
 }
 async function priceLayer(){
  try{
-  prices=await loadPrices(viewer,buildings.manifest);useAds();setMetric(state.metric);
+  prices=await loadPrices(viewer);useAds();setMetric(state.metric);
   card?.refresh();
  }catch(e){$('#price-legend').textContent='Postal-area prices unavailable.';unavailable('Prices',e,priceLayer);}
 }
@@ -101,7 +101,8 @@ function setMetric(metric){
   if(noise)noiseLegend(legend,$('#noise-switch'),noise,setNoiseMode);else legend.textContent='Noise data is still loading or unavailable.';
   $('#area-info').hidden=true;save();return;
  }
- buildings?.setColoring(prices&&metric!=='overview'?id=>prices.colorOf(id):null,'#c2622f');
+ // Price view colours the postal areas on the ground; the buildings keep their photos (Ton, 14 Oct 2026).
+ buildings?.setColoring(null);
  if(prices&&metric!=='overview'){
   const [lo,hi]=prices.range(metric),fmt=v=>Math.round(v).toLocaleString('en-GB');
   legendGradient(legend,{colors:PRICE_COLORS,start:fmt(lo),end:fmt(hi)});
