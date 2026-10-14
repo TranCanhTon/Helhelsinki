@@ -45,13 +45,10 @@ try{
  await input.fill('qwertyzzzz');await page.waitForFunction(()=>document.querySelector('.search-status').textContent.includes('No Helsinki'),null,{timeout:30000});
  await input.fill('Otakaari 1');await page.waitForTimeout(350);assert.ok((await page.locator('.search-status').textContent()).includes('No Helsinki'));
  await input.fill('');await input.press('Escape');
- assert.equal(await page.locator('html').getAttribute('data-theme'),'dusk');
  await page.locator('[data-view=noise]').click();await page.waitForTimeout(1500);assert.match(await page.locator('#price-legend').textContent(),/75\+/);
  await page.screenshot({path:out+'/noise-dusk.png'});
  await page.locator('[data-view=sale]').click();assert.match(await page.locator('#price-legend').textContent(),/\d,\d{3}/);
- await page.locator('#tool-theme').click();await page.waitForTimeout(2000);
- assert.equal(await page.locator('html').getAttribute('data-theme'),'day');
- await page.screenshot({path:out+'/rent-day.png'});
+ await page.screenshot({path:out+'/sale.png'});
  const frames=await page.evaluate(()=>new Promise(resolve=>{const times=[];let prev=performance.now();function tick(now){times.push(now-prev);prev=now;if(times.length<60)requestAnimationFrame(tick);else resolve(1000/(times.reduce((a,b)=>a+b,0)/times.length));}requestAnimationFrame(tick);}));
  const report={viewport:'1440x900',loadMs,downloadedContentLengthBytes:bytes,fps:frames,renderer:'Chrome headless SwiftShader; not representative of hardware GPU performance',errors,external};
  await writeFile(out+'/report.json',JSON.stringify(report,null,2));console.log(report);

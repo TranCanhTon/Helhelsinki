@@ -52,16 +52,8 @@ export const CLASSES = [
 
 export const STREET_USES = ALL_STREETS;
 
+// Dark only: Ton removed day mode (14 Oct 2026).
 export const THEMES = {
-  day: {
-    outside: '#d7d6d0', sea: '#b4d2cf', water: '#b4d2cf', land: '#ebe9e3',
-    block: '#e4e1d9', industry: '#dedbd3', field: '#e3e7d4', forest: '#c6d7b8', park: '#d0dfc3',
-    square: '#f1eee8', path: '#f2efe8', parking: '#e6e2da',
-    street: '#fbfaf7', collector: '#ffffff', main: '#ffffff', motorway: '#f7e4cf',
-    outlineCollector: '#d9d4ca', outlineMain: '#cfc8bb', outlineMotorway: '#d9b48d',
-    bridge: '#fdfcfa', lane: '#e1ddd5', laneBig: '#d8d3ca',
-    pier: '#cbc5b9', rail: '#959b98', metro: '#d07a4a', railDash: '#f4f2ed',
-  },
   dusk: {
     outside: '#101413', sea: '#0e2a2d', water: '#0e2a2d', land: '#1c2321',
     block: '#212927', industry: '#232826', field: '#212a23', forest: '#1d2f27', park: '#21342b',

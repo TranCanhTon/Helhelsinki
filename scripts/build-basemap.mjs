@@ -1,4 +1,4 @@
-// Phase 2: draw the ground map as image tiles, one set for day and one for dusk.
+// Phase 2: draw the dark ground map as image tiles.
 //
 // Input:  data/raw/basemap/*.json (npm run data:basemap:fetch), lon/lat GeoJSON
 // Output: public/basemap/<theme>/<z>/<x>/<y>.webp  and  public/basemap/basemap.json
@@ -14,7 +14,7 @@
 // turn it into a WebP image. Tiles are written to data/staging first, checked,
 // and only then copied to public/.
 //
-// Run: npm run data:basemap:build  [--themes=day,dusk] [--max-zoom=17]
+// Run: npm run data:basemap:build  [--max-zoom=17]
 import {readFile, writeFile, mkdir, rm, cp, readdir} from 'node:fs/promises';
 import sharp from 'sharp';
 import Flatbush from 'flatbush';
@@ -31,7 +31,7 @@ const STAGING = new URL('data/staging/basemap/', ROOT);
 const PUBLIC = new URL('public/basemap/', ROOT);
 const TILE = 256;
 const arg = name => process.argv.find(a => a.startsWith(`--${name}=`))?.slice(name.length + 3);
-const themes = (arg('themes') ?? 'day,dusk').split(',');
+const themes = ['dusk'];
 const maxZoom = Number(arg('max-zoom') ?? 17);
 const LEVELS = {base: {min: 10, max: 15}, detail: {min: 16, max: 17}};
 

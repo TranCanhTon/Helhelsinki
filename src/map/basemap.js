@@ -1,10 +1,11 @@
 import * as Cesium from 'cesium';
 import {loadJson} from '../data/load.js';
 export async function loadBasemap(viewer) {
-  const meta=await loadJson('/basemap/basemap.json'), layers={};
+  const meta=await loadJson('/basemap/basemap.json');
+  // The dark ground map only (Ton removed day mode, 14 Oct 2026).
   // Both providers reuse base imagery below z16; detail adds the central street view.
-  for(const theme of meta.themes){
-    layers[theme]=[];
+  {
+    const theme='dusk';
     for(const level of Object.values(meta.levels).filter(Boolean)){
       const provider=new Cesium.UrlTemplateImageryProvider({
         url:'/basemap/'+theme+'/{z}/{x}/{y}.webp',tilingScheme:new Cesium.WebMercatorTilingScheme(),
@@ -15,15 +16,12 @@ export async function loadBasemap(viewer) {
       // them onto continent-sized globe tiles near the horizon, never finishes,
       // and keeps redrawing the scene. Those far tiles just get the plain colour.
       const layer=new Cesium.ImageryLayer(provider,{minimumTerrainLevel:8});
-      viewer.imageryLayers.add(layer);layer.show=false;layers[theme].push(layer);
+      viewer.imageryLayers.add(layer);
     }
   }
-  return {meta,setTheme(theme){
-    for(const [name,items] of Object.entries(layers))for(const item of items)item.show=name===theme;
-    document.documentElement.dataset.theme=theme;
-    viewer.scene.globe.baseColor=Cesium.Color.fromCssColorString(theme==='dusk'?'#101413':'#d7d6d0');
-    viewer.scene.backgroundColor=viewer.scene.globe.baseColor;
-    viewer.scene.requestRender();
-  }};
+  viewer.scene.globe.baseColor=Cesium.Color.fromCssColorString('#101413');
+  viewer.scene.backgroundColor=viewer.scene.globe.baseColor;
+  viewer.scene.requestRender();
+  return {meta};
 }
 

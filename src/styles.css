@@ -1,19 +1,19 @@
-/* Helsinki Lens: "Copper and granite".
+/* Helsinki Lens: "Copper and granite", dark only (Ton removed day mode, 14 Oct 2026).
    Colours taken from the city: grey granite, the verdigris of copper roofs,
    and bright copper for whatever you have selected. Desktop layout. */
 :root {
-  --ground: #e6e4de;          /* map background before the base map loads */
-  --panel: rgba(250, 249, 246, 0.9);
-  --panel-solid: #faf9f6;
-  --ink: #1d2826;
-  --muted: #5f6b67;
-  --faint: #8a9591;
-  --line: rgba(29, 40, 38, 0.12);
-  --verdigris: #2c8577;
-  --verdigris-ink: #1d5f55;
-  --verdigris-soft: #dcebe7;
+  --ground: #101413;          /* map background before the base map loads */
+  --panel: rgba(29, 39, 35, 0.94);
+  --panel-solid: #1d2723;
+  --ink: #e6eee9;
+  --muted: #b0c1b6;
+  --faint: #87978e;
+  --line: rgba(229, 239, 231, 0.15);
+  --verdigris: #438e7a;
+  --verdigris-ink: #a8d7bb;
+  --verdigris-soft: #2c4438;
   --copper: #c2622f;
-  --copper-soft: #f6e3d6;
+  --copper-soft: #49352a;
   --radius: 14px;
   --radius-small: 9px;
   --shadow: 0 1px 2px rgba(29, 40, 38, 0.08), 0 10px 30px rgba(29, 40, 38, 0.14);
@@ -224,7 +224,6 @@ button { font: inherit; color: inherit; }
 .legend-seg b.is-end { left:auto;right:0;transform:translateX(50%); }
 .legend-missing { display:flex;align-items:center;gap:6px;color:var(--muted);white-space:nowrap; }
 .legend-missing i { width:14px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--line); }
-#tool-theme { display:grid;place-items:center; }
 .area-info { position:absolute;left:50%;top:18px;transform:translateX(-50%);padding:10px 15px;font-size:12px;max-width:520px;z-index:3; }
 .price-row { padding:10px 0;border-bottom:1px solid var(--line); }
 .rent-groups { display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:8px 0 4px;font-size:13px; }
@@ -238,21 +237,15 @@ button { font: inherit; color: inherit; }
 .ad-compare { font-weight:600; }
 .ad-compare.is-above { color:#b3302e; }
 .ad-compare.is-below { color:#2c5fa8; }
-[data-theme=dusk] .ad-compare.is-above { color:#f0a08a; }
-[data-theme=dusk] .ad-compare.is-below { color:#8db8e0; }
+.ad-compare.is-above { color:#f0a08a; }
+.ad-compare.is-below { color:#8db8e0; }
 .copy-address,.building-choices button { border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);padding:9px 12px;cursor:pointer;margin-top:8px; }
 .building-choices button { display:block;text-align:left;width:100%;font-size:13px; }
 .place-labels { position:absolute;inset:0;pointer-events:none;overflow:hidden; }
-.place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-size:12px;font-weight:600;color:#35483f;text-shadow:0 1px 2px #fff,1px 0 2px #fff,-1px 0 2px #fff; }
+.place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-size:12px;font-weight:600;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
 #data-status { position:absolute;left:18px;top:130px;max-width:330px;font-size:12px;z-index:5; }
 .data-error { padding:8px;background:var(--panel-solid);border:1px solid var(--line);border-radius:8px;margin-bottom:5px; }
 .data-error button { cursor:pointer; }
-[data-theme=dusk] {
- --ground:#101413;--panel:rgba(29,39,35,.94);--panel-solid:#1d2723;--ink:#e6eee9;--muted:#b0c1b6;
- --faint:#87978e;--line:rgba(229,239,231,.15);--verdigris:#438e7a;--verdigris-ink:#a8d7bb;--verdigris-soft:#2c4438;
- --copper-soft:#49352a;
-}
-[data-theme=dusk] .place-labels span { color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
 [hidden] { display:none !important; }
 
 .noise-mode-switch { display:flex;gap:2px;padding:2px;border-radius:7px;background:var(--line); }

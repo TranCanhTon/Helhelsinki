@@ -41,7 +41,7 @@ function unavailable(label,error,retry){
 }
 let basemap,prices,noise,parking,transit,listings,buildings,card,marker,currentAddress=null;
 async function ground(){
- try{basemap=await loadBasemap(viewer);basemap.setTheme(state.theme);}
+ try{basemap=await loadBasemap(viewer);}
  catch(e){unavailable('Ground map',e,ground);}
 }
 async function priceLayer(){
@@ -73,7 +73,7 @@ async function noiseLayer(){
  catch(e){unavailable('Noise',e,noiseLayer);}
 }
 async function parkingLayer(){
- try{parking=await loadParking(viewer);parking.setTheme(state.theme);if(state.metric==='parking')setMetric('parking');card?.refresh();}
+ try{parking=await loadParking(viewer);if(state.metric==='parking')setMetric('parking');card?.refresh();}
  catch(e){unavailable('Parking',e,parkingLayer);}
 }
 async function transitLayer(){
@@ -109,18 +109,6 @@ function setMetric(metric){
  $('#area-info').hidden=true;save();
 }
 for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>setMetric(b.dataset.view);
-// Light/dark switch in the tool bar. The icon shows the mode you switch to.
-const SUN='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
-const MOON='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>';
-function paintTheme(){
- document.documentElement.dataset.theme=state.theme;
- const b=$('#tool-theme');b.innerHTML=state.theme==='day'?MOON:SUN;b.title=state.theme==='day'?'Dark mode':'Light mode';b.setAttribute('aria-label',b.title);
-}
-$('#tool-theme').onclick=()=>{
- state.theme=state.theme==='day'?'dusk':'day';basemap?.setTheme(state.theme);parking?.setTheme(state.theme);
- paintTheme();setMetric(state.metric);card?.refresh();
-};
-paintTheme();
 function clearSelection(){
  state.building=null;currentAddress=null;buildings?.setSelected(null);card?.hide();
  if(marker)viewer.entities.remove(marker);marker=null;viewer.scene.requestRender();save();

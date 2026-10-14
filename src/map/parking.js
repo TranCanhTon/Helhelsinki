@@ -7,10 +7,7 @@ import {nearbyIndex, zoneLookup, zonePrice, PARKING_GROUPS} from '../data/parkin
 // grown by a few metres and merged, drawn as a see-through fill with a solid
 // outline in its group's colour. Zones load the first time the view opens.
 // Colours checked with the dataviz palette validator (all pairs, light and dark map).
-export const PARKING_COLORS = {
- day: {free: '#1baf7a', paid: '#eb6834', permit: '#2a78d6', other: '#9a9a94'},
- dusk: {free: '#199e70', paid: '#d95926', permit: '#3987e5', other: '#7d847f'},
-};
+export const PARKING_COLORS = {free: '#199e70', paid: '#d95926', permit: '#3987e5', other: '#7d847f'};
 const FILL_ALPHA = 0.42;
 
 export async function loadParking(viewer) {
@@ -22,13 +19,13 @@ export async function loadParking(viewer) {
  const asFeatures = zones => zones.map(z => ({type: 'Feature', properties: z, geometry: z.geometry}));
  const paidZoneAt = zoneLookup(asFeatures(data.paidZones), z => ({number: z.number, name: z.name, price: zonePrice(z.note), link: z.link}));
  const residentZoneAt = zoneLookup(asFeatures(data.residentZones), z => ({code: z.code, name: z.name}));
- let theme = 'day', visible = false, zones = null, drawn = null, loading = null;
+ let visible = false, zones = null, drawn = null, loading = null;
 
  const ring = r => Cesium.Cartesian3.fromDegreesArray(r.slice(0, -1).flat());
  const draw = () => {
   if (drawn) { viewer.scene.primitives.remove(drawn.fill); viewer.scene.primitives.remove(drawn.edges); drawn = null; }
   if (!zones) return;
-  const colors = PARKING_COLORS[theme], instances = [], edges = new Cesium.PolylineCollection();
+  const colors = PARKING_COLORS, instances = [], edges = new Cesium.PolylineCollection();
   for (const {key} of PARKING_GROUPS) {
    const color = Cesium.Color.fromCssColorString(colors[key]);
    for (const [outer, ...holes] of zones.zones[key]) {
@@ -57,7 +54,6 @@ export async function loadParking(viewer) {
    if (on && !zones) loading ??= loadJson('/parking-zones.json').then(z => { zones = z; draw(); }).catch(error => console.warn('Parking zones unavailable', error));
    viewer.scene.requestRender();
   },
-  setTheme(t) { theme = t === 'day' ? 'day' : 'dusk'; if (zones) draw(); },
-  colors: () => PARKING_COLORS[theme],
+  colors: () => PARKING_COLORS,
  };
 }
