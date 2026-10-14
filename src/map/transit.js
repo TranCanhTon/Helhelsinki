@@ -8,10 +8,10 @@ import {stopPin, MODE_COLORS, SQUARE_MODES} from './pinIcons.js';
 export {MODE_COLORS, SQUARE_MODES};
 
 // Stop pins on the main map (data:transit), in every view, once the scale bar reads
-// 70 m or less. Platforms closer than MERGE_M to each other become one pin, whatever
+// 60 m or less (Ton, 14 Oct 2026). Platforms closer than MERGE_M to each other become one pin, whatever
 // their direction or type; a pin shows one icon per type. Only pins within
 // NEAR_HOME_M of a home are drawn. The card's nearest stops use every platform.
-const MERGE_M = 80, NEAR_HOME_M = 200, SHOW_AT_M = 70;
+const MERGE_M = 80, NEAR_HOME_M = 200, SHOW_AT_M = 60;
 
 // homes: [lon, lat] of residential buildings.
 export async function loadTransit(viewer, nav, homes) {
