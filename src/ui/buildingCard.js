@@ -2,14 +2,16 @@
 //
 // Kept short (Ton, 14 Oct 2026): address header with a copy button, the rental ads in
 // this building (when there are any), the key facts with noise, average rent,
-// construction within 50 m, street parking, public transport and plan protection.
-// No explaining notes. Missing values say "Not recorded", never zero.
+// construction within 50 m, street parking, public transport, shops and services
+// nearby and plan protection. No explaining notes. Missing values say
+// "Not recorded", never zero.
 import {rentSection, adsSection} from './pricesCard.js';
 import {bandText} from './noiseCard.js';
 import {isApartmentBuilding, NOISE_MODES} from '../data/noise.js';
 import {parkingSection} from './parkingCard.js';
 import {transitSection} from './transitCard.js';
 import {constructionSection} from './constructionCard.js';
+import {placesSection} from './placesCard.js';
 import {t, num} from './i18n.js';
 
 const el = (tag, className, textValue) => {
@@ -99,10 +101,10 @@ function titleRow(text, address) {
 }
 
 // One line at the end naming the data sources, which their licences ask for.
-const credit = () => el('p', 'card-credit', t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie'));
+const credit = () => el('p', 'card-credit', t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie, © OpenStreetMap contributors'));
 
 export class BuildingCard {
-  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getConstruction = () => null) {
+  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getConstruction = () => null, getPlaces = () => null) {
     this.el = container;
     this.onClose = onClose;
     this.getPrices = getPrices;
@@ -111,6 +113,7 @@ export class BuildingCard {
     this.getParking = getParking;
     this.getTransit = getTransit;
     this.getConstruction = getConstruction;
+    this.getPlaces = getPlaces;
   }
 
   // Redraw the open card after prices or ads change, keeping the scroll position.
@@ -128,6 +131,7 @@ export class BuildingCard {
       constructionSection(row.position, this.getConstruction()),
       parkingSection(row.position, this.getParking()),
       transitSection(row.position, this.getTransit()),
+      placesSection(row.position, this.getPlaces()),
     ];
   }
 

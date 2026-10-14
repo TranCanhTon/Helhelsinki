@@ -325,4 +325,13 @@ button { font: inherit; color: inherit; }
 .work-when,.work-where { margin:3px 0 0 88px;font-size:13px;line-height:1.4; }
 .work-where { color:var(--muted);overflow-wrap:anywhere; }
 
+/* Nearby shops and services: kind, name, distance on one line. */
+.place-list { margin:0; }
+.place-row { display:grid;grid-template-columns:112px 1fr auto;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px; }
+.place-row:last-child { border-bottom:0; }
+.place-row dt { color:var(--muted); }
+.place-row dd { margin:0; }
+.place-name { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.place-row.is-missing .place-name { color:var(--faint); }
+.place-distance { color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap; }
 .card-credit { margin:22px 0 0;font-size:11px;line-height:1.4;color:var(--faint); }

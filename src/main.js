@@ -15,6 +15,8 @@ import {constructionLegend} from './ui/constructionCard.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
+import {nearestPlaces} from './data/places.js';
+import {loadJson} from './data/load.js';
 import {AddressSearch} from './ui/search.js';
 import {createLanding} from './ui/landing.js';
 import {t,num,locale,setLang,translatePage} from './ui/i18n.js';
@@ -49,7 +51,7 @@ function unavailable(label,error,retry){
  const row=document.createElement('div');row.className='data-error';row.textContent=t('{label} unavailable. ',{label:t(label)});
  const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
-let basemap,prices,noise,parking,construction,transit,listings,buildings,card,search,marker,currentAddress=null;
+let basemap,prices,noise,parking,construction,transit,places,listings,buildings,card,search,marker,currentAddress=null;
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
  catch(e){unavailable('Ground map',e,ground);}
@@ -92,6 +94,14 @@ async function parkingLayer(){
 async function constructionLayer(){
  try{construction=await loadConstruction(viewer);if(state.metric==='noise')setMetric('noise');card?.refresh();}
  catch(e){unavailable('Construction',e,constructionLayer);}
+}
+// Shops and services near the chosen building (data:places), on the card only.
+async function placesLayer(){
+ try{
+  const data=await loadJson('/places.json');
+  if(data.schemaVersion!==1)throw new Error('places.json is out of date. Run npm run data:places');
+  places={data,nearest:nearestPlaces(data.places)};card?.refresh();
+ }catch(e){unavailable('Shops and services',e,placesLayer);}
 }
 async function transitLayer(){
  try{
@@ -181,7 +191,7 @@ function showInfo(text){const node=$('#area-info');node.hidden=!text;if(text)nod
 const landing=createLanding(nav,()=>{canWrite=true;save();});
 async function start(){
  buildings=await loadBuildings(viewer);
- card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction);
+ card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction,()=>places);
  search=new AddressSearch($('#search'),selectAddress);
  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
  handler.setInputAction(click=>{
@@ -204,13 +214,14 @@ async function start(){
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&e.target.id!=='address-query')clearSelection();});
  if(state.building && buildings.records.has(state.building))selectBuilding(state.building,false);else state.building=null;
  landing.ready();
- window.__lens={Cesium,viewer,nav,buildings,card,search,selectAddress,selectBuilding,setMetric,get prices(){return prices;},get listings(){return listings;},get noise(){return noise;},get parking(){return parking;},get construction(){return construction;},get transit(){return transit;},ready:true};
+ window.__lens={Cesium,viewer,nav,buildings,card,search,selectAddress,selectBuilding,setMetric,get prices(){return prices;},get listings(){return listings;},get noise(){return noise;},get parking(){return parking;},get construction(){return construction;},get places(){return places;},get transit(){return transit;},ready:true};
  ground();
  loadLabels(viewer,nav).catch(e=>unavailable('Place labels',e,()=>loadLabels(viewer,nav)));
  priceLayer();
  noiseLayer();
  parkingLayer();
  constructionLayer();
+ placesLayer();
  transitLayer();
  adsLayer();setInterval(adsLayer,10*60*1000);
  neighbourhoodList();
