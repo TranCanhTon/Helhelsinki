@@ -17,14 +17,13 @@
   --radius: 16px;
   --radius-small: 10px;
   --shadow: 0 1px 2px rgba(29, 40, 38, 0.08), 0 12px 32px rgba(29, 40, 38, 0.16);
-  /* Fonts (Ton, 14 Oct 2026), all bundled, no font requests: Syne ExtraBold for
-     the name, Courier Prime Bold for the landing text, Work Sans for the
-     building card text (easier to read small), Instrument Serif for everything
-     else. Instrument Serif has one weight, so no fake bold. */
+  /* Fonts, three only (Ton, 15 Oct 2026), all bundled, no font requests:
+     Syne ExtraBold for the name, Instrument Serif for big text (tabs, titles,
+     the hook line, place names on the map), Work Sans for everything small
+     (easier to read). Instrument Serif has one weight, so no fake bold. */
   --serif: 'Instrument Serif', Georgia, serif;
-  --sans: var(--serif);
-  --card: 'Work Sans Variable', 'Segoe UI', sans-serif;
-  --mono: 'Courier Prime', 'Courier New', monospace;
+  --sans: 'Work Sans Variable', 'Segoe UI', sans-serif;
+  --card: var(--sans);
   --display: 'Syne', var(--serif);
   --edge: 24px;   /* space between the panels and the window edge */
   --gap: 14px;    /* space between panels */
@@ -166,11 +165,11 @@ button { font: inherit; color: inherit; }
 .landing-brand { font-size: min(112px, 8vw); will-change: transform; }
 .landing-hook { margin: 0; font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.1; color: var(--ink); text-wrap: balance; }
 .landing-hook em { color: var(--copper); }
-.landing-text { margin: 18px 0 0; max-width: 440px; font-family: var(--mono); font-weight: 700; font-size: 15.5px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+.landing-text { margin: 18px 0 0; max-width: 440px; font-family: var(--sans); font-weight: 400; font-size: 16px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
 .landing-hook, .landing-text, .landing-cue { text-shadow: 0 1px 12px var(--ground), 0 0 2px var(--ground); }
 
 /* Click cue: a mouse with its left button flashing, and the words under it. */
-.landing-cue { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 34px; font-family: var(--mono); font-weight: 700; font-size: 13px; letter-spacing: 0.06em; color: var(--muted); }
+.landing-cue { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 34px; font-family: var(--sans); font-weight: 500; font-size: 13px; letter-spacing: 0.03em; color: var(--muted); }
 .mouse { position: relative; width: 24px; height: 38px; border: 2px solid currentColor; border-radius: 13px; opacity: 0.5; transition: opacity 0.4s, color 0.4s; }
 .mouse i { position: absolute; left: 50%; top: 7px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: currentColor; }
 .is-ready .landing-cue { color: var(--ink); }
@@ -274,7 +273,7 @@ button { font: inherit; color: inherit; }
 .building-choices button { border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);padding:9px 12px;cursor:pointer;margin-top:8px; }
 .building-choices button { display:block;text-align:left;width:100%;font-size:13px; }
 .place-labels { position:absolute;inset:0;pointer-events:none;overflow:hidden; }
-.place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-size:15px;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
+.place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-family:var(--serif);font-size:15px;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
 #data-status { position:absolute;left:var(--edge);top:calc(var(--edge) + 36px + 46px + 2 * var(--gap));max-width:330px;font-size:12.5px;z-index:5; }
 .data-error { padding:10px 12px;background:var(--panel-solid);border:1px solid var(--line);border-radius:var(--radius-small);margin-bottom:8px; }
 .data-error button { cursor:pointer; }

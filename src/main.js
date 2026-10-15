@@ -25,7 +25,6 @@ import {createLanding} from './ui/landing.js';
 import {t,num,locale,setLang,translatePage} from './ui/i18n.js';
 import {readState,writeState} from './data/urlState.js';
 import '@fontsource/syne/800.css';
-import '@fontsource/courier-prime/700.css';
 import '@fontsource/instrument-serif/400.css';
 import '@fontsource/instrument-serif/400-italic.css';
 import '@fontsource-variable/work-sans/wght.css';
