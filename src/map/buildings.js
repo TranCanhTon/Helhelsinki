@@ -38,6 +38,7 @@ export async function groundShader() {
       u_up: {type: Cesium.UniformType.VEC3, value: new Cesium.Cartesian3(up.x, up.y, up.z)},
       u_grid: {type: Cesium.UniformType.VEC4, value: new Cesium.Cartesian4(meta.minE, meta.minN, meta.width * meta.cellM, meta.height * meta.cellM)},
       u_heights: {type: Cesium.UniformType.VEC3, value: new Cesium.Cartesian3(meta.minM, meta.stepM, meta.fallbackM)},
+      u_plain: {type: Cesium.UniformType.VEC3, value: PLAIN_SHADE.clone()},
       u_ground: {type: Cesium.UniformType.SAMPLER_2D, value: new Cesium.TextureUniform({
         typedArray: new Uint8Array(bytes), width: meta.width, height: meta.height,
         pixelFormat: Cesium.PixelFormat.LUMINANCE, pixelDatatype: Cesium.PixelDatatype.UNSIGNED_BYTE,
@@ -55,8 +56,21 @@ export async function groundShader() {
         }
         vsOutput.positionMC -= (czm_inverseModel * vec4(u_up * h, 0.0)).xyz;
       }`,
+    // Parts without a photo draw in their white base colour and pop out of the photo
+    // city. Those are shaded down to granite (Ton, 15 Oct 2026). Only near grey colours:
+    // the copper selected building keeps its colour. Coloured views set u_plain to 1.
+    fragmentShaderText: `
+      void fragmentMain(FragmentInput fsInput, inout czm_modelMaterial material) {
+        #ifndef HAS_BASE_COLOR_TEXTURE
+          vec3 d = material.diffuse;
+          if (max(d.r, max(d.g, d.b)) - min(d.r, min(d.g, d.b)) < 0.12) material.diffuse = d * u_plain;
+        #endif
+      }`,
   });
 }
+// Multiplier for the parts without a photo in Overview, Price and Sun: about #6f7572 on white.
+const PLAIN_SHADE = new Cesium.Cartesian3(0.42, 0.45, 0.44);
+const NO_SHADE = new Cesium.Cartesian3(1, 1, 1);
 
 async function loadTextured() {
   const customShader = await groundShader();
@@ -141,7 +155,10 @@ export async function loadBuildings(viewer) {
   // a coloured view the colours replace the photo, so the buildings look like the grey ones.
   let coloured = false;
   const applyStyle = () => {
-    if (textured) tileset.colorBlendMode = coloured ? Cesium.Cesium3DTileColorBlendMode.REPLACE : Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
+    if (textured) {
+      tileset.colorBlendMode = coloured ? Cesium.Cesium3DTileColorBlendMode.REPLACE : Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
+      tileset.customShader.setUniform('u_plain', coloured ? NO_SHADE : PLAIN_SHADE);
+    }
     const neutral = coloured ? NEUTRAL_COLOURED : textured ? '#ffffff' : NEUTRAL;
     const style = new Cesium.Cesium3DTileStyle();
     style.color = {evaluateColor: (feature, result) => {
