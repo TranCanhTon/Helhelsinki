@@ -54,14 +54,16 @@ export const CLASSES = [
 export const STREET_USES = ALL_STREETS;
 
 // Dark only: Ton removed day mode (14 Oct 2026).
+// Roads are granite grey, bigger roads a lighter grey (Ton, 15 Oct 2026): copper
+// is kept for what you select and for the map layers (paid parking, the sun).
 export const THEMES = {
   dusk: {
     outside: '#101413', sea: '#0e2a2d', water: '#0e2a2d', land: '#1c2321',
     block: '#212927', industry: '#232826', field: '#212a23', forest: '#1d2f27', park: '#21342b',
     square: '#28302d', path: '#262d2b', parking: '#262c2a',
-    street: '#323a37', collector: '#5e4c36', main: '#a8743c', motorway: '#c88a43',
-    outlineCollector: '#3d3529', outlineMain: '#7a5730', outlineMotorway: '#8f6233',
-    bridge: '#3a423f', lane: '#2a312f', laneBig: '#6a5033',
-    pier: '#46504c', rail: '#5d6663', metro: '#b4683f', railDash: '#1c2321',
+    street: '#323a37', collector: '#3b413e', main: '#484e4a', motorway: '#535853',
+    outlineCollector: '#2c322f', outlineMain: '#3a403c', outlineMotorway: '#424843',
+    bridge: '#3a423f', lane: '#2a312f', laneBig: '#3c423f',
+    pier: '#46504c', rail: '#5d6663', metro: '#7a5b48', railDash: '#1c2321',
   },
 };
