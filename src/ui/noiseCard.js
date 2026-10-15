@@ -1,4 +1,4 @@
-import {NOISE_SCALE,NOISE_VIEW_MODES} from '../map/noise.js';
+import {NOISE_SCALE,NOISE_VIEW_MODES,NO_BAND_COLOR} from '../map/noise.js';
 import {legendGradient} from './legend.js';
 import {t} from './i18n.js';
 const el=(tag,className,text)=>{const n=document.createElement(tag);if(className)n.className=className;if(text!=null)n.textContent=text;return n;};
@@ -9,7 +9,7 @@ export const bandText=b=>b.hi==null?t('{lo} dB and above',{lo:b.lo}):t('{lo} to 
 // Noise view: the colour bar in the legend.
 export function noiseLegend(container,noise){
  const bands=noise.meta.bands;
- legendGradient(container,{colors:NOISE_SCALE,start:String(bands[0].lo),end:bands.at(-1).lo+'+'});
+ legendGradient(container,{colors:NOISE_SCALE,title:t('Noise · dB'),start:String(bands[0].lo),end:bands.at(-1).lo+'+',missing:{color:NO_BAND_COLOR,text:t('No data')}});
 }
 
 // The noise sources plus Construction (Ton, 13 Oct 2026), stacked on the left of the map.

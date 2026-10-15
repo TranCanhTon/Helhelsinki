@@ -137,7 +137,8 @@ function setMetric(metric){
  }
  if(metric==='noise'){
   const work=state.noiseMode==='construction';
-  buildings?.setColoring(noise&&!work?id=>noise.colorOf(buildings.records.get(id)):null,'#c2622f');
+  // Selected building: white, since copper and red are on the noise scale.
+  buildings?.setColoring(noise&&!work?id=>noise.colorOf(buildings.records.get(id)):null,'#ffffff');
   noiseSwitch($('#noise-switch'),state.noiseMode,setNoiseMode);
   legend.replaceChildren();
   if(work){if(construction)constructionLegend(legend,construction);else legend.textContent=t('Construction data is still loading or unavailable.');}
@@ -148,7 +149,7 @@ function setMetric(metric){
  buildings?.setColoring(null);
  if(prices&&metric!=='overview'){
   const [lo,hi]=prices.range(metric),fmt=v=>num(Math.round(v));
-  legendGradient(legend,{colors:PRICE_COLORS,start:fmt(lo),end:fmt(hi)});
+  legendGradient(legend,{colors:PRICE_COLORS,title:t('Sale price · €/m²'),start:fmt(lo),end:fmt(hi)});
  }
  $('#area-info').hidden=true;save();
 }

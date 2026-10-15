@@ -75,7 +75,8 @@ async function loadTextured() {
   return tileset;
 }
 
-const NEUTRAL = '#f3f0ea';   // warm white
+const NEUTRAL = '#f3f0ea';   // warm white: the grey buildings in Overview
+const NEUTRAL_COLOURED = '#454c48';  // dark granite: buildings a coloured view leaves out
 const SELECTED = '#c2622f';  // copper
 const SELECTED_ON_PRICES = '#1d2826';  // dark ink, stands out from blue and red
 
@@ -141,13 +142,15 @@ export async function loadBuildings(viewer) {
   let coloured = false;
   const applyStyle = () => {
     if (textured) tileset.colorBlendMode = coloured ? Cesium.Cesium3DTileColorBlendMode.REPLACE : Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
-    const neutral = textured && !coloured ? '#ffffff' : NEUTRAL;
+    const neutral = coloured ? NEUTRAL_COLOURED : textured ? '#ffffff' : NEUTRAL;
     const style = new Cesium.Cesium3DTileStyle();
     style.color = {evaluateColor: (feature, result) => {
       // Some city tiles carry no building data; Cesium then asks once for the whole tile, without a feature.
       if (!feature) return Cesium.Color.clone(colorFor(neutral), result);
       const id = idOf(feature), price = colorOf(id);
-      const css = id === selected ? (price ? selectedOnColors : SELECTED) : price ?? neutral;
+      // In a coloured view the selected building always takes that view's selected colour,
+      // also when the view leaves it out (copper would read as a noise level).
+      const css = id === selected ? (coloured ? selectedOnColors : SELECTED) : price ?? neutral;
       return Cesium.Color.clone(colorFor(css), result);
     }};
     tileset.style = style;
