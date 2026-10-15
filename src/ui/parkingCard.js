@@ -31,7 +31,7 @@ export function parkingSection(point,parking){
  zones.append(el('span',null,paid?t('Paid zone {n}',{n:paid.number})+(paid.price?' · '+priceText(paid.price):''):t('Not in a paid zone')),
   el('span',null,resident?t('Resident zone {code} · {name}',{code:resident.code,name:resident.name}):t('Not in a resident parking zone')));
  section.append(zones);
- const other=Object.entries(near.other).map(([type,n])=>t('{n} {what}',{n:num(n),what:t(PARKING_TYPES[type].short)}));
+ const other=Object.entries(near.other).map(([type,n])=>t('{what} {n}',{n:num(n),what:t(PARKING_TYPES[type].short)}));
  if(other.length)section.append(el('p','note',t('Other places mapped: {list}.',{list:other.join(', ')})));
  return section;
 }

@@ -355,6 +355,7 @@ const FI = {
   '{n} {what}': '{what} {n}',
   'car sharing': 'yhteiskäyttöauto',
   'loading': 'lastaus',
+  'loading bay': 'lastauspaikka',
   'disabled permit': 'liikkumisesteisen lupa',
   'taxi or official': 'taksi tai viranomainen',
   'electric car': 'sähköauto',

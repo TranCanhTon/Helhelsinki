@@ -26,7 +26,7 @@ export const PARKING_TYPES = {
   'disc-permit': {label: 'Free with parking disc, or with permit', group: 'free'},
   'conditional': {label: 'Free outside no-parking hours', group: 'free'},
   'car-sharing': {label: 'Car sharing (Z permit)', group: 'other', short: 'car sharing'},
-  'loading': {label: 'Loading', group: 'other', short: 'loading'},
+  'loading': {label: 'Loading', group: 'other', short: 'loading bay'},
   'accessible': {label: 'Accessible (disabled permit)', group: 'other', short: 'disabled permit'},
   'reserved': {label: 'Reserved (taxi, police, diplomats, officials)', group: 'other', short: 'taxi or official'},
   'ev': {label: 'Electric cars', group: 'other', short: 'electric car'},
