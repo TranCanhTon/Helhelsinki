@@ -196,6 +196,16 @@ function areaInfo(hit){
 // Stop pin under the pointer (pins show in every view when zoomed in).
 const layerPick=position=>transit?.pick(position)??null;
 function showInfo(text){const node=$('#area-info');node.hidden=!text;if(text)node.textContent=text;}
+// "Scroll to zoom · Shift + drag to rotate" fades after the first zoom or drag on the
+// map, and stays gone on later visits (only a convenience, so storage may fail).
+function hintOnce(){
+ const hint=$('.hint'),key='daroad.hintDone';
+ const done=()=>{hint.classList.add('is-done');try{localStorage.setItem(key,'1');}catch{}};
+ try{if(localStorage.getItem(key)){hint.classList.add('is-done');return;}}catch{}
+ viewer.canvas.addEventListener('wheel',done,{once:true,passive:true});
+ viewer.canvas.addEventListener('pointermove',e=>{if(e.buttons)done();},{passive:true});
+}
+hintOnce();
 // The URL only follows the camera after the landing, not its slow turn.
 const landing=createLanding(nav,()=>{canWrite=true;save();});
 async function start(){

@@ -237,16 +237,28 @@ button { font: inherit; color: inherit; }
 #neighbourhood-list { max-height:300px;overflow:auto;scrollbar-width:none;padding:4px 8px 8px;border-top:1px solid var(--line); }
 #neighbourhood-list button { display:block;width:100%;padding:8px 8px;border-radius:8px;text-transform:capitalize;text-align:left;border:0;background:transparent;cursor:pointer;font-size:13.5px; }
 #neighbourhood-list button:hover { color:var(--verdigris-ink);background:var(--verdigris-soft); }
+/* Bottom dock, top to bottom: legend or sun panel, tabs, hint. The tabs sit in the
+   middle of the window at the same height in every view (Ton, 15 Oct 2026: fixed
+   in the middle, also with a card open); the hint keeps its space after it fades. */
 .bottom-dock { position:absolute;left:50%;bottom:var(--edge);transform:translateX(-50%);max-width:calc(100% - 200px);display:flex;flex-direction:column;align-items:center;gap:var(--gap);z-index:3;pointer-events:none; }
 .bottom-dock > * { pointer-events:auto; }
 /* With a building card open, the map tools hide and the card takes their place. */
 #app:has(.building-card:not([hidden])) .map-tools { display:none; }
 #app:has(.building-card:not([hidden])) .building-card { right:var(--edge); }
-.hint { padding:5px 12px;border-radius:999px;background:var(--panel);backdrop-filter:blur(10px);font-size:12px;color:var(--muted); }
-.view-controls { display:flex;gap:4px;padding:6px;border-radius:999px; }
-.view-controls button { border:0;background:transparent;padding:8px 20px 9px;border-radius:999px;cursor:pointer;font-family:var(--serif);font-size:17px;font-weight:400;line-height:1.2;color:var(--muted);transition:background .15s,color .15s; }
-.view-controls button:hover { color:var(--ink);background:var(--verdigris-soft); }
-.view-controls [aria-pressed=true],.view-controls [aria-pressed=true]:hover { background:var(--verdigris);color:white; }
+.hint { padding:5px 12px;border-radius:999px;background:var(--panel);backdrop-filter:blur(10px);font-size:12px;color:var(--muted);transition:opacity .6s,visibility .6s; }
+/* Gone after the first zoom or drag on the map (main.js). */
+.hint.is-done { opacity:0;visibility:hidden; }
+/* Tab bar (Ton, 15 Oct 2026, design C): serif words, no filled pill; the open tab is
+   full ink with a copper dot under it. Hover: the word brightens and lifts a little,
+   and a small faint dot shows where the copper one would go. */
+.view-controls { display:flex;gap:6px;padding:4px 14px;border-radius:999px; }
+.view-controls button { position:relative;border:0;background:transparent;padding:10px 14px 14px;border-radius:999px;cursor:pointer;font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.2;color:var(--faint);transition:color .2s,transform .2s; }
+.view-controls button::after { content:'';position:absolute;left:50%;bottom:5px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--copper);opacity:0;transform:scale(.4);transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1); }
+.view-controls button:hover,.view-controls button:focus-visible { color:var(--ink);transform:translateY(-1px); }
+.view-controls button:hover::after,.view-controls button:focus-visible::after { opacity:.45;transform:scale(.7); }
+.view-controls [aria-pressed=true],.view-controls [aria-pressed=true]:hover { color:var(--ink);transform:none; }
+.view-controls [aria-pressed=true]::after,.view-controls [aria-pressed=true]:hover::after { opacity:1;transform:none; }
+@media (prefers-reduced-motion: reduce) { .view-controls button,.view-controls button::after { transition:none; } .view-controls button:hover { transform:none; } }
 .price-legend { display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px 16px;padding:10px 18px 20px;font-size:12px; }
 .legend-head { display:flex;align-items:center;gap:10px;white-space:nowrap; }
 .legend-bar { display:flex;gap:2px; }
