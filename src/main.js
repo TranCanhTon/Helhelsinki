@@ -61,7 +61,7 @@ async function ground(){
 }
 async function priceLayer(){
  try{
-  prices=await loadPrices(viewer);useAds();setMetric(state.metric);
+  prices=await loadPrices(viewer);prices.setLabels(canWrite);useAds();setMetric(state.metric);
   card?.refresh();
  }catch(e){$('#price-legend').textContent=t('Postal-area prices unavailable.');unavailable('Prices',e,priceLayer);}
 }
@@ -160,7 +160,7 @@ function paintLang(){
 }
 $('#tool-lang').onclick=()=>{
  state.lang=state.lang==='fi'?'en':'fi';setLang(state.lang);translatePage();paintLang();
- search?.translate();neighbourhoodList();setMetric(state.metric);card?.refresh();nav.apply();
+ search?.translate();neighbourhoodList();prices?.refresh();setMetric(state.metric);card?.refresh();nav.apply();
 };
 paintLang();
 function clearSelection(){
@@ -208,7 +208,7 @@ function hintOnce(){
 }
 hintOnce();
 // The URL only follows the camera after the landing, not its slow turn.
-const landing=createLanding(nav,()=>{canWrite=true;save();});
+const landing=createLanding(nav,()=>{canWrite=true;prices?.setLabels(true);save();});
 async function start(){
  buildings=await loadBuildings(viewer);
  sun=createSunShadows(viewer,buildings.tileset);sunPanel=createSunPanel($('#sun-panel'),$('#sun-dial'),sun);
