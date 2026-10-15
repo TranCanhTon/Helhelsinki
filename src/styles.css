@@ -12,7 +12,9 @@
   --verdigris: #438e7a;
   --verdigris-ink: #a8d7bb;
   --verdigris-soft: #2c4438;
+  --verdigris-deep: #2f7566;   /* behind white text: 5.4:1 */
   --copper: #c2622f;
+  --copper-ink: #eaa47c;       /* copper for small text: 5.5:1 on copper-soft */
   --copper-soft: #49352a;
   --radius: 16px;
   --radius-small: 10px;
@@ -77,7 +79,7 @@ button { font: inherit; color: inherit; }
   background: transparent; cursor: pointer; font-size: 17px; color: var(--ink);
 }
 .map-tools button:hover { background: var(--verdigris-soft); color: var(--verdigris-ink); }
-#compass { display: inline-block; color: var(--copper); font-weight: 700; font-size: 13px; transition: transform 0.1s; }
+#compass { display: inline-block; color: var(--copper-ink); font-weight: 700; font-size: 13px; transition: transform 0.1s; }
 
 .map-caption {
   position: absolute; left: var(--edge); bottom: var(--edge);
@@ -125,7 +127,7 @@ button { font: inherit; color: inherit; }
   background: var(--verdigris-soft); color: var(--verdigris-ink);
   font-size: 12.5px; font-weight: 600;
 }
-.tag-protected { background: var(--copper-soft); color: #8d4220; }
+.tag-protected { background: var(--copper-soft); color: var(--copper-ink); }
 
 .facts {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
@@ -143,11 +145,11 @@ button { font: inherit; color: inherit; }
 .note { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 
 .protection { padding: 12px 14px; border-radius: var(--radius-small); background: var(--copper-soft); }
-.protection h3 { color: #8d4220; }
+.protection h3 { color: var(--copper-ink); }
 .protection-meta { margin: 0; font-size: 13.5px; font-weight: 600; }
 .protection-summary { margin: 6px 0 0; font-size: 13.5px; }
 .protection-details { margin-top: 8px; }
-.protection-details summary { cursor: pointer; font-size: 12.5px; color: #8d4220; font-weight: 600; }
+.protection-details summary { cursor: pointer; font-size: 12.5px; color: var(--copper-ink); font-weight: 600; }
 .protection-rule { margin: 6px 0 0; font-size: 13px; line-height: 1.45; }
 
 /* Landing: covers the map while it loads, then the name moves to its corner.
@@ -266,8 +268,6 @@ button { font: inherit; color: inherit; }
 .building-ad strong { font-size:15px; }
 .building-ad .note { margin:0; }
 .ad-compare { font-weight:600; }
-.ad-compare.is-above { color:#b3302e; }
-.ad-compare.is-below { color:#2c5fa8; }
 .ad-compare.is-above { color:#f0a08a; }
 .ad-compare.is-below { color:#8db8e0; }
 .building-choices button { border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);padding:9px 12px;cursor:pointer;margin-top:8px; }
@@ -283,7 +283,7 @@ button { font: inherit; color: inherit; }
 .noise-mode-switch { display:flex;flex-direction:column;gap:4px; }
 .noise-mode-switch button { border:0;background:transparent;padding:8px 16px 9px;border-radius:var(--radius-small);cursor:pointer;font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);text-align:left; }
 .noise-mode-switch button:hover { background:var(--verdigris-soft); }
-.noise-mode-switch [aria-pressed=true],.noise-mode-switch [aria-pressed=true]:hover { background:var(--verdigris);color:white; }
+.noise-mode-switch [aria-pressed=true],.noise-mode-switch [aria-pressed=true]:hover { background:var(--verdigris-deep);color:white; }
 /* Parking and transit: legend keys and card sections. */
 .price-legend.is-keys { padding-bottom:8px; }
 .legend-keys { display:flex;flex-wrap:wrap;gap:6px 14px; }
