@@ -6,7 +6,7 @@
 // 3. Keeps records whose centre is inside Helsinki.
 // 4. Writes public/parking.json: one point per parking area with its type,
 //    estimated cars, hours and time limit, plus the paid and resident zones; and
-//    public/parking-zones.json: map zones per group (each area grown by 6 m and merged;
+//    public/parking-zones.json: map strips per group (each area grown by 1.5 m and merged;
 //    free over paid over permit).
 //    The map works out what is near a building when you open it, so this does
 //    not need to run again after data:city-tiles.
@@ -49,7 +49,8 @@ console.log('types', counts, 'unknown codes', unknownCodes);
 
 // Zones for the map: per group, every parking area grown by ZONE_M and merged.
 // Free wins over paid, paid over permit, so zones never overlap.
-const ZONE_M = 6;
+// 1.5 m (Ton, 15 Oct 2026, was 6 m): thin strips along the kerb, not wide blobs.
+const ZONE_M = 1.5;
 const hulls = Object.fromEntries(PARKING_GROUPS.map(g => [g.key, []]));
 for (const f of raw.features) {
   const type = classify(f.properties), group = type === 'exclude' ? null : PARKING_TYPES[type].group;
