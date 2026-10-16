@@ -4,10 +4,10 @@ import {t,tn,num} from './i18n.js';
 const el=(tag,className,text)=>{const n=document.createElement(tag);if(className)n.className=className;if(text!=null)n.textContent=text;return n;};
 const areas=n=>tn(n,'{n} area','{n} areas'),spaces=n=>tn(n,'{n} space','{n} spaces');
 // "€3 per hour" from the zone data -> "3 €/tunti" in Finnish.
-const priceText=p=>{const m=/^€([\d.]+) per hour$/.exec(p??'');return m?t('€{p} per hour',{p:num(Number(m[1]))}):p;};
+export const priceText=p=>{const m=/^€([\d.]+) per hour$/.exec(p??'');return m?t('€{p} per hour',{p:num(Number(m[1]))}):p;};
 
 // "about 44 spaces", "3 areas, no estimate", "None mapped". Missing stays missing, never 0.
-function spacesText(g){
+export function spacesText(g){
  if(!g.areas)return null;
  if(g.spaces===null)return t('{areas}, no estimate',{areas:areas(g.areas)});
  return t('about {spaces}',{spaces:spaces(g.spaces)})+(g.noEstimate?t(' and {areas} without estimate',{areas:areas(g.noEstimate)}):'');

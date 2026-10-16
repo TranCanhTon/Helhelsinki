@@ -1,18 +1,19 @@
 // The panel that opens when you click a building.
 //
-// Kept short (Ton, 14 Oct 2026): address header with a copy button, the rental ads in
-// this building (when there are any), the key facts with noise, average rent,
-// construction within 50 m, street parking, public transport, shops and services
-// nearby and plan protection. No explaining notes. Missing values say
+// Order (Ton, 16 Oct 2026): address header with a copy button, four answers (rent by
+// flat size, noise, nearest stop, parking), rental ads in this building, the building
+// facts, public transport, shops and services nearby, street parking, plan protection,
+// and construction within 50 m last. No explaining notes. Missing values say
 // "Not recorded", never zero.
-import {rentSection, adsSection} from './pricesCard.js';
-import {bandText} from './noiseCard.js';
+import {adsSection} from './pricesCard.js';
+import {ROOM_GROUPS} from '../data/listings.js';
 import {isApartmentBuilding, NOISE_MODES} from '../data/noise.js';
-import {parkingSection} from './parkingCard.js';
+import {parkingSection, priceText, spacesText} from './parkingCard.js';
+import {priceValue} from '../map/prices.js';
 import {transitSection} from './transitCard.js';
 import {constructionSection} from './constructionCard.js';
 import {placesSection} from './placesCard.js';
-import {t, num} from './i18n.js';
+import {t, num, getLang} from './i18n.js';
 
 const el = (tag, className, textValue) => {
   const node = document.createElement(tag);
@@ -26,17 +27,10 @@ const number = n => n === null || n === undefined ? null : num(n);
 // Register words (building type...) are stored in English; shown in the chosen language.
 const word = s => s == null ? s : t(s);
 
-// "65 to 70 dB, road traffic": the loudest modelled band at the building and its source.
+// Noise sources in words, for the key strip.
 const NOISE_SOURCE = {road: 'road traffic', rail: 'trains', metro: 'metro', tram: 'trams'};
-function noiseText(record, noise) {
-  if (!noise || !record.noise) return null;
-  const all = noise.band(noise.bandOf(record, 'all'));
-  if (!all) return t('Under 45 dB');
-  const [loudest] = NOISE_MODES.map(m => m.key).filter(k => record.noise[k] != null).sort((a, b) => record.noise[b] - record.noise[a]);
-  return bandText(all) + (loudest ? ', ' + t(NOISE_SOURCE[loudest]) : '');
-}
 
-function factsSection(record, noise) {
+function factsSection(record) {
   const f = record.facts ?? {};
   const rows = [
     ['Year built', record.yearBuilt],
@@ -46,8 +40,6 @@ function factsSection(record, noise) {
     ['Floor area', f.floorAreaM2 ? `${number(f.floorAreaM2)} m²` : null],
     ['Elevator', f.elevator ? t('Yes') : null],
   ];
-  // Noise for apartment buildings only, as in the Noise view.
-  if (isApartmentBuilding(record)) rows.push(['Noise', noiseText(record, noise)]);
   const grid = el('dl', 'facts');
   for (const [label, value] of rows) {
     const cell = el('div', value === null || value === undefined ? 'fact is-missing' : 'fact');
@@ -74,6 +66,48 @@ function protectionSection(protection) {
     box.append(details);
   }
   return box;
+}
+
+// Four answers at the top of the card (Ton, 15 Oct 2026): rent, noise, the nearest
+// stop and parking, each a big value with a short line under it. Missing says "No data".
+const euroText = v => getLang() === 'fi' ? num(Math.round(v)) + ' €' : '€' + num(Math.round(v));
+function keyStrip(record, {prices, listings, noise, transit, parking}) {
+  const keys = [];
+  // Rent: median asking rent of current 2-room ads in the postal area, else the official per m².
+  const area = prices?.areaAt('rent', record.position), stats = area && listings?.stats.get(area.postcode);
+  // Rent by flat size from the ads: 2 rooms big, the other sizes in the line under it
+  // (Ton, 16 Oct 2026: replaces the separate Average rent section).
+  const sizes = ROOM_GROUPS.map(g => ({label: t(g.label), rent: stats?.groups[g.key]?.rent})).filter(g => g.rent != null);
+  const main = sizes.find(g => g.label === t('2 rooms')) ?? sizes[0];
+  if (main) keys.push(['Rent', euroText(main.rent), [main.label + ' · ' + t('per month'), sizes.filter(g => g !== main).map(g => g.label + ' ' + euroText(g.rent)).join(' · ')]]);
+  else if (area?.values[1] != null) keys.push(['Rent', priceValue(area.values[1], prices.data.metrics.rent.units), t('Average for the postal area')]);
+  else keys.push(['Rent', null, prices ? null : t('Loading…')]);
+  // Noise: apartment buildings only, as in the Noise view.
+  if (isApartmentBuilding(record) && noise) {
+    const band = noise.band(noise.bandOf(record, 'all'));
+    const [loudest] = NOISE_MODES.map(m => m.key).filter(k => record.noise?.[k] != null).sort((a, b) => record.noise[b] - record.noise[a]);
+    keys.push(['Noise', band ? (band.hi == null ? band.lo + '+ dB' : band.lo + '–' + band.hi + ' dB') : t('Under 45 dB'), loudest ? t(NOISE_SOURCE[loudest]) : null]);
+  } else keys.push(['Noise', null, isApartmentBuilding(record) ? t('Loading…') : t('Modelled for homes only')]);
+  // Nearest stop: distance big, name and lines under it.
+  const stop = transit?.nearest(record.position)[0];
+  if (stop) keys.push(['Nearest stop', num(stop.distanceM) + ' m', [stop.stop.name, [...new Set(stop.stop.lines.map(l => l.short))].slice(0, 3).join(' ')].filter(Boolean).join(' · ')]);
+  else keys.push(['Nearest stop', null, transit ? t('None within 1.5 km') : t('Loading…')]);
+  // Parking: the paid zone's price, else free street parking nearby.
+  const near = parking?.near(record.position);
+  if (near?.paidZone) keys.push(['Parking', priceText(near.paidZone.price) ?? t('Paid zone'), [t('Paid zone {n}', {n: near.paidZone.number}), near.residentZone && t('resident zone {code}', {code: near.residentZone.code})].filter(Boolean).join(' · ')]);
+  else if (near?.groups.free.areas) keys.push(['Parking', t('Free'), spacesText(near.groups.free)]);
+  else keys.push(['Parking', null, parking ? t('None mapped') : t('Loading…')]);
+
+  const grid = el('dl', 'keys');
+  for (const [label, value, sub] of keys) {
+    const cell = el('div', value == null ? 'key is-missing' : 'key');
+    const dd = el('dd');
+    dd.append(el('span', 'key-value', value ?? t('No data')));
+    for (const line of [sub].flat().filter(Boolean)) dd.append(el('span', 'key-sub', line));
+    cell.append(el('dt', null, t(label)), dd);
+    grid.append(cell);
+  }
+  return grid;
 }
 
 // Small copy button next to the title; a tick shows for a moment once copied.
@@ -124,16 +158,21 @@ export class BuildingCard {
     this.el.scrollTop = top;
   }
 
-  // Sections about the surroundings, the same for a building and a bare address.
+  // The four answers at the top, for a building and for a bare address.
+  keys(row) {
+    return keyStrip(row, {prices: this.getPrices(), listings: this.getListings(), noise: this.getNoise(), transit: this.getTransit(), parking: this.getParking()});
+  }
+
+  // Sections about the surroundings (Ton, 16 Oct 2026): public transport, nearby
+  // places and street parking first; construction goes last, after plan protection.
   surroundings(row) {
     return [
-      rentSection(row, this.getPrices(), this.getListings()),
-      constructionSection(row.position, this.getConstruction()),
-      parkingSection(row.position, this.getParking()),
       transitSection(row.position, this.getTransit()),
       placesSection(row.position, this.getPlaces()),
+      parkingSection(row.position, this.getParking()),
     ];
   }
+  construction(row) { return constructionSection(row.position, this.getConstruction()); }
 
   show(buildingId, record) {
     this.current = [buildingId, record];
@@ -142,10 +181,11 @@ export class BuildingCard {
 
     const header = el('header', 'card-header');
     const heading = el('div', 'card-heading');
-    heading.append(titleRow(record?.address ?? t('Building without a registered address'), record?.address));
-    const place = [titleCase(record?.subdistrict?.nameFi), titleCase(record?.district?.nameFi), record?.postcode].filter(Boolean);
+    // Place in small capitals above the address, the address big below it.
+    const place = [titleCase(record?.district?.nameFi), titleCase(record?.subdistrict?.nameFi), record?.postcode].filter(Boolean);
     const unique = place.filter((p, i) => place.indexOf(p) === i);
     if (unique.length) heading.append(el('p', 'card-place', unique.join(' · ')));
+    heading.append(titleRow(record?.address ?? t('Building without a registered address'), record?.address));
     const close = el('button', 'card-close', '×');
     close.type = 'button';
     close.setAttribute('aria-label', t('Close building details'));
@@ -166,21 +206,17 @@ export class BuildingCard {
     if (tags.children.length) card.append(tags);
 
     if (record.addresses?.length > 1) card.append(el('p', 'card-sub', t('Also {list}', {list: record.addresses.slice(1).join(', ')})));
-    if (record.addressSv) {
-      const sv = el('p', 'card-sub', t('På svenska: {a}', {a: record.addressSv}));
-      sv.lang = 'sv';
-      card.append(sv);
-    }
 
-    // Current rental ads in this building first, then the facts.
+    // The four answers first, then rental ads in this building, then the facts.
+    if (record.address) card.append(this.keys(record));
     const ads = adsSection(record, this.getListings());
     if (ads) card.append(ads);
-    if (record.address) card.append(factsSection(record, this.getNoise()));
+    if (record.address) card.append(factsSection(record));
     else card.append(el('p', 'note', t('No register data.')));
 
     card.append(...this.surroundings(record));
     if (record.protection) card.append(protectionSection(record.protection));
-    card.append(credit());
+    card.append(this.construction(record), credit());
     card.hidden = false;
     card.scrollTop = 0;
   }
@@ -192,7 +228,7 @@ export class BuildingCard {
     const close=el('button','card-close','×');close.type='button';close.setAttribute('aria-label',t('Close address details'));close.onclick=this.onClose;
     header.append(titleRow(row.address,row.address),close);this.el.append(header);
     this.el.append(el('p','note',t('No linked 3D building')),el('p','card-sub',[row.addressSv,row.postcode].filter(Boolean).join(' · ')));
-    this.el.append(...this.surroundings(row),credit());
+    this.el.append(this.keys(row),...this.surroundings(row),this.construction(row),credit());
     this.el.hidden=false;this.el.scrollTop=0;
   }
   showChoices(row,records,onSelect) {

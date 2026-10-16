@@ -1,29 +1,10 @@
-import {priceValue} from '../map/prices.js';
-import {ROOM_GROUPS,groupOf,perM2} from '../data/listings.js';
+import {groupOf,perM2} from '../data/listings.js';
 import {t,num,locale,getLang} from './i18n.js';
 const el=(tag,className,text)=>{const n=document.createElement(tag);if(className)n.className=className;if(text!=null)n.textContent=text;return n;};
 // "€765" in English, "765 €" in Finnish.
 const euro=s=>getLang()==='fi'?s+' €':'€'+s;
 const euros=v=>euro(num(Math.round(v)));
 const when=iso=>new Date(iso).toLocaleDateString(locale(),{day:'numeric',month:'short'});
-
-// Card section (Ton, 14 Oct 2026): average rent per month in the building's postal
-// area by flat size, the median asking rent of current Oikotie ads (at least MIN_ADS
-// ads per size). Without ads for the area: the official average per m² (Statistics Finland).
-export function rentSection(record,prices,listings){
- const section=el('section','postal-prices');
- section.append(el('h3',null,t('Average rent')));
- if(!prices){section.append(el('p','note',t('Loading…')));return section;}
- const area=prices.areaAt('rent',record.position),s=area&&listings?.stats.get(area.postcode);
- const grid=el('dl','rent-groups');
- if(s)for(const g of ROOM_GROUPS){
-  const v=s.groups[g.key];
-  grid.append(el('dt',null,t(g.label)),el('dd',null,v.rent!=null?t('{v} / month',{v:euros(v.rent)}):t('No data')));
- }
- else grid.append(el('dt',null,t('Per m²')),el('dd',null,area?.values[1]!=null?priceValue(area.values[1],prices.data.metrics.rent.units):t('No data')));
- section.append(grid);
- return section;
-}
 
 // Ads in this exact building, each compared with similar ads in the same postal area.
 export function adsSection(record,listings){
