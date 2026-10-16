@@ -10,7 +10,7 @@ export async function loadLabels(viewer,nav) {
  const rows=await loadJson('/labels.json');
  const index=new Flatbush(rows.length);rows.forEach(r=>index.add(r.position[0],r.position[1],r.position[0],r.position[1]));index.finish();
  const host=document.createElement('div');host.className='place-labels';host.setAttribute('aria-hidden','true');document.querySelector('#app').append(host);
- const pool=[];const measure=document.createElement('canvas').getContext('2d');measure.font='15px "Instrument Serif"';
+ const pool=[];const measure=document.createElement('canvas').getContext('2d');measure.font='600 15px Khand';
  let last='',lastTime=0,timer;
  // The map only redraws on request, so panels opening or closing must ask for
  // a redraw to move labels out from under them.
@@ -26,8 +26,8 @@ export async function loadLabels(viewer,nav) {
   if(wait>0){clearTimeout(timer);timer=setTimeout(redraw,wait);return;}
   last=key;lastTime=performance.now();
   const box=viewBox(viewer);if(!box)return;
-  // Names only when zoomed right in: the scale bar (80 px) shows 40 m or less.
-  const candidates=Math.round(nav.metersPerPixel()*80/10)*10<=40?index.search(...box).map(i=>rows[i]):[];
+  // Names only when zoomed right in: the scale bar (80 px) shows 30 m or less (Ton, 16 Oct 2026).
+  const candidates=Math.round(nav.metersPerPixel()*80/10)*10<=30?index.search(...box).map(i=>rows[i]):[];
   candidates.sort((a,b)=>Number(/katu|polku/i.test(a.kind??''))-Number(/katu|polku/i.test(b.kind??''))||a.name.localeCompare(b.name));
   const blocked=[...document.querySelectorAll('.panel:not([hidden]),.map-caption,.hint')].filter(e=>e.offsetWidth).map(e=>{const r=e.getBoundingClientRect();return[r.left,r.top,r.right,r.bottom];});
   const accepted=[];let count=0;
