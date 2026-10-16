@@ -175,6 +175,8 @@ function clearSelection(){
 }
 // The full record comes with its tile's detail file; the card opens when it is in.
 // Camera distance at which the scale bar (80 px) shows `metres`.
+// Heading equal to `target` that is the short way round from where the camera faces now.
+const nearestHeading=target=>{const h=nav.state.heading;return h+(((target-h)%360)+540)%360-180;};
 const rangeForScale=metres=>metres/80*viewer.canvas.clientHeight/(2*Math.tan((viewer.camera.frustum.fovy??Math.PI/3)/2));
 // fly: true flies close (search), 'ease' moves to a clicked building: always the same
 // zoom (scale bar 35 m) and the base angle turned 6 degrees, so picking one building
@@ -208,8 +210,6 @@ function selectAddress(row){
  }
  marker=viewer.entities.add({position:Cesium.Cartesian3.fromDegrees(...row.position),point:{pixelSize:12,color:Cesium.Color.fromCssColorString('#c2622f'),outlineColor:Cesium.Color.WHITE,outlineWidth:3,disableDepthTestDistance:Number.POSITIVE_INFINITY}});
  card.showAddress(row);viewer.scene.requestRender();
-// Heading equal to `target` that is the short way round from where the camera faces now.
-const nearestHeading=target=>{const h=nav.state.heading;return h+(((target-h)%360)+540)%360-180;};
 }
 function areaInfo(hit){
  const node=$('#area-info');node.hidden=!hit;
@@ -275,6 +275,20 @@ async function start(){
   areaInfo(prices?.pick(move.endPosition));
  },Cesium.ScreenSpaceEventType.MOUSE_MOVE);
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&e.target.id!=='address-query')closeCard();});
+ // Shortcuts (Ton, 16 Oct 2026): / search, F back to the picked building, Alt+R the
+ // base angle and distance over the same place (Home still goes to the city centre).
+ // F and R by key position, so they work on a Finnish keyboard too; / by the character
+ // (Shift+7 there). Not while typing.
+ document.addEventListener('keydown',e=>{
+  if(e.target.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey||!$('#landing').hidden)return;
+  if(e.key==='/'&&!e.altKey){e.preventDefault();$('#address-query')?.focus();return;}
+  if(e.code==='KeyF'&&!e.altKey&&!e.shiftKey&&state.building){
+   const record=buildings.records.get(state.building);
+   if(record){e.preventDefault();nav.flyTo(record.position,rangeForScale(35),{heading:HOME.heading+6,pitch:HOME.pitch},1000);}
+   return;
+  }
+  if(e.code==='KeyR'&&e.altKey&&!e.shiftKey){e.preventDefault();nav.flyTo([nav.state.lon,nav.state.lat],HOME.range,{heading:nearestHeading(HOME.heading),pitch:HOME.pitch},900);}
+ });
  if(state.building && buildings.records.has(state.building))selectBuilding(state.building,false);else state.building=null;
  landing.ready();
  window.__lens={Cesium,viewer,nav,buildings,card,search,selectAddress,selectBuilding,setMetric,get prices(){return prices;},get listings(){return listings;},get noise(){return noise;},get parking(){return parking;},get construction(){return construction;},get places(){return places;},get transit(){return transit;},ready:true};
@@ -307,17 +321,3 @@ start().catch(error=>{
  window.__lens={viewer,nav,ready:true,error:error.message};
 });
 
- // Shortcuts (Ton, 16 Oct 2026): / search, F back to the picked building, Alt+R the
- // base angle and distance over the same place (Home still goes to the city centre).
- // F and R by key position, so they work on a Finnish keyboard too; / by the character
- // (Shift+7 there). Not while typing.
- document.addEventListener('keydown',e=>{
-  if(e.target.closest?.('input,textarea,select,[contenteditable]')||e.ctrlKey||e.metaKey||!$('#landing').hidden)return;
-  if(e.key==='/'&&!e.altKey){e.preventDefault();$('#address-query')?.focus();return;}
-  if(e.code==='KeyF'&&!e.altKey&&!e.shiftKey&&state.building){
-   const record=buildings.records.get(state.building);
-   if(record){e.preventDefault();nav.flyTo(record.position,rangeForScale(35),{heading:HOME.heading+6,pitch:HOME.pitch},1000);}
-   return;
-  }
-  if(e.code==='KeyR'&&e.altKey&&!e.shiftKey){e.preventDefault();nav.flyTo([nav.state.lon,nav.state.lat],HOME.range,{heading:nearestHeading(HOME.heading),pitch:HOME.pitch},900);}
- });
