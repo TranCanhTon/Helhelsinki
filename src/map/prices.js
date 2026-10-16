@@ -59,7 +59,7 @@ export async function loadPrices(viewer) {
     if(!points.has(area))points.set(area,labelPoint(area.geometry));
     // Name and value; they fade out when the camera is far, where they would pile up.
     labels.add({position:Cesium.Cartesian3.fromDegrees(...points.get(area),2),text:area.name+'\n'+(units==='EUR/m²'?t('{v} €/m²',{v:num(Math.round(valueOf(current,area)))}):priceValue(valueOf(current,area),units)),
-     font:'600 13px "Work Sans Variable", "Segoe UI", sans-serif',fillColor:ink,outlineColor:halo,outlineWidth:4,style:Cesium.LabelStyle.FILL_AND_OUTLINE,
+     font:'600 13px "General Sans", "Segoe UI", sans-serif',fillColor:ink,outlineColor:halo,outlineWidth:4,style:Cesium.LabelStyle.FILL_AND_OUTLINE,
      horizontalOrigin:Cesium.HorizontalOrigin.CENTER,verticalOrigin:Cesium.VerticalOrigin.CENTER,
      translucencyByDistance:new Cesium.NearFarScalar(4000,1,9000,0),disableDepthTestDistance:Number.POSITIVE_INFINITY});
     for(const [outer,...holes] of area.geometry.coordinates){

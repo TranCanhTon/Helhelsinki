@@ -1,6 +1,12 @@
 /* daroad: "Copper and granite", dark only (Ton removed day mode, 14 Oct 2026).
    Colours taken from the city: grey granite, the verdigris of copper roofs,
    and bright copper for whatever you have selected. Desktop layout. */
+/* General Sans by the Indian Type Foundry, free from fontshare.com (ITF Free Font
+   License), stored in src/fonts so the site makes no font requests. */
+@font-face { font-family: 'General Sans'; src: url('./fonts/general-sans-400.woff2') format('woff2'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: 'General Sans'; src: url('./fonts/general-sans-500.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: 'General Sans'; src: url('./fonts/general-sans-600.woff2') format('woff2'); font-weight: 600; font-style: normal; font-display: swap; }
+
 :root {
   --ground: #101413;          /* map background before the base map loads */
   --panel: rgba(29, 39, 35, 0.94);
@@ -19,14 +25,17 @@
   --radius: 16px;
   --radius-small: 10px;
   --shadow: 0 1px 2px rgba(29, 40, 38, 0.08), 0 12px 32px rgba(29, 40, 38, 0.16);
-  /* Fonts, three only (Ton, 15 Oct 2026), all bundled, no font requests:
-     Syne ExtraBold for the name, Instrument Serif for big text (tabs, titles,
-     the hook line, place names on the map), Work Sans for everything small
-     (easier to read). Instrument Serif has one weight, so no fake bold. */
+  /* Fonts (Ton, 16 Oct 2026), all bundled, no font requests: Syne ExtraBold for the
+     name, Khand Semi Bold for headings (tabs, titles, the hook line, place names, the
+     card title and its big numbers, the search placeholder), General Sans for all
+     other text. Khand comes in one weight here, so no fake bold. */
+  --head: 'Khand', 'Arial Narrow', sans-serif;
+  /* Instrument Serif for the tab bar, the Neighbourhoods title and the search
+     placeholder (Ton, 16 Oct 2026). */
   --serif: 'Instrument Serif', Georgia, serif;
-  --sans: 'Work Sans Variable', 'Segoe UI', sans-serif;
+  --sans: 'General Sans', 'Segoe UI', sans-serif;
   --card: var(--sans);
-  --display: 'Syne', var(--serif);
+  --display: 'Syne', var(--head);
   --edge: 24px;   /* space between the panels and the window edge */
   --gap: 14px;    /* space between panels */
 }
@@ -75,11 +84,23 @@ button { font: inherit; color: inherit; }
   display: flex; flex-direction: column; gap: 4px; padding: 6px;
 }
 .map-tools button {
+  display: grid; place-items: center;
   width: 40px; height: 40px; border: 0; border-radius: var(--radius-small);
-  background: transparent; cursor: pointer; font-size: 17px; color: var(--ink);
+  background: transparent; cursor: pointer; font-size: 17px; color: var(--muted);
+  transition: color .2s, background .2s;
 }
-.map-tools button:hover { background: var(--verdigris-soft); color: var(--verdigris-ink); }
-#compass { display: inline-block; color: var(--copper-ink); font-weight: 700; font-size: 13px; transition: transform 0.1s; }
+.map-tools button:hover { background: rgba(229, 239, 231, .06); color: var(--ink); }
+/* One line icon set (Ton, 15 Oct 2026): 20 px, 1.6 px stroke, same as the tab bar's weight. */
+.tool-icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+#tool-overhead[data-next="3d"] .icon-2d, #tool-overhead:not([data-next="3d"]) .icon-3d { display: none; }
+/* Compass: the north half of the needle is copper and filled, the south half an outline. */
+#compass { display: grid; place-items: center; transition: transform 0.1s; }
+#compass .needle-n { fill: var(--copper); stroke: var(--copper); }
+#compass .needle-s { fill: none; }
+/* Haze over the far edge of the map (top of the screen when tilted). Pure CSS, no extra
+   drawing for the map. main.js fades it out as the view turns straight down. */
+.haze { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(26, 35, 32, .92) 0%, rgba(26, 35, 32, .55) 16%, rgba(26, 35, 32, .18) 32%, rgba(26, 35, 32, 0) 46%); }
 
 .map-caption {
   position: absolute; left: var(--edge); bottom: var(--edge);
@@ -95,24 +116,30 @@ button { font: inherit; color: inherit; }
 .building-card {
   position: absolute; top: 96px; right: 80px;
   width: 420px; max-height: calc(100% - 96px - var(--edge)); overflow-y: auto;
-  padding: 0 22px 20px;
+  padding: 0 26px 24px;
   z-index: 2;
   scrollbar-width: none;
   font-family: var(--card);
+  /* Slides in a moment after the building is picked (Ton, 15 Oct 2026). */
+  animation: card-in .45s .12s cubic-bezier(.2, .7, .2, 1) backwards;
 }
 .building-card[hidden] { display: none; }
+@keyframes card-in { from { opacity: 0; transform: translateX(18px); } }
+@media (prefers-reduced-motion: reduce) { .building-card { animation: none; } }
 .card-header {
   position: sticky; top: 0; z-index: 1;
   display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-  margin: 0 -22px; padding: 20px 22px 14px;
+  margin: 0 -26px; padding: 22px 26px 16px;
   background: var(--panel-solid);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid rgba(229, 239, 231, .09);
 }
-.card-header h2 { margin: 0; font-family: var(--serif); font-size: 23px; line-height: 1.2; letter-spacing: -0.01em; }
+/* Header: place in small capitals, the address big in Khand under it; the rest of the
+   card is General Sans (Ton, 16 Oct 2026). */
+.card-header h2 { margin: 0; font-family: var(--head); font-size: 34px; font-weight: 600; line-height: 1; letter-spacing: 0; }
 .card-title { display: flex; align-items: center; gap: 6px; }
 .copy-address { flex: none; display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
 .copy-address:hover { color: var(--verdigris-ink); background: var(--verdigris-soft); }
-.card-place { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; }
+.card-place { margin: 0 0 6px; color: var(--faint); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; }
 .card-close {
   flex: none; width: 32px; height: 32px; border-radius: 50%;
   border: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 19px; line-height: 1;
@@ -129,9 +156,17 @@ button { font: inherit; color: inherit; }
 }
 .tag-protected { background: var(--copper-soft); color: var(--copper-ink); }
 
+/* Key strip: rent, noise, nearest stop, parking. Big values, a short line under each. */
+.keys { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 16px; margin: 20px 0 4px; }
+.key dt { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+.key dd { margin: 4px 0 0; display: flex; flex-direction: column; gap: 3px; }
+.key-value { font-family: var(--head); font-size: 30px; font-weight: 600; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.key-sub { font-size: 12px; line-height: 1.35; color: var(--muted); }
+.key.is-missing .key-value { color: var(--faint); font-size: 22px; }
+
 .facts {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
-  margin: 16px 0 0; overflow: hidden;
+  margin: 26px 0 0; overflow: hidden;
   background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-small);
 }
 .fact { padding: 9px 12px; background: var(--panel-solid); }
@@ -140,11 +175,11 @@ button { font: inherit; color: inherit; }
 .fact dd { margin: 2px 0 0; font-size: 14.5px; font-weight: 550; font-variant-numeric: tabular-nums; }
 .fact.is-missing dd { color: var(--faint); font-weight: 400; }
 
-.building-card section { margin-top: 20px; }
-.building-card h3 { margin: 0 0 6px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--verdigris-ink); }
+.building-card section { margin-top: 30px; padding-top: 22px; border-top: 1px solid rgba(229, 239, 231, .07); }
+.building-card h3 { margin: 0 0 10px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--verdigris-ink); }
 .note { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
 
-.protection { padding: 12px 14px; border-radius: var(--radius-small); background: var(--copper-soft); }
+.protection, .building-card section.protection { padding: 12px 14px; border-top: 0; border-radius: var(--radius-small); background: var(--copper-soft); }
 .protection h3 { color: var(--copper-ink); }
 .protection-meta { margin: 0; font-size: 13.5px; font-weight: 600; }
 .protection-summary { margin: 6px 0 0; font-size: 13.5px; }
@@ -165,7 +200,7 @@ button { font: inherit; color: inherit; }
 .landing-inner { display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 660px; }
 .landing-title { margin: 0 0 14px; font-weight: 400; }
 .landing-brand { font-size: min(112px, 8vw); will-change: transform; }
-.landing-hook { margin: 0; font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.1; color: var(--ink); text-wrap: balance; }
+.landing-hook { margin: 0; font-family: var(--head); font-size: 38px; font-weight: 400; line-height: 1.1; color: var(--ink); text-wrap: balance; }
 .landing-hook em { color: var(--copper); }
 .landing-text { margin: 18px 0 0; max-width: 440px; font-family: var(--sans); font-weight: 400; font-size: 16px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
 .landing-hook, .landing-text, .landing-cue { text-shadow: 0 1px 12px var(--ground), 0 0 2px var(--ground); }
@@ -219,7 +254,7 @@ button { font: inherit; color: inherit; }
  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='7' cy='7' r='5.2' fill='none' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M11 11l3.6 3.6' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='7' cy='7' r='5.2' fill='none' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M11 11l3.6 3.6' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; }
 .search input { width:100%;font:inherit;font-size:14.5px;padding:12px 14px 12px 40px;border:0;border-radius:var(--radius-small);background:transparent;color:var(--ink); }
-.search input::placeholder { color:var(--muted); }
+.search input::placeholder { color:var(--muted);font-family:var(--serif);font-weight:400;font-size:17px; }
 .search input:focus-visible { outline:none; }
 .search:focus-within { background:var(--panel); }
 #address-results { scrollbar-width:none;margin-top:6px;padding:4px 0 2px;border-top:1px solid var(--line);max-height:460px;overflow:auto; }
@@ -269,12 +304,9 @@ button { font: inherit; color: inherit; }
 .legend-missing { display:flex;align-items:center;gap:6px;color:var(--muted);white-space:nowrap; }
 .legend-missing i { width:14px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--line); }
 /* Language switch: the code of the language you switch to. */
-.map-tools .tool-lang { font-size:15px;letter-spacing:0.04em; }
+.map-tools .tool-lang { font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:0.06em; }
 /* Hover info: centred between the left column and the search box, never under either. */
 .area-info { position:absolute;top:var(--edge);left:calc(var(--edge) + 270px + var(--gap));right:calc(var(--edge) + 400px + var(--gap));width:fit-content;margin:0 auto;padding:12px 18px;font-size:13px;line-height:1.45;z-index:3; }
-.rent-groups { display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:8px 0 4px;font-size:13px; }
-.rent-groups dt { color:var(--muted); }
-.rent-groups dd { margin:0;font-weight:600; }
 .building-ads { margin-top:14px; }
 .building-ad { display:flex;flex-direction:column;gap:3px;padding:10px 12px;margin-top:8px;border:1px solid var(--line);border-radius:var(--radius-small);color:var(--ink);text-decoration:none;font-size:13px; }
 .building-ad:hover { border-color:var(--verdigris);background:var(--verdigris-soft); }
@@ -286,17 +318,22 @@ button { font: inherit; color: inherit; }
 .building-choices button { border:1px solid var(--line);border-radius:8px;background:var(--panel-solid);padding:9px 12px;cursor:pointer;margin-top:8px; }
 .building-choices button { display:block;text-align:left;width:100%;font-size:13px; }
 .place-labels { position:absolute;inset:0;pointer-events:none;overflow:hidden; }
-.place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-family:var(--serif);font-size:15px;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
+.place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-family:var(--head);font-size:15px;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
 #data-status { position:absolute;left:var(--edge);top:calc(var(--edge) + 36px + 46px + 2 * var(--gap));max-width:330px;font-size:12.5px;z-index:5; }
 .data-error { padding:10px 12px;background:var(--panel-solid);border:1px solid var(--line);border-radius:var(--radius-small);margin-bottom:8px; }
 .data-error button { cursor:pointer; }
 [hidden] { display:none !important; }
 
 /* Noise sources and Construction: stacked on the left, above the scale bar, like the map tools on the right. */
-.noise-mode-switch { display:flex;flex-direction:column;gap:4px; }
-.noise-mode-switch button { border:0;background:transparent;padding:8px 16px 9px;border-radius:var(--radius-small);cursor:pointer;font-family:var(--serif);font-size:17px;font-weight:400;color:var(--ink);text-align:left; }
-.noise-mode-switch button:hover { background:var(--verdigris-soft); }
-.noise-mode-switch [aria-pressed=true],.noise-mode-switch [aria-pressed=true]:hover { background:var(--verdigris-deep);color:white; }
+/* Noise sources: same look as the tab bar (copper dot), stacked; the dot sits left of the word. */
+.noise-mode-switch { display:flex;flex-direction:column;gap:2px;padding:4px 6px; }
+.noise-mode-switch button { position:relative;border:0;background:transparent;padding:7px 16px 8px 26px;cursor:pointer;font-family:var(--head);font-size:18px;font-weight:400;color:var(--faint);text-align:left;transition:color .2s,transform .2s; }
+.noise-mode-switch button::before { content:'';position:absolute;left:11px;top:50%;width:5px;height:5px;margin-top:-2px;border-radius:50%;background:var(--copper);opacity:0;transform:scale(.4);transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1); }
+.noise-mode-switch button:hover,.noise-mode-switch button:focus-visible { color:var(--ink);transform:translateX(2px); }
+.noise-mode-switch button:hover::before,.noise-mode-switch button:focus-visible::before { opacity:.45;transform:scale(.7); }
+.noise-mode-switch [aria-pressed=true],.noise-mode-switch [aria-pressed=true]:hover { color:var(--ink);transform:none; }
+.noise-mode-switch [aria-pressed=true]::before,.noise-mode-switch [aria-pressed=true]:hover::before { opacity:1;transform:none; }
+@media (prefers-reduced-motion: reduce) { .noise-mode-switch button,.noise-mode-switch button::before { transition:none; } .noise-mode-switch button:hover { transform:none; } }
 /* Parking and transit: legend keys and card sections. */
 .price-legend.is-keys { padding-bottom:8px; }
 .legend-keys { display:flex;flex-wrap:wrap;gap:6px 14px; }
@@ -352,9 +389,9 @@ button { font: inherit; color: inherit; }
    As wide as the price legend, so an open building card does not cover it. */
 .sun-panel { display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px 14px;width:540px;padding:12px 20px 12px;font-size:12px; }
 .sun-head { grid-column:1 / -1;display:flex;align-items:center;gap:16px; }
-.sun-month { color-scheme:dark;font-family:var(--serif);font-size:17px;color:var(--ink);background:var(--panel-solid);border:1px solid var(--line);border-radius:999px;padding:6px 12px 7px 14px;cursor:pointer; }
+.sun-month { color-scheme:dark;font-family:var(--head);font-size:17px;color:var(--ink);background:var(--panel-solid);border:1px solid var(--line);border-radius:999px;padding:6px 12px 7px 14px;cursor:pointer; }
 .sun-month:hover { border-color:var(--verdigris); }
-.sun-time { margin-left:auto;font-family:var(--serif);font-size:28px;font-weight:400;line-height:1;font-variant-numeric:tabular-nums; }
+.sun-time { margin-left:auto;font-family:var(--head);font-size:28px;font-weight:400;line-height:1;font-variant-numeric:tabular-nums; }
 .sun-lines { display:flex;flex-direction:column;gap:2px;color:var(--muted);white-space:nowrap; }
 .sun-end { display:flex;flex-direction:column;align-items:center;gap:1px;font-variant-numeric:tabular-nums; }
 .sun-end small { font-size:11px;color:var(--muted); }
@@ -368,9 +405,16 @@ button { font: inherit; color: inherit; }
 /* Compass dial on the left: turns with the map; the copper ray points at the sun. */
 .sun-dial { position:absolute;left:var(--edge);bottom:calc(var(--edge) + 32px + var(--gap));width:124px;height:124px;border-radius:50%;z-index:3;--heading:0;--sun:180; }
 .dial-ring { position:absolute;inset:22px;border-radius:50%;border:1px solid var(--line);transform:rotate(calc(var(--heading) * -1deg)); }
-.dial-letter { position:absolute;left:50%;top:50%;font-family:var(--serif);font-size:17px;line-height:1;color:var(--muted);
+.dial-letter { position:absolute;left:50%;top:50%;font-family:var(--head);font-size:17px;line-height:1;color:var(--muted);
  transform:translate(-50%,-50%) rotate(calc(var(--a) * 1deg)) translateY(-51px) rotate(calc((var(--heading) - var(--a)) * 1deg)); }
 .dial-letter.is-north { color:var(--ink); }
 .dial-ray { position:absolute;left:50%;bottom:50%;width:2px;height:40px;margin-left:-1px;border-radius:2px;background:var(--copper);transform-origin:50% 100%;transform:rotate(calc(var(--sun) * 1deg)); }
 .dial-ray::after { content:'';position:absolute;left:50%;top:-5px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--copper);box-shadow:0 0 10px var(--copper); }
 .dial-ring::after { content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:var(--ink); }
+
+/* Hover preview: the building under the mouse, at the top middle, the same place as the
+   postal area info (Ton, 16 Oct 2026). No box: bigger text with a dark glow behind it so
+   it reads over the map. */
+.hover-tip { position:absolute;top:calc(var(--edge) + 4px);left:calc(var(--edge) + 270px + var(--gap));right:calc(var(--edge) + 400px + var(--gap));width:fit-content;margin:0 auto;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:14px;font-weight:500;color:var(--muted);white-space:nowrap;
+  text-shadow:0 0 18px var(--ground),0 0 8px var(--ground),0 1px 3px var(--ground); }
+.hover-tip strong { font-family:var(--head);font-size:30px;font-weight:400;line-height:1.1;color:var(--ink); }

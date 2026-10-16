@@ -7,6 +7,7 @@ import {loadLabels} from './map/context.js';
 import {loadPrices,priceValue,PRICE_COLORS} from './map/prices.js';
 import {loadNoise} from './map/noise.js';
 import {noiseLegend,noiseSwitch} from './ui/noiseCard.js';
+import {screenFinder} from './map/screenPick.js';
 import {loadParking} from './map/parking.js';
 import {loadTransit} from './map/transit.js';
 import {parkingLegend} from './ui/parkingCard.js';
@@ -15,6 +16,7 @@ import {constructionLegend} from './ui/constructionCard.js';
 import {createSunShadows} from './map/sun.js';
 import {createSunPanel} from './ui/sunPanel.js';
 import {loadStationTrains} from './map/stationTrains.js';
+import {createSelectionGlow} from './map/selectionGlow.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
@@ -25,9 +27,8 @@ import {createLanding} from './ui/landing.js';
 import {t,num,locale,setLang,translatePage} from './ui/i18n.js';
 import {readState,writeState} from './data/urlState.js';
 import '@fontsource/syne/800.css';
+import '@fontsource/khand/600.css';
 import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
-import '@fontsource-variable/work-sans/wght.css';
 import './styles.css';
 const $=selector=>document.querySelector(selector);
 const HOME={lon:24.9480,lat:60.1835,heading:20,pitch:-40,range:1400};
@@ -42,7 +43,10 @@ const save=()=>{if(!canWrite)return;clearTimeout(urlTimer);urlTimer=setTimeout((
 const nav=new Navigation(viewer,HOME,(camera,navigation)=>{
  $('#compass').style.transform='rotate('+(-camera.heading)+'deg)';
  $('#sun-dial').style.setProperty('--heading',camera.heading.toFixed(1));
- $('#tool-overhead').textContent=camera.pitch<-80?'3D':'2D';
+ // The button shows the view it switches to: a cube from straight above, a flat grid when tilted.
+ $('#tool-overhead').dataset.next=camera.pitch<-80?'3d':'2d';
+ // Haze at the far edge of a tilted view; none from straight above, where there is no horizon.
+ $('.haze').style.opacity=Math.min(1,Math.max(0,(camera.pitch+85)/45)).toFixed(2);
  const metres=navigation.metersPerPixel()*80;
  $('#scale-label').textContent=metres>=1000?num(metres/1000,{minimumFractionDigits:1,maximumFractionDigits:1})+' km':Math.round(metres/10)*10+' m';
  save();
@@ -55,6 +59,7 @@ function unavailable(label,error,retry){
  const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
 let basemap,prices,noise,parking,construction,transit,places,listings,buildings,sun,sunPanel,card,search,marker,currentAddress=null;
+const glow=createSelectionGlow(viewer);
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
  catch(e){unavailable('Ground map',e,ground);}
@@ -164,19 +169,34 @@ $('#tool-lang').onclick=()=>{
 };
 paintLang();
 function clearSelection(){
- state.building=null;currentAddress=null;buildings?.setSelected(null);card?.hide();
+ state.building=null;currentAddress=null;buildings?.setSelected(null);card?.hide();glow.show(null);
  if(marker)viewer.entities.remove(marker);marker=null;viewer.scene.requestRender();save();
 }
 // The full record comes with its tile's detail file; the card opens when it is in.
+// Camera distance at which the scale bar (80 px) shows `metres`.
+const rangeForScale=metres=>metres/80*viewer.canvas.clientHeight/(2*Math.tan((viewer.camera.frustum.fovy??Math.PI/3)/2));
+// fly: true flies close (search), 'ease' moves to a clicked building: always the same
+// zoom (scale bar 35 m) and the base angle turned 6 degrees, so picking one building
+// after another does not keep zooming in or turning (Ton, 16 Oct 2026). false keeps
+// the camera (link, retry).
 async function selectBuilding(id,fly=true){
  const record=buildings.records.get(id);if(!record)return;
- clearSelection();state.building=id;buildings.setSelected(id);
- if(fly)nav.flyTo(record.position,420);save();
+ clearSelection();state.building=id;buildings.setSelected(id);glow.show(record.position);
+ if(fly==='ease')nav.flyTo(record.position,rangeForScale(35),{heading:HOME.heading+6,pitch:HOME.pitch},1200);
+ else if(fly)nav.flyTo(record.position,420);
+ save();
  try{
   const full=await buildings.detail(id);
   if(!full)throw new Error('Building '+id+' is missing from its detail file. Run npm run data:split');
   if(state.building===id)card.show(id,full);
  }catch(e){if(state.building===id)unavailable('Building details',e,()=>selectBuilding(id,false));}
+}
+// Closing the card (×, Escape or a click on empty map): zoom out to a 60 m scale bar
+// and turn back to the base angle, staying over the same place (Ton, 16 Oct 2026).
+function closeCard(){
+ const open=!!state.building;
+ clearSelection();
+ if(open)nav.flyTo([nav.state.lon,nav.state.lat],rangeForScale(60),{heading:HOME.heading,pitch:HOME.pitch},1100);
 }
 function selectAddress(row){
  clearSelection();currentAddress=row;
@@ -213,27 +233,45 @@ async function start(){
  buildings=await loadBuildings(viewer);
  sun=createSunShadows(viewer,buildings.tileset);sunPanel=createSunPanel($('#sun-panel'),$('#sun-dial'),sun);
  if(state.metric==='sun')setMetric('sun');
- card=new BuildingCard($('#building-card'),clearSelection,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction,()=>places);
+ card=new BuildingCard($('#building-card'),closeCard,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction,()=>places);
  search=new AddressSearch($('#search'),selectAddress);
  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
  handler.setInputAction(click=>{
   if(nav.dragged)return;
+  $('#hover-tip').hidden=true;
   const spot=layerPick(click.position);
   if(spot){showInfo(spot.text);if(spot.zoomTo)nav.flyTo(spot.zoomTo,Math.max(150,nav.state.range/3));return;}
   const hit=buildings.pick(click.position);
-  if(hit){selectBuilding(hit.buildingId,false);return;}
+  if(hit){selectBuilding(hit.buildingId,'ease');return;}
   const area=prices?.pick(click.position);if(area){areaInfo(area);return;}
-  clearSelection();
+  closeCard();
  },Cesium.ScreenSpaceEventType.LEFT_CLICK);
  let hoverTime=0;
+ // Hover preview (Ton, 15 Oct 2026): address and type of the building under the
+ // mouse, in a fixed box at the top middle (Ton, 16 Oct 2026: not following the mouse). Found by screen distance to each addressed
+ // building's point 12 m up (about mid height), not by scene.pick, which is slow.
+ const addressed=buildings.manifest.filter(r=>r.address),findBuilding=screenFinder(viewer,addressed.map(r=>r.position),12);
+ const tip=$('#hover-tip');
+ const hoverTip=position=>{
+  const r=position?addressed[findBuilding(position,26)]:null;
+  if(!r){tip.hidden=true;return null;}
+  const line=document.createElement('span');line.textContent=r.classEn??r.useEn?t(r.classEn??r.useEn):'';
+  const name=document.createElement('strong');name.textContent=r.address;
+  tip.replaceChildren(name,line);tip.hidden=false;return r;
+ };
+ viewer.canvas.addEventListener('pointermove',e=>{if(e.buttons)tip.hidden=true;});
+ viewer.canvas.addEventListener('pointerleave',()=>{tip.hidden=true;});
  handler.setInputAction(move=>{
   if(performance.now()-hoverTime<100)return;hoverTime=performance.now();
-  const spot=layerPick(move.endPosition);viewer.canvas.style.cursor=spot?'pointer':'';
+  const spot=layerPick(move.endPosition);
+  const building=spot||nav.dragged?hoverTip(null):hoverTip(move.endPosition);
+  viewer.canvas.style.cursor=spot||building?'pointer':'';
   if(spot){showInfo(spot.text);return;}
+  if(building){$('#area-info').hidden=true;return;}
   if(state.metric==='overview'||state.metric==='parking'){$('#area-info').hidden=true;return;}
   areaInfo(prices?.pick(move.endPosition));
  },Cesium.ScreenSpaceEventType.MOUSE_MOVE);
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&e.target.id!=='address-query')clearSelection();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&e.target.id!=='address-query')closeCard();});
  if(state.building && buildings.records.has(state.building))selectBuilding(state.building,false);else state.building=null;
  landing.ready();
  window.__lens={Cesium,viewer,nav,buildings,card,search,selectAddress,selectBuilding,setMetric,get prices(){return prices;},get listings(){return listings;},get noise(){return noise;},get parking(){return parking;},get construction(){return construction;},get places(){return places;},get transit(){return transit;},ready:true};

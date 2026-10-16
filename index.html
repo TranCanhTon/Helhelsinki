@@ -10,6 +10,7 @@
   <body>
     <div id="app" class="is-landing">
       <div id="scene"></div>
+      <div class="haze" aria-hidden="true"></div>
 
       <header class="brand">
         <span class="brand-lockup"><span class="brand-name">daroad</span></span>
@@ -29,12 +30,13 @@
       </div>
       <div id="area-info" class="area-info panel" hidden role="status"></div>
       <div id="data-status" role="status"></div>
+      <div id="hover-tip" class="hover-tip" hidden aria-hidden="true"></div>
       <nav class="map-tools panel" aria-label="Map controls" data-i18n-label="Map controls">
-        <button id="tool-home" type="button" title="Reset view (Home)" aria-label="Reset view" data-i18n-title="Reset view (Home)" data-i18n-label="Reset view">⌂</button>
-        <button id="tool-zoom-in" type="button" title="Zoom in (+)" aria-label="Zoom in" data-i18n-title="Zoom in (+)" data-i18n-label="Zoom in">+</button>
-        <button id="tool-zoom-out" type="button" title="Zoom out (−)" aria-label="Zoom out" data-i18n-title="Zoom out (−)" data-i18n-label="Zoom out">−</button>
-        <button id="tool-overhead" type="button" title="Overhead view" aria-label="Toggle overhead view" data-i18n-title="Overhead view" data-i18n-label="Toggle overhead view">2D</button>
-        <button id="tool-north" type="button" title="Face north" aria-label="Face north" data-i18n-title="Face north" data-i18n-label="Face north"><span id="compass">N</span></button>
+        <button id="tool-home" type="button" title="Reset view (Home)" aria-label="Reset view" data-i18n-title="Reset view (Home)" data-i18n-label="Reset view"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5"/><path d="M6.5 9.5v9.5h4v-5h3v5h4V9.5"/></svg></button>
+        <button id="tool-zoom-in" type="button" title="Zoom in (+)" aria-label="Zoom in" data-i18n-title="Zoom in (+)" data-i18n-label="Zoom in"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
+        <button id="tool-zoom-out" type="button" title="Zoom out (−)" aria-label="Zoom out" data-i18n-title="Zoom out (−)" data-i18n-label="Zoom out"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12h13"/></svg></button>
+        <button id="tool-overhead" type="button" title="Overhead view" aria-label="Toggle overhead view" data-i18n-title="Overhead view" data-i18n-label="Toggle overhead view"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><g class="icon-2d"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M5 12h14M12 5v14"/></g><g class="icon-3d"><path d="M12 3.8 19.5 8v8L12 20.2 4.5 16V8z"/><path d="M4.5 8 12 12.2 19.5 8M12 12.2v8"/></g></svg></button>
+        <button id="tool-north" type="button" title="Face north" aria-label="Face north" data-i18n-title="Face north" data-i18n-label="Face north"><span id="compass"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="needle-n" d="M12 3.5 15 12H9z"/><path class="needle-s" d="M9 12h6l-3 8.5z"/></svg></span></button>
         <button id="tool-lang" class="tool-lang" type="button"></button>
       </nav>
 
