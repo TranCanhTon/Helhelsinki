@@ -217,6 +217,9 @@ button { font: inherit; color: inherit; }
 .is-ready .mouse { animation: press 1.6s ease-out infinite; }
 .is-ready .mouse::before { animation: click 1.6s ease-out infinite; }
 .landing:not(.is-ready) #landing-status::after { content: ''; animation: dots 1.2s steps(4) infinite; }
+/* Download bar under the words while the start files load (landing.js). */
+.landing-bar { display:block;width:180px;height:3px;border-radius:999px;background:var(--line);overflow:hidden; }
+.landing-bar i { display:block;height:100%;width:0;background:var(--copper);border-radius:inherit;transition:width .25s; }
 .landing.is-failed .landing-cue { color: var(--copper); max-width: 420px; line-height: 1.5; }
 @keyframes click { 0%, 55% { opacity: 0; } 60% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes press { 0%, 55% { transform: none; } 60% { transform: translateY(1px) scale(0.95); } 75%, 100% { transform: none; } }

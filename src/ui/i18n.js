@@ -456,4 +456,6 @@ const FI = {
   'Print a viewing sheet': 'Tulosta näyttölappu',
   'Printed {date}': 'Tulostettu {date}',
   'At the viewing': 'Näytössä',
+  'loading the map': 'kartta latautuu',
+  '{a} of {b} MB': '{a} / {b} Mt',
 };

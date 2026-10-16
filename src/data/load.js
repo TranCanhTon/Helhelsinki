@@ -9,3 +9,23 @@ export async function loadJson(url) {
   return response.json();
 }
 
+
+// The body of a response as bytes, calling onBytes(loaded, total) as parts arrive, for
+// the loading screen. total is the Content-Length, or null when the server sends none.
+// A compressed answer can give more bytes than its Content-Length; the caller copes.
+export async function readWithProgress(response, onBytes) {
+  const total = Number(response.headers.get('content-length')) || null;
+  if (!onBytes || !response.body) return new Uint8Array(await response.arrayBuffer());
+  const reader = response.body.getReader(), parts = [];
+  let loaded = 0;
+  onBytes(0, total);
+  for (;;) {
+    const {done, value} = await reader.read();
+    if (done) break;
+    parts.push(value); loaded += value.length; onBytes(loaded, total);
+  }
+  const bytes = new Uint8Array(loaded);
+  let at = 0;
+  for (const part of parts) { bytes.set(part, at); at += part.length; }
+  return bytes;
+}

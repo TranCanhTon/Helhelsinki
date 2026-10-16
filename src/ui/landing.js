@@ -1,4 +1,4 @@
-import {t} from './i18n.js';
+import {t, num} from './i18n.js';
 
 // Landing screen. It covers the map while the buildings load, with the city
 // centre further out and turning slowly behind it. A click anywhere (or Enter or
@@ -41,9 +41,24 @@ export function createLanding(nav, onDone){
  };
  screen.addEventListener('click',enter);
  document.addEventListener('keydown',e=>{if(!screen.hidden&&['Enter',' '].includes(e.key)){e.preventDefault();enter();}});
+ // Real progress while loading (Ton, 16 Oct 2026): the bytes of the big start files
+ // (buildings list, ground grid) as they arrive. The bar fills only when every file
+ // gave its size and kept to it; otherwise just the megabytes so far.
+ const parts=new Map(),bar=screen.querySelector('.landing-bar i');
+ const mb=b=>num(b/1048576,{minimumFractionDigits:1,maximumFractionDigits:1});
+ const paint=()=>{
+  if(ready)return;
+  const list=[...parts.values()],loaded=list.reduce((s,p)=>s+p.loaded,0);
+  const sized=list.every(p=>p.total&&p.loaded<=p.total),total=list.reduce((s,p)=>s+(p.total??0),0);
+  delete status.dataset.i18n;
+  status.textContent=t('loading the map')+' · '+(sized?t('{a} of {b} MB',{a:mb(loaded),b:mb(total)}):mb(loaded)+' MB');
+  bar.parentElement.hidden=!sized;if(sized)bar.style.width=(100*loaded/total).toFixed(1)+'%';
+ };
  return {
+  // name -> onBytes(loaded, total) for one download.
+  progress(name){return (loaded,total)=>{parts.set(name,{loaded,total});paint();};},
   ready(){
-   ready=true;screen.classList.add('is-ready');say('click anywhere to dive in');
+   ready=true;screen.classList.add('is-ready');bar.parentElement.hidden=true;say('click anywhere to dive in');
    // Browser checks run without anyone to click.
    if(navigator.webdriver)finish();
   },

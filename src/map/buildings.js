@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import {decodeIndex, detailFile} from '../data/buildingIndex.js';
-import {loadJson, dataUrl} from '../data/load.js';
+import {loadJson, dataUrl, readWithProgress} from '../data/load.js';
 
 // Loads the prepared 3D buildings and the short index that describes them.
 //
@@ -24,10 +24,11 @@ export const TEXTURED_URL = 'https://kartta.hel.fi/3d/datasource-data/e5e7158a-5
 // 10 m cells, checked against the city tiles: no building floats, median sinks 0.4 m):
 // the highest building base in each 10 m cell, so a building may sink a little but
 // never floats.
-export async function groundShader() {
+// onBytes(loaded, total): download progress of the grid, for the loading screen.
+export async function groundShader(onBytes) {
   const [meta, bytes] = await Promise.all([loadJson('/ground-grid.json'), fetch(dataUrl('/ground-grid.bin')).then(r => {
     if (!r.ok) throw new Error('Ground grid unavailable. Run npm run data:ground');
-    return r.arrayBuffer();
+    return readWithProgress(r, onBytes);
   })]);
   if (bytes.byteLength !== meta.width * meta.height) throw new Error('ground-grid.bin does not match ground-grid.json. Run npm run data:ground');
   const frame = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(...meta.origin));
@@ -40,7 +41,7 @@ export async function groundShader() {
       u_heights: {type: Cesium.UniformType.VEC3, value: new Cesium.Cartesian3(meta.minM, meta.stepM, meta.fallbackM)},
       u_plain: {type: Cesium.UniformType.VEC3, value: PLAIN_SHADE.clone()},
       u_ground: {type: Cesium.UniformType.SAMPLER_2D, value: new Cesium.TextureUniform({
-        typedArray: new Uint8Array(bytes), width: meta.width, height: meta.height,
+        typedArray: bytes, width: meta.width, height: meta.height,
         pixelFormat: Cesium.PixelFormat.LUMINANCE, pixelDatatype: Cesium.PixelDatatype.UNSIGNED_BYTE,
         minificationFilter: Cesium.TextureMinificationFilter.NEAREST, magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST, wrapS: Cesium.TextureWrap.CLAMP_TO_EDGE, wrapT: Cesium.TextureWrap.CLAMP_TO_EDGE,
       })},
@@ -72,8 +73,8 @@ export async function groundShader() {
 const PLAIN_SHADE = new Cesium.Cartesian3(0.42, 0.45, 0.44);
 const NO_SHADE = new Cesium.Cartesian3(1, 1, 1);
 
-async function loadTextured() {
-  const customShader = await groundShader();
+async function loadTextured(onBytes) {
+  const customShader = await groundShader(onBytes);
   const tileset = await Cesium.Cesium3DTileset.fromUrl(TEXTURED_URL, {cacheBytes: 256 * 1024 * 1024});
   tileset.customShader = customShader;
   // The city's tree has empty levels above its 2 km tiles, and Cesium opens those only
@@ -94,20 +95,22 @@ const NEUTRAL_COLOURED = '#454c48';  // dark granite: buildings a coloured view 
 const SELECTED = '#c2622f';  // copper
 const SELECTED_ON_PRICES = '#1d2826';  // dark ink, stands out from blue and red
 
-export async function loadBuildings(viewer) {
-  const [indexResponse, textured] = await Promise.all([
-    fetch(dataUrl('/buildings-index.json')),
-    // A city server that does not answer must not hold up the map: grey after 8 s.
-    Promise.race([loadTextured(), new Promise((_, reject) => setTimeout(() => reject(new Error('no answer in 8 s')), 8000))])
-      .catch(error => { console.warn('Textured buildings unavailable, using the grey ones', error); return null; }),
-  ]);
-  // The grey buildings (373 MB) are only the fallback: the public site does not carry them.
+// progress(name) -> onBytes(loaded, total), for the loading screen (optional).
+export async function loadBuildings(viewer, progress = () => null) {
   // A missing file comes back as a 404 or as index.html, so check for JSON.
   const isJson = r => r.ok && (r.headers.get('content-type') ?? '').includes('json');
-  if (!isJson(indexResponse)) {
+  const [indexBytes, textured] = await Promise.all([
+    // Read while the city model loads, so the loading screen counts the real download.
+    fetch(dataUrl('/buildings-index.json')).then(r => isJson(r) ? readWithProgress(r, progress('index')) : null),
+    // A city server that does not answer must not hold up the map: grey after 8 s.
+    Promise.race([loadTextured(progress('ground')), new Promise((_, reject) => setTimeout(() => reject(new Error('no answer in 8 s')), 8000))])
+      .catch(error => { console.warn('Textured buildings unavailable, using the grey ones', error); return null; }),
+  ]);
+  if (!indexBytes) {
     console.error('Missing buildings-index.json. Locally: npm run data:split. Public site: npm run data:upload.');
     throw new Error('Map data is missing on this server (buildings-index.json)');
   }
+  // The grey buildings (373 MB) are only the fallback: the public site does not carry them.
   let tileset = textured;
   if (!tileset) {
     if (!isJson(await fetch('/tileset/tileset.json').catch(() => ({ok: false, headers: new Headers()})))) {
@@ -116,7 +119,7 @@ export async function loadBuildings(viewer) {
     }
     tileset = await Cesium.Cesium3DTileset.fromUrl('/tileset/tileset.json', {cacheBytes: 256 * 1024 * 1024});
   }
-  const manifest = decodeIndex(await indexResponse.json());
+  const manifest = decodeIndex(JSON.parse(new TextDecoder().decode(indexBytes)));
   const records = new Map(manifest.map(record => [record.buildingId, record]));
 
   // Full records, one file per tile, fetched once.

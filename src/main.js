@@ -260,7 +260,7 @@ hintOnce();
 // The URL only follows the camera after the landing, not its slow turn.
 const landing=createLanding(nav,()=>{canWrite=true;prices?.setLabels(true);save();});
 async function start(){
- buildings=await loadBuildings(viewer);
+ buildings=await loadBuildings(viewer,landing.progress);
  sun=createSunShadows(viewer,buildings.tileset);sunPanel=createSunPanel($('#sun-panel'),$('#sun-dial'),sun);
  if(state.metric==='sun')setMetric('sun');
  card=new BuildingCard($('#building-card'),closeCard,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction,()=>places,()=>services);
