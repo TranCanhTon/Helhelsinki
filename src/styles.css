@@ -56,6 +56,8 @@ html, body, #app {
 }
 
 #scene { position: absolute; inset: 0; }
+/* Copy of the last picture while views change (viewFade.js). */
+.view-fade { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 #scene canvas:focus-visible { outline: 2px solid var(--verdigris); outline-offset: -2px; }
 
 /* Hide Cesium's own logo strip; data credits are in each card's Sources section. */

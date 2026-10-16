@@ -17,6 +17,7 @@ import {createSunShadows} from './map/sun.js';
 import {createSunPanel} from './ui/sunPanel.js';
 import {loadStationTrains} from './map/stationTrains.js';
 import {createSelectionGlow} from './map/selectionGlow.js';
+import {createViewFade} from './map/viewFade.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
@@ -59,7 +60,7 @@ function unavailable(label,error,retry){
  const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
 let basemap,prices,noise,parking,construction,transit,places,listings,buildings,sun,sunPanel,card,search,marker,currentAddress=null;
-const glow=createSelectionGlow(viewer);
+const glow=createSelectionGlow(viewer),fade=createViewFade(viewer);
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
  catch(e){unavailable('Ground map',e,ground);}
@@ -144,7 +145,7 @@ function setMetric(metric){
   const work=state.noiseMode==='construction';
   // Selected building: white, since copper and red are on the noise scale.
   buildings?.setColoring(noise&&!work?id=>noise.colorOf(buildings.records.get(id)):null,'#ffffff');
-  noiseSwitch($('#noise-switch'),state.noiseMode,setNoiseMode);
+  noiseSwitch($('#noise-switch'),state.noiseMode,mode=>{if(mode!==state.noiseMode)fade(()=>setNoiseMode(mode));});
   legend.replaceChildren();
   if(work){if(construction)constructionLegend(legend,construction);else legend.textContent=t('Construction data is still loading or unavailable.');}
   else if(noise)noiseLegend(legend,noise);else legend.textContent=t('Noise data is still loading or unavailable.');
@@ -158,7 +159,7 @@ function setMetric(metric){
  }
  $('#area-info').hidden=true;save();
 }
-for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>setMetric(b.dataset.view);
+for(const b of document.querySelectorAll('[data-view]'))b.onclick=()=>{if(b.dataset.view!==state.metric)fade(()=>setMetric(b.dataset.view));};
 // English / Finnish switch in the tool bar (Ton, 14 Oct 2026). The button shows the language you switch to.
 function paintLang(){
  const b=$('#tool-lang');b.textContent=state.lang==='fi'?'EN':'FI';b.title=state.lang==='fi'?'In English':'Suomeksi';b.setAttribute('aria-label',b.title);
