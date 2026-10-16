@@ -17,7 +17,10 @@
       </header>
 
       <section id="search" class="search panel" aria-label="Address search" data-i18n-label="Address search"></section>
-      <details class="neighbourhoods panel"><summary data-i18n="Neighbourhoods">Neighbourhoods</summary><div id="neighbourhood-list"></div></details>
+      <div class="left-column">
+        <details class="neighbourhoods panel"><summary data-i18n="Neighbourhoods">Neighbourhoods</summary><div id="neighbourhood-list"></div></details>
+        <div id="data-status" role="status"></div>
+      </div>
       <div id="noise-switch" class="noise-switch panel" hidden></div>
       <div id="sun-dial" class="sun-dial panel" hidden aria-hidden="true"></div>
       <div class="bottom-dock">
@@ -29,7 +32,6 @@
         <span class="hint" data-i18n="Scroll to zoom · Shift + drag to rotate">Scroll to zoom · Shift + drag to rotate</span>
       </div>
       <div id="area-info" class="area-info panel" hidden role="status"></div>
-      <div id="data-status" role="status"></div>
       <div id="hover-tip" class="hover-tip" hidden aria-hidden="true"></div>
       <nav class="map-tools panel" aria-label="Map controls" data-i18n-label="Map controls">
         <button id="tool-home" type="button" title="Reset view (Home)" aria-label="Reset view" data-i18n-title="Reset view (Home)" data-i18n-label="Reset view"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 11 12 4.5l7.5 6.5"/><path d="M6.5 9.5v9.5h4v-5h3v5h4V9.5"/></svg></button>

@@ -269,7 +269,9 @@ button { font: inherit; color: inherit; }
 #address-results span { margin-top:4px;font-size:12px;color:var(--muted);line-height:1.4; }
 .search-status { font-size:12.5px;margin:4px 12px 8px;color:var(--muted); }
 .search-status:empty { display:none; }
-.neighbourhoods { position:absolute;top:calc(var(--edge) + 36px + var(--gap));left:var(--edge);width:270px;padding:0; }
+/* Left column under the name: Neighbourhoods, then any data errors. */
+.left-column { position:absolute;top:calc(var(--edge) + 36px + var(--gap));left:var(--edge);width:270px;display:flex;flex-direction:column;gap:var(--gap);z-index:4;max-height:calc(100% - 200px); }
+.neighbourhoods { padding:0; }
 .neighbourhoods summary { padding:10px 16px 11px;font-family:var(--serif);font-size:17px;font-weight:400;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px; }
 .neighbourhoods summary::-webkit-details-marker { display:none; }
 .neighbourhoods summary::after { content:'';width:7px;height:7px;border:solid var(--muted);border-width:0 1.6px 1.6px 0;transform:translateY(-2px) rotate(45deg);transition:transform .2s; }
@@ -328,7 +330,8 @@ button { font: inherit; color: inherit; }
 .building-choices button { display:block;text-align:left;width:100%;font-size:13px; }
 .place-labels { position:absolute;inset:0;pointer-events:none;overflow:hidden; }
 .place-labels span { position:absolute;top:0;left:0;white-space:nowrap;font-family:var(--head);font-size:15px;color:#d2dfd4;text-shadow:0 1px 2px #15211b,1px 0 2px #15211b,-1px 0 2px #15211b; }
-#data-status { position:absolute;left:var(--edge);top:calc(var(--edge) + 36px + 46px + 2 * var(--gap));max-width:330px;font-size:12.5px;z-index:5; }
+#data-status { font-size:12.5px; }
+#data-status:empty { display:none; }
 .data-error { padding:10px 12px;background:var(--panel-solid);border:1px solid var(--line);border-radius:var(--radius-small);margin-bottom:8px; }
 .data-error button { cursor:pointer; }
 [hidden] { display:none !important; }
