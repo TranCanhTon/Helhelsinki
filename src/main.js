@@ -22,6 +22,7 @@ import {createWalkRings} from './map/walkRings.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
+import {adsLegend} from './ui/adsPanel.js';
 import {nearestPlaces} from './data/places.js';
 import {loadJson,dataUrl} from './data/load.js';
 import {AddressSearch} from './ui/search.js';
@@ -81,7 +82,7 @@ async function adsLayer(){
   const data=await response.json();
   if(listings?.updatedAt===data.updatedAt)return;
   listings=indexListings(data);useAds();
-  if(prices)setMetric(state.metric);
+  if(prices||state.metric==='ads')setMetric(state.metric);
   card?.refresh();
  }catch(e){console.warn('Rental ads unavailable',e);}
 }
@@ -125,6 +126,16 @@ function setNoiseMode(mode){
  if(mode==='construction')state.noiseMode=mode;else{noise?.setMode(mode);state.noiseMode=noise?.mode??'all';}
  setMetric('noise');
 }
+// Ads view (Ton, 16 Oct 2026): every building with a current ad in one bright amber,
+// the rest darker than in the other coloured views and the photos covered more, so the
+// ad buildings stand out from far away. No filters (Ton removed them the same day).
+const AD_COLOR='#ffc247';
+function paintAds(){
+ if(state.metric!=='ads'||!buildings)return;
+ if(!listings){buildings.setColoring(null);return;}
+ const ads=listings.byBuilding;
+ buildings.setColoring(id=>ads.has(id)?AD_COLOR:null,'#ffffff',{mix:0.85,rest:'#2b312e'});
+}
 function setMetric(metric){
  state.metric=metric;viewer.canvas.style.cursor='';
  document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===metric)));
@@ -133,6 +144,10 @@ function setMetric(metric){
  parking?.setVisible(metric==='parking');construction?.setVisible(metric==='noise'&&state.noiseMode==='construction');
  // Sun: shadows and the sun's light only while this tab is open.
  const sunny=metric==='sun'&&!!sun;sun?.setOn(sunny);$('#sun-panel').hidden=!sunny;$('#sun-dial').hidden=!sunny;
+ if(metric==='ads'){
+  paintAds();adsLegend(legend,listings,AD_COLOR);
+  $('#area-info').hidden=true;save();return;
+ }
  if(metric==='sun'){
   buildings?.setColoring(null);sunPanel?.show();
   $('#area-info').hidden=true;save();return;

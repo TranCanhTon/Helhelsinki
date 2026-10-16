@@ -434,4 +434,14 @@ const FI = {
   'Other building or repair work': 'Muu rakennus- tai korjaustyö',
   'From the City of Helsinki\'s digging notices and street area rentals, prepared {date}. Heavy, medium and light is a rough guess from the kind of work, not a noise level. Distance in a straight line from the middle of the building to the nearest edge of the work area. Work areas are drawn roughly, and private building sites that rent no street space are missing. City of Helsinki, CC BY 4.0.':
     'Helsingin kaupungin kaivuilmoituksista ja katualueen vuokrauksista, koottu {date}. Raskas, keskiraskas ja kevyt on karkea arvio työn laadusta, ei melutaso. Etäisyys linnuntietä rakennuksen keskeltä työalueen lähimpään reunaan. Työalueet on piirretty karkeasti, ja yksityiset työmaat, jotka eivät vuokraa katutilaa, puuttuvat. Helsingin kaupunki, CC BY 4.0.',
+  'Ads': 'Ilmoitukset',
+  '{ads} at {addresses}': '{ads}, {addresses}',
+  '{n} address': '{n} osoite',
+  '{n} addresses': '{n} osoitetta',
+  '{n} ad': '{n} ilmoitus',
+  '{n} ads': '{n} ilmoitusta',
+  'Oikotie, {time}': 'Oikotie, {time}',
+  'Building with a rental ad now': 'Talossa vuokrailmoitus nyt',
+  'Rental ads': 'Vuokrailmoitukset',
+  'Rental ads are still loading or unavailable.': 'Vuokrailmoitukset latautuvat vielä tai eivät ole saatavilla.',
 };

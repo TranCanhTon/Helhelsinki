@@ -153,16 +153,16 @@ export async function loadBuildings(viewer) {
   };
   // Textured: the photo shows in Overview and Price (tinted copper when selected); in
   // a coloured view the colour washes over the photo.
-  let coloured = false;
+  let coloured = false, mix = 0.6, rest = NEUTRAL_COLOURED;
   const applyStyle = () => {
     if (textured) {
       // Coloured views keep the photos under a 60% wash of the colour (Ton, 15 Oct 2026),
       // so windows and roofs still show; the other views show the plain photo.
       tileset.colorBlendMode = coloured ? Cesium.Cesium3DTileColorBlendMode.MIX : Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
-      tileset.colorBlendAmount = 0.6;
+      tileset.colorBlendAmount = mix;
       tileset.customShader.setUniform('u_plain', coloured ? NO_SHADE : PLAIN_SHADE);
     }
-    const neutral = coloured ? NEUTRAL_COLOURED : textured ? '#ffffff' : NEUTRAL;
+    const neutral = coloured ? rest : textured ? '#ffffff' : NEUTRAL;
     const style = new Cesium.Cesium3DTileStyle();
     style.color = {evaluateColor: (feature, result) => {
       // Some city tiles carry no building data; Cesium then asks once for the whole tile, without a feature.
@@ -180,7 +180,13 @@ export async function loadBuildings(viewer) {
   const setSelected = buildingId => { selected = buildingId; applyStyle(); };
   // fn(buildingId) -> CSS colour or null. Call again after its answers change.
   // selectedCss: the selected building's colour while the others are coloured.
-  const setColoring = (fn, selectedCss = SELECTED_ON_PRICES) => { coloured = !!fn; colorOf = fn ?? (() => null); selectedOnColors = selectedCss; applyStyle(); };
+  // options: mix, how strongly the colours cover the photos (0.6 when not given), and
+  // rest, the colour of the buildings fn leaves out (dark granite when not given).
+  const setColoring = (fn, selectedCss = SELECTED_ON_PRICES, options = {}) => {
+    coloured = !!fn; colorOf = fn ?? (() => null); selectedOnColors = selectedCss;
+    mix = options.mix ?? 0.6; rest = options.rest ?? NEUTRAL_COLOURED;
+    applyStyle();
+  };
   setSelected(null);
 
   // Screen position -> building record (or null if nothing was clicked).
