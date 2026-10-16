@@ -152,11 +152,14 @@ export async function loadBuildings(viewer) {
     return parent >= 0 ? feature.content.getFeature(parent)?.getProperty('id') ?? own : own;
   };
   // Textured: the photo shows in Overview and Price (tinted copper when selected); in
-  // a coloured view the colours replace the photo, so the buildings look like the grey ones.
+  // a coloured view the colour washes over the photo.
   let coloured = false;
   const applyStyle = () => {
     if (textured) {
-      tileset.colorBlendMode = coloured ? Cesium.Cesium3DTileColorBlendMode.REPLACE : Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
+      // Coloured views keep the photos under a 60% wash of the colour (Ton, 15 Oct 2026),
+      // so windows and roofs still show; the other views show the plain photo.
+      tileset.colorBlendMode = coloured ? Cesium.Cesium3DTileColorBlendMode.MIX : Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
+      tileset.colorBlendAmount = 0.6;
       tileset.customShader.setUniform('u_plain', coloured ? NO_SHADE : PLAIN_SHADE);
     }
     const neutral = coloured ? NEUTRAL_COLOURED : textured ? '#ffffff' : NEUTRAL;
