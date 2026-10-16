@@ -13,7 +13,7 @@ npm run dev
 
 Open the local URL printed by Vite. The prepared files already present in this checkout are used immediately. A fresh clone needs the data commands below because generated datasets are git-ignored.
 
-Drag to pan, scroll to zoom, Shift/right-drag to rotate and tilt. Map buttons also provide home, overhead, rotation and north. Search accepts Finnish or Swedish street names, ignores case and accents, and supports arrow keys, Enter and Escape. Shared addresses offer an explicit building choice; an address without a model gets a marker and “No linked 3D building”.
+Drag to pan, scroll to zoom, Shift/right-drag to rotate and tilt. Keys: `/` search, `F` back to the picked building, `Alt+R` base angle and distance over the same place (Home goes back to the city centre). Map buttons also provide home, overhead, rotation and north. Search accepts Finnish or Swedish street names, ignores case and accents, and supports arrow keys, Enter and Escape. Shared addresses offer an explicit building choice; an address without a model gets a marker and “No linked 3D building”.
 
 ## Data commands
 
