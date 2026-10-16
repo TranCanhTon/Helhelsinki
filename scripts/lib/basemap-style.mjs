@@ -27,7 +27,8 @@ const grow = (atZ12, atZ17) => z => atZ12 * (atZ17 / atZ12) ** ((Math.min(17, Ma
 const fade = px => z => (z >= 15 ? 0 : px * (15 - z) / 5);
 
 export const CLASSES = [
-  {id: 'land', test: layer => layer === 'land', fill: 'land'},
+  // shore: a soft lighter band drawn into the sea along every land edge (Ton, 15 Oct 2026).
+  {id: 'land', test: layer => layer === 'land', fill: 'land', shore: {wide: grow(1.6, 26), near: grow(0.6, 7)}},
   {id: 'blocks', test: guide('kerrostalokortteli', 'pientalokortteli'), fill: 'block', minZoom: 13},
   {id: 'industry', test: guide('teollisuuskortteli'), fill: 'industry', minZoom: 13},
   {id: 'fields', test: guide('pelto'), fill: 'field'},
@@ -58,7 +59,8 @@ export const STREET_USES = ALL_STREETS;
 // is kept for what you select and for the map layers (paid parking, the sun).
 export const THEMES = {
   dusk: {
-    outside: '#101413', sea: '#0e2a2d', water: '#0e2a2d', land: '#1c2321',
+    outside: '#101413', sea: '#11303a', water: '#11303a', land: '#1c2321',
+    shoreWide: '#173e47', shoreNear: '#24555c',
     block: '#212927', industry: '#232826', field: '#212a23', forest: '#1d2f27', park: '#21342b',
     square: '#28302d', path: '#262d2b', parking: '#262c2a',
     street: '#323a37', collector: '#3b413e', main: '#484e4a', motorway: '#535853',

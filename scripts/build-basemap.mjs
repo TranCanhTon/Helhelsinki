@@ -153,10 +153,28 @@ function tileSvg(x, y, z, theme) {
   if (clip !== null) {
     body += `<rect width="${TILE}" height="${TILE}" fill="${colors.sea}"/>`;
     const [w, s, e, n] = tileBox(x, y, z, 8);
+    // Shore: all land edges get the sea-side band first, then the land fills cover the
+    // land side. Collected here and written before the first non-land shape.
+    let shore = [], fills = '';
+    const flushShore = () => {
+      if (!shore.length) return;
+      const d = shore.join(''), cls = CLASSES.find(c => c.shore);
+      body += `<path d="${d}" fill="none" stroke="${colors.shoreWide}" stroke-width="${cls.shore.wide(z).toFixed(2)}" stroke-linejoin="round"/>`;
+      body += `<path d="${d}" fill="none" stroke="${colors.shoreNear}" stroke-width="${cls.shore.near(z).toFixed(2)}" stroke-linejoin="round"/>`;
+      body += fills;
+      shore = []; fills = '';
+    };
     for (const i of index.search(w, s, e, n).sort((a, b) => a - b)) {
       const f = features[i];
       const cls = CLASSES[f.classIndex];
       if (z < (cls.minZoom ?? 0)) continue;
+      if (cls.shore) {
+        const d = f.parts.map(p => p.map(r => ringPath(r, z, x, y) + 'Z').join('')).join('');
+        shore.push(d);
+        fills += `<path d="${d}" fill="${colors[cls.fill]}" fill-rule="evenodd"/>`;
+        continue;
+      }
+      flushShore();
       if (cls.stroke) {
         const d = f.parts.map(p => ringPath(p[0], z, x, y)).join('');
         const width = cls.width(z).toFixed(2);
@@ -171,6 +189,7 @@ function tileSvg(x, y, z, theme) {
         if (cls.texture && z >= TEXTURE_MIN_ZOOM) body += `<path d="${d}" fill="url(#asphalt)" fill-rule="evenodd"/>`;
       }
     }
+    flushShore();
   }
   const clipPath = clip ? `<clipPath id="h"><path d="${clip}" clip-rule="evenodd"/></clipPath>` : '';
   const texture = clip !== null && z >= TEXTURE_MIN_ZOOM ? ASPHALT : '';
