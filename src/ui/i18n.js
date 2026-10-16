@@ -444,4 +444,8 @@ const FI = {
   'Building with a rental ad now': 'Talossa vuokrailmoitus nyt',
   'Rental ads': 'Vuokrailmoitukset',
   'Rental ads are still loading or unavailable.': 'Vuokrailmoitukset latautuvat vielä tai eivät ole saatavilla.',
+  'Schools and health': 'Koulut ja terveys',
+  'Day care': 'Päiväkoti',
+  'Primary school': 'Alakoulu',
+  'Health station': 'Terveysasema',
 };

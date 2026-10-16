@@ -12,7 +12,7 @@ import {parkingSection, priceText, spacesText} from './parkingCard.js';
 import {priceValue} from '../map/prices.js';
 import {transitSection} from './transitCard.js';
 import {constructionSection} from './constructionCard.js';
-import {placesSection} from './placesCard.js';
+import {placesSection, servicesSection} from './placesCard.js';
 import {t, num, getLang} from './i18n.js';
 
 const el = (tag, className, textValue) => {
@@ -138,7 +138,7 @@ function titleRow(text, address) {
 const credit = () => el('p', 'card-credit', t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie, © OpenStreetMap contributors'));
 
 export class BuildingCard {
-  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getConstruction = () => null, getPlaces = () => null) {
+  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getConstruction = () => null, getPlaces = () => null, getServices = () => null) {
     this.el = container;
     this.onClose = onClose;
     this.getPrices = getPrices;
@@ -148,6 +148,7 @@ export class BuildingCard {
     this.getTransit = getTransit;
     this.getConstruction = getConstruction;
     this.getPlaces = getPlaces;
+    this.getServices = getServices;
   }
 
   // Redraw the open card after prices or ads change, keeping the scroll position.
@@ -164,11 +165,12 @@ export class BuildingCard {
   }
 
   // Sections about the surroundings (Ton, 16 Oct 2026): public transport, nearby
-  // places and street parking first; construction goes last, after plan protection.
+  // places, schools and health, and street parking first; construction goes last, after plan protection.
   surroundings(row) {
     return [
       transitSection(row.position, this.getTransit()),
       placesSection(row.position, this.getPlaces()),
+      servicesSection(row.position, this.getServices()),
       parkingSection(row.position, this.getParking()),
     ];
   }

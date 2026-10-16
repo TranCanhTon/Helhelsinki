@@ -24,7 +24,7 @@ const PUBLIC = ROOT + 'public/', OUT = ROOT + 'data/snapshot/';
 // What the browser loads. Everything else in public/ stays on this computer.
 export const PUBLISHED = ['tileset', 'buildings', 'basemap', 'buildings-index.json', 'addresses.json',
   'ground-grid.json', 'ground-grid.bin', 'labels.json', 'layers.json', 'price-by-area.json', 'parking.json',
-  'parking-zones.json', 'transit.json', 'construction.json', 'places.json', 'dataset.json'];
+  'parking-zones.json', 'transit.json', 'construction.json', 'places.json', 'services.json', 'dataset.json'];
 const NEVER = ['listings.json'];
 const dry = process.argv.includes('--dry');
 const git = (args, opts = {}) => (execFileSync('git', args, {cwd: ROOT, encoding: 'utf8', ...opts}) ?? '').trim();

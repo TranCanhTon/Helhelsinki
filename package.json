@@ -34,6 +34,7 @@
     "data:transit": "node scripts/fetch-transit.mjs",
     "data:construction": "node scripts/fetch-construction.mjs",
     "data:places": "node scripts/fetch-places.mjs",
+    "data:services": "node scripts/fetch-services.mjs",
     "data:pack": "node scripts/pack-data.mjs",
     "build:train": "node scripts/build-train-model.mjs",
     "data:split": "node scripts/split-buildings.mjs",

@@ -23,7 +23,7 @@ import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
 import {adsLegend} from './ui/adsPanel.js';
-import {nearestPlaces} from './data/places.js';
+import {nearestPlaces,SERVICE_KEYS,SERVICE_NEAR_M} from './data/places.js';
 import {loadJson,dataUrl} from './data/load.js';
 import {AddressSearch} from './ui/search.js';
 import {createLanding} from './ui/landing.js';
@@ -61,7 +61,7 @@ function unavailable(label,error,retry){
  const row=document.createElement('div');row.className='data-error';row.textContent=t('{label} unavailable. ',{label:t(label)});
  const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
-let basemap,prices,noise,parking,construction,transit,places,listings,buildings,sun,sunPanel,card,search,marker,currentAddress=null;
+let basemap,prices,noise,parking,construction,transit,places,services,listings,buildings,sun,sunPanel,card,search,marker,currentAddress=null;
 const glow=createSelectionGlow(viewer),fade=createViewFade(viewer),rings=createWalkRings(viewer);
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
@@ -113,6 +113,14 @@ async function placesLayer(){
   if(data.schemaVersion!==1)throw new Error('places.json is out of date. Run npm run data:places');
   places={data,nearest:nearestPlaces(data.places)};card?.refresh();
  }catch(e){unavailable('Shops and services',e,placesLayer);}
+}
+// Day care, primary schools and health stations (data:services), on the card only.
+async function servicesLayer(){
+ try{
+  const data=await loadJson('/services.json');
+  if(data.schemaVersion!==1)throw new Error('services.json is out of date. Run npm run data:services');
+  services={data,nearest:nearestPlaces(data.places,SERVICE_NEAR_M,SERVICE_KEYS)};card?.refresh();
+ }catch(e){unavailable('Schools and health',e,servicesLayer);}
 }
 async function transitLayer(){
  try{
@@ -252,7 +260,7 @@ async function start(){
  buildings=await loadBuildings(viewer);
  sun=createSunShadows(viewer,buildings.tileset);sunPanel=createSunPanel($('#sun-panel'),$('#sun-dial'),sun);
  if(state.metric==='sun')setMetric('sun');
- card=new BuildingCard($('#building-card'),closeCard,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction,()=>places);
+ card=new BuildingCard($('#building-card'),closeCard,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction,()=>places,()=>services);
  search=new AddressSearch($('#search'),selectAddress);
  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
  handler.setInputAction(click=>{
@@ -315,6 +323,7 @@ async function start(){
  parkingLayer();
  constructionLayer();
  placesLayer();
+ servicesLayer();
  // Parked trains at the Central Station: preview only (?trains=1) until Ton says yes.
  if(new URLSearchParams(location.search).get('trains')==='1')loadStationTrains(viewer).catch(e=>console.warn('Parked trains unavailable',e));
  transitLayer();
