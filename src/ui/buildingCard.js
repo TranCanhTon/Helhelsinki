@@ -139,7 +139,14 @@ function titleRow(text, address) {
 const PRINT = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5V2h7v3.5"/><rect x="1.8" y="5.5" width="12.4" height="5.5" rx="1.3"/><path d="M4.5 9h7v5h-7z"/></svg>';
 
 // One line at the end naming the data sources, which their licences ask for.
-const credit = () => el('p', 'card-credit', t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie, © OpenStreetMap contributors'));
+// "All sources" opens the sources panel (main.js listens for clicks on .credit-link).
+const credit = () => {
+  const p = el('p', 'card-credit', t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie, © OpenStreetMap contributors') + ' · ');
+  const link = el('button', 'credit-link', t('All sources'));
+  link.type = 'button';
+  p.append(link);
+  return p;
+};
 
 export class BuildingCard {
   constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getConstruction = () => null, getPlaces = () => null, getServices = () => null) {

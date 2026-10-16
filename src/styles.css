@@ -477,3 +477,18 @@ button { font: inherit; color: inherit; }
   .print-line { height:9mm;border-bottom:1px solid var(--line); }
 }
 
+/* Sources panel: in the middle at the card's height, ending above the tab bar. */
+.sources-panel { position:absolute;top:96px;left:50%;transform:translateX(-50%);width:640px;max-width:calc(100% - 2 * var(--edge));max-height:calc(100% - 96px - 140px);overflow:auto;scrollbar-width:none;padding:0 26px 20px;z-index:6;background:var(--panel-solid); }
+.sources-head { position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;margin:0 -26px;padding:20px 26px 14px;background:var(--panel-solid);border-bottom:1px solid var(--line); }
+.sources-head h2 { margin:0;font-family:var(--head);font-size:30px;font-weight:600;line-height:1; }
+.sources-list { margin:4px 0 0; }
+.source-row { display:grid;grid-template-columns:150px 1fr auto;gap:14px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px; }
+.source-row dt { font-weight:600; }
+.source-row dd { margin:0;display:flex;flex-direction:column;gap:2px; }
+.source-what { color:var(--ink); }
+.source-by,.source-extra { color:var(--muted);font-size:12px; }
+.source-date { color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap; }
+.source-date.is-missing { color:var(--faint); }
+.sources-panel > .note { margin-top:14px; }
+.credit-link { padding:0;border:0;background:none;color:var(--verdigris-ink);font-size:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:2px; }
+.credit-link:hover { color:var(--ink); }

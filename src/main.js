@@ -26,6 +26,7 @@ import {adsLegend} from './ui/adsPanel.js';
 import {createSaved} from './data/saved.js';
 import {savedPanel as createSavedPanel} from './ui/savedCard.js';
 import {printSheet} from './ui/printSheet.js';
+import {createSourcesPanel} from './ui/sourcesPanel.js';
 import {nearestPlaces,SERVICE_KEYS,SERVICE_NEAR_M} from './data/places.js';
 import {loadJson,dataUrl} from './data/load.js';
 import {AddressSearch} from './ui/search.js';
@@ -58,7 +59,11 @@ const nav=new Navigation(viewer,HOME,(camera,navigation)=>{
  save();
 });
 Object.assign(nav.state,initial.camera);nav.apply();
-for(const [id,action] of Object.entries({'home':()=>nav.goHome(),'zoom-in':()=>nav.zoom(0.75),'zoom-out':()=>nav.zoom(1.33),'overhead':()=>nav.toggleOverhead(),'north':()=>nav.faceNorth()}))$('#tool-'+id).onclick=action;
+// Sources panel (Ton, 16 Oct 2026): every dataset with its licence and date; the
+// tool bar button and "All sources" at the end of the card open it.
+const sources=createSourcesPanel($('#sources-panel'),()=>listings);
+$('#building-card').addEventListener('click',e=>{if(e.target.closest('.credit-link'))sources.open();});
+for(const [id,action] of Object.entries({'home':()=>nav.goHome(),'zoom-in':()=>nav.zoom(0.75),'zoom-out':()=>nav.zoom(1.33),'overhead':()=>nav.toggleOverhead(),'north':()=>nav.faceNorth(),'sources':()=>sources.toggle()}))$('#tool-'+id).onclick=action;
 function unavailable(label,error,retry){
  console.warn(label,error);
  const row=document.createElement('div');row.className='data-error';row.textContent=t('{label} unavailable. ',{label:t(label)});
@@ -193,7 +198,7 @@ function paintLang(){
 }
 $('#tool-lang').onclick=()=>{
  state.lang=state.lang==='fi'?'en':'fi';setLang(state.lang);translatePage();paintLang();
- search?.translate();neighbourhoodList();savedPanel?.paint();prices?.refresh();setMetric(state.metric);card?.refresh();nav.apply();
+ search?.translate();neighbourhoodList();sources.refresh();savedPanel?.paint();prices?.refresh();setMetric(state.metric);card?.refresh();nav.apply();
 };
 paintLang();
 function clearSelection(){
