@@ -37,12 +37,14 @@
         <button id="tool-zoom-out" type="button" title="Zoom out (−)" aria-label="Zoom out" data-i18n-title="Zoom out (−)" data-i18n-label="Zoom out"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12h13"/></svg></button>
         <button id="tool-overhead" type="button" title="Overhead view" aria-label="Toggle overhead view" data-i18n-title="Overhead view" data-i18n-label="Toggle overhead view"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><g class="icon-2d"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M5 12h14M12 5v14"/></g><g class="icon-3d"><path d="M12 3.8 19.5 8v8L12 20.2 4.5 16V8z"/><path d="M4.5 8 12 12.2 19.5 8M12 12.2v8"/></g></svg></button>
         <button id="tool-north" type="button" title="Face north" aria-label="Face north" data-i18n-title="Face north" data-i18n-label="Face north"><span id="compass"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="needle-n" d="M12 3.5 15 12H9z"/><path class="needle-s" d="M9 12h6l-3 8.5z"/></svg></span></button>
+        <button id="tool-saved" type="button" title="Saved" aria-label="Saved buildings" aria-controls="saved-panel" data-i18n-title="Saved" data-i18n-label="Saved buildings"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 16.6l-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg></button>
         <button id="tool-lang" class="tool-lang" type="button"></button>
       </nav>
 
       <div class="map-caption"><span class="scale-line"></span><span id="scale-label">100 m</span></div>
 
       <aside id="building-card" class="building-card panel" hidden aria-live="polite"></aside>
+      <aside id="saved-panel" class="saved-panel panel" hidden aria-label="Saved buildings" data-i18n-label="Saved buildings"></aside>
 
       <div id="landing" class="landing">
         <div class="landing-inner">

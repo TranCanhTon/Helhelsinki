@@ -23,6 +23,8 @@ import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
 import {adsLegend} from './ui/adsPanel.js';
+import {createSaved} from './data/saved.js';
+import {savedPanel as createSavedPanel} from './ui/savedCard.js';
 import {nearestPlaces,SERVICE_KEYS,SERVICE_NEAR_M} from './data/places.js';
 import {loadJson,dataUrl} from './data/load.js';
 import {AddressSearch} from './ui/search.js';
@@ -61,7 +63,7 @@ function unavailable(label,error,retry){
  const row=document.createElement('div');row.className='data-error';row.textContent=t('{label} unavailable. ',{label:t(label)});
  const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
-let basemap,prices,noise,parking,construction,transit,places,services,listings,buildings,sun,sunPanel,card,search,marker,currentAddress=null;
+let savedPanel,basemap,prices,noise,parking,construction,transit,places,services,listings,buildings,sun,sunPanel,card,search,marker,currentAddress=null;
 const glow=createSelectionGlow(viewer),fade=createViewFade(viewer),rings=createWalkRings(viewer);
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
@@ -190,7 +192,7 @@ function paintLang(){
 }
 $('#tool-lang').onclick=()=>{
  state.lang=state.lang==='fi'?'en':'fi';setLang(state.lang);translatePage();paintLang();
- search?.translate();neighbourhoodList();prices?.refresh();setMetric(state.metric);card?.refresh();nav.apply();
+ search?.translate();neighbourhoodList();savedPanel?.paint();prices?.refresh();setMetric(state.metric);card?.refresh();nav.apply();
 };
 paintLang();
 function clearSelection(){
@@ -262,6 +264,15 @@ async function start(){
  if(state.metric==='sun')setMetric('sun');
  card=new BuildingCard($('#building-card'),closeCard,()=>prices,()=>listings,()=>noise,()=>parking,()=>transit,()=>construction,()=>places,()=>services);
  search=new AddressSearch($('#search'),selectAddress);
+ // Saved buildings (browser only): the star on the card, the list from the tool bar.
+ const saved=createSaved((()=>{try{return localStorage;}catch{return null;}})());
+ card.saved=saved;
+ // Removed from the list while its card is open: redraw the card so its star follows.
+ saved.onChange(()=>{if(card.current&&!card.el.hidden&&saved.has(card.current[0])!==card.savedShown)card.refresh();});
+ savedPanel=createSavedPanel($('#saved-panel'),$('#tool-saved'),saved,id=>{
+  if(buildings.records.has(id)){selectBuilding(id,'ease');return;}
+  const item=saved.get(id);if(item?.position)nav.flyTo(item.position,rangeForScale(60));
+ });
  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
  handler.setInputAction(click=>{
   if(nav.dragged)return;

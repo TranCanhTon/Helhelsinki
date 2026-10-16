@@ -13,6 +13,7 @@ import {priceValue} from '../map/prices.js';
 import {transitSection} from './transitCard.js';
 import {constructionSection} from './constructionCard.js';
 import {placesSection, servicesSection} from './placesCard.js';
+import {starButton} from './savedCard.js';
 import {t, num, getLang} from './i18n.js';
 
 const el = (tag, className, textValue) => {
@@ -151,6 +152,9 @@ export class BuildingCard {
     this.getServices = getServices;
   }
 
+  // saved: the saved-buildings store (the star), set by main.js; optional.
+  saved = null;
+
   // Redraw the open card after prices or ads change, keeping the scroll position.
   refresh() {
     if (this.el.hidden || !this.current) return;
@@ -192,7 +196,12 @@ export class BuildingCard {
     close.type = 'button';
     close.setAttribute('aria-label', t('Close building details'));
     close.onclick = () => this.onClose();
-    header.append(heading, close);
+    // The star (save) sits left of the close button (Ton, 16 Oct 2026).
+    const actions = el('div', 'card-actions');
+    this.savedShown = !!this.saved?.has(buildingId);
+    if (record && this.saved) actions.append(starButton(this.saved, buildingId, record, unique.join(' · ') || null));
+    actions.append(close);
+    header.append(heading, actions);
     card.append(header);
 
     if (!record) {

@@ -420,3 +420,34 @@ button { font: inherit; color: inherit; }
 .hover-tip { position:absolute;top:calc(var(--edge) + 4px);left:calc(var(--edge) + 270px + var(--gap));right:calc(var(--edge) + 400px + var(--gap));width:fit-content;margin:0 auto;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:14px;font-weight:500;color:var(--muted);white-space:nowrap;
   text-shadow:0 0 18px var(--ground),0 0 8px var(--ground),0 1px 3px var(--ground); }
 .hover-tip strong { font-family:var(--head);font-size:30px;font-weight:400;line-height:1.1;color:var(--ink); }
+
+
+/* Saved buildings: the star and print buttons in the card header; the star in the
+   tool bar with a copper count, and its list just left of the tool bar. */
+.card-actions { display:flex;align-items:center;gap:6px;flex:none; }
+.card-icon { display:grid;place-items:center;width:32px;height:32px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--muted);cursor:pointer;transition:color .2s,background .2s,border-color .2s; }
+.card-icon:hover { color:var(--ink);background:var(--verdigris-soft); }
+.card-star.is-on { color:var(--copper);border-color:var(--copper); }
+.card-star.is-on svg path { fill:currentColor; }
+.map-tools #tool-saved { position:relative; }
+.map-tools #tool-saved.has-saved { color:var(--copper-ink); }
+.tool-badge { position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--copper);color:#fff;font-family:var(--sans);font-size:10px;font-weight:600;line-height:16px;text-align:center;font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px var(--panel-solid); }
+.saved-panel { position:absolute;right:calc(var(--edge) + 54px + var(--gap));bottom:var(--edge);width:320px;max-height:min(460px,calc(100% - 140px));display:flex;flex-direction:column;z-index:5;background:var(--panel-solid);overflow:hidden;
+  animation:saved-in .25s cubic-bezier(.2,.7,.2,1); }
+@keyframes saved-in { from { opacity:0;transform:translateX(10px); } }
+@media (prefers-reduced-motion: reduce) { .saved-panel { animation:none; } }
+.saved-head { display:flex;align-items:baseline;gap:10px;padding:18px 20px 12px;border-bottom:1px solid var(--line); }
+.saved-head h2 { margin:0;font-family:var(--head);font-size:26px;font-weight:600;line-height:1; }
+.saved-count { font-size:12px;font-weight:600;color:var(--copper-ink);font-variant-numeric:tabular-nums; }
+.saved-empty { margin:0;padding:16px 20px 20px;color:var(--muted);font-size:13px;line-height:1.5; }
+.saved-items { list-style:none;margin:0;padding:6px;overflow:auto;scrollbar-width:none; }
+.saved-item { position:relative;display:flex;align-items:center;border-radius:var(--radius-small);transition:background .15s; }
+.saved-item + .saved-item { margin-top:2px; }
+.saved-item:hover { background:var(--verdigris-soft); }
+.saved-open { flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding:10px 40px 10px 14px;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--ink); }
+.saved-place { font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.saved-open strong { font-family:var(--head);font-size:21px;font-weight:600;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.saved-remove { position:absolute;right:8px;top:50%;width:26px;height:26px;margin-top:-13px;border:0;border-radius:50%;background:transparent;color:var(--faint);cursor:pointer;font-size:17px;line-height:1;opacity:0;transition:opacity .15s,color .15s; }
+.saved-item:hover .saved-remove,.saved-remove:focus-visible { opacity:1; }
+.saved-remove:hover { color:var(--ink);background:rgba(229,239,231,.08); }
+

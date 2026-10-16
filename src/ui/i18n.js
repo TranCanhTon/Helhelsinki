@@ -448,4 +448,9 @@ const FI = {
   'Day care': 'Päiväkoti',
   'Primary school': 'Alakoulu',
   'Health station': 'Terveysasema',
+  'Saved': 'Tallennetut',
+  'Saved buildings': 'Tallennetut talot',
+  'Save this building': 'Tallenna tämä talo',
+  'Remove from saved': 'Poista tallennetuista',
+  'Nothing saved yet. Use the star on a building card.': 'Ei vielä tallennettuja. Käytä talon kortin tähteä.',
 };
