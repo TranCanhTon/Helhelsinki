@@ -18,6 +18,7 @@ import {createSunPanel} from './ui/sunPanel.js';
 import {loadStationTrains} from './map/stationTrains.js';
 import {createSelectionGlow} from './map/selectionGlow.js';
 import {createViewFade} from './map/viewFade.js';
+import {createWalkRings} from './map/walkRings.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
@@ -60,7 +61,7 @@ function unavailable(label,error,retry){
  const b=document.createElement('button');b.textContent=t('Retry');b.onclick=()=>{row.remove();retry();};row.append(b);$('#data-status').append(row);
 }
 let basemap,prices,noise,parking,construction,transit,places,listings,buildings,sun,sunPanel,card,search,marker,currentAddress=null;
-const glow=createSelectionGlow(viewer),fade=createViewFade(viewer);
+const glow=createSelectionGlow(viewer),fade=createViewFade(viewer),rings=createWalkRings(viewer);
 async function ground(){
  try{basemap=await loadBasemap(viewer);}
  catch(e){unavailable('Ground map',e,ground);}
@@ -170,7 +171,7 @@ $('#tool-lang').onclick=()=>{
 };
 paintLang();
 function clearSelection(){
- state.building=null;currentAddress=null;buildings?.setSelected(null);card?.hide();glow.show(null);
+ state.building=null;currentAddress=null;buildings?.setSelected(null);card?.hide();glow.show(null);rings.show(null);
  if(marker)viewer.entities.remove(marker);marker=null;viewer.scene.requestRender();save();
 }
 // The full record comes with its tile's detail file; the card opens when it is in.
@@ -184,7 +185,7 @@ const rangeForScale=metres=>metres/80*viewer.canvas.clientHeight/(2*Math.tan((vi
 // the camera (link, retry).
 async function selectBuilding(id,fly=true){
  const record=buildings.records.get(id);if(!record)return;
- clearSelection();state.building=id;buildings.setSelected(id);glow.show(record.position);
+ clearSelection();state.building=id;buildings.setSelected(id);glow.show(record.position);rings.show(record.position);
  if(fly==='ease')nav.flyTo(record.position,rangeForScale(35),{heading:HOME.heading+6,pitch:HOME.pitch},1200);
  else if(fly)nav.flyTo(record.position,420);
  save();
@@ -209,7 +210,7 @@ function selectAddress(row){
   card.showChoices(row,row.buildingIds.map(id=>buildings.records.get(id)).filter(Boolean),id=>selectBuilding(id));return;
  }
  marker=viewer.entities.add({position:Cesium.Cartesian3.fromDegrees(...row.position),point:{pixelSize:12,color:Cesium.Color.fromCssColorString('#c2622f'),outlineColor:Cesium.Color.WHITE,outlineWidth:3,disableDepthTestDistance:Number.POSITIVE_INFINITY}});
- card.showAddress(row);viewer.scene.requestRender();
+ rings.show(row.position);card.showAddress(row);viewer.scene.requestRender();
 }
 function areaInfo(hit){
  const node=$('#area-info');node.hidden=!hit;
