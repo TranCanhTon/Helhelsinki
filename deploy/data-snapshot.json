@@ -1,10 +1,10 @@
 {
   "repo": "https://github.com/TranCanhTon/Helhelsinki.git",
-  "ref": "refs/daroad-data/20261016T113843",
-  "commit": "b0ce8a8255fd9f82294342eca2aa17f5ca8afb30",
-  "createdAt": "2026-10-16T11:38:43.458Z",
-  "files": 8371,
-  "bytes": 519319731,
+  "ref": "refs/daroad-data/20261016T151407",
+  "commit": "c091ca5cf08ca7c075992cb08b2c939aaf600ce8",
+  "createdAt": "2026-10-16T15:14:07.369Z",
+  "files": 8372,
+  "bytes": 519352768,
   "buildings": 85784,
   "tiles": 1028,
   "tileBuildings": 85784
