@@ -451,3 +451,26 @@ button { font: inherit; color: inherit; }
 .saved-item:hover .saved-remove,.saved-remove:focus-visible { opacity:1; }
 .saved-remove:hover { color:var(--ink);background:rgba(229,239,231,.08); }
 
+/* Viewing sheet (printSheet.js): hidden on screen; when printing, only the sheet shows,
+   in dark ink on white paper, the card's own layout without its scroll box. */
+.print-sheet { display:none; }
+@media print {
+  @page { margin:14mm; }
+  html, body, #app { height:auto; overflow:visible; background:#fff; color:#111; }
+  #app > :not(#print-sheet) { display:none !important; }
+  .print-sheet { display:block; position:static; width:auto; max-height:none; overflow:visible; padding:0; animation:none;
+    background:#fff; border:0; box-shadow:none; backdrop-filter:none;
+    --ink:#111; --muted:#444; --faint:#6b6b6b; --line:rgba(0,0,0,.16); --panel-solid:#fff;
+    --verdigris-ink:#2f6b5c; --verdigris-soft:#e9f1ed; --copper:#a5501f; --copper-ink:#8c4419; --copper-soft:#f5ebe4; color:var(--ink); }
+  .print-top { display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--line); }
+  .print-brand { font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.03em; }
+  .print-date { font-size:11px;color:var(--muted); }
+  .print-sheet .card-heading { margin-bottom:10px; }
+  .print-sheet h2 { margin:0;font-family:var(--head);font-size:30px;font-weight:600;line-height:1; }
+  .print-map { display:block;width:100%;max-height:85mm;object-fit:cover;border-radius:8px;margin:6px 0 4px; }
+  .print-sheet .keys { break-inside:avoid; }
+  .print-sheet section { break-inside:avoid;margin-top:16px;padding-top:12px; }
+  .print-sheet .building-ad { color:var(--ink); }
+  .print-line { height:9mm;border-bottom:1px solid var(--line); }
+}
+

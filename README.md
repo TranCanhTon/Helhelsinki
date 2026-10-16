@@ -84,7 +84,7 @@ Refresh after new data (in `D:\HelsinkiMap\helhelsinki`):
 - **Nearby shops and services:** the nearest grocery store, pharmacy, gym, Alko, restaurant and café within 1 km of the building, with name and straight-line distance, from OpenStreetMap (`data:places`). Small K-Markets and Alepas are tagged as corner shops there, so corner shops count as grocery stores, except petrol station shops. On the card only, not drawn on the map.
 - **Ads view:** every building with a current Oikotie ad in one bright amber, the rest dark, no filters. An ad is linked to every building at its exact address, so the count is by address. Ads without a matching address are counted but not drawn. Re-link saved ads to buildings without fetching (after `data:context`): `node scripts/fetch-listings.mjs --publish-only`.
 - **Schools and health (card):** nearest day care, primary school and health station within 3 km, straight line. Not the school or health station the address belongs to.
-- **Saved buildings:** the star on the card saves a building, in this browser only (localStorage); the star in the map tools opens the list.
+- **Saved buildings:** the star on the card saves a building, in this browser only (localStorage); the star in the map tools opens the list. The print button on the card prints a viewing sheet: the map as it is on screen and the card.
 - **Sources:** City of Helsinki, Statistics Finland and HSL, CC BY 4.0; shops and services © OpenStreetMap contributors, ODbL. The card ends with one line naming them. Retrieval dates, source URLs, coverage, counts and limitations are in `public/dataset.json`.
 
 ## Current limits

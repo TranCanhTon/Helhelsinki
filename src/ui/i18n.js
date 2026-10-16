@@ -453,4 +453,7 @@ const FI = {
   'Save this building': 'Tallenna tämä talo',
   'Remove from saved': 'Poista tallennetuista',
   'Nothing saved yet. Use the star on a building card.': 'Ei vielä tallennettuja. Käytä talon kortin tähteä.',
+  'Print a viewing sheet': 'Tulosta näyttölappu',
+  'Printed {date}': 'Tulostettu {date}',
+  'At the viewing': 'Näytössä',
 };

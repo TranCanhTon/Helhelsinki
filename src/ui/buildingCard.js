@@ -135,6 +135,9 @@ function titleRow(text, address) {
   return row;
 }
 
+// Print button: the viewing sheet (main.js builds it from this card).
+const PRINT = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5V2h7v3.5"/><rect x="1.8" y="5.5" width="12.4" height="5.5" rx="1.3"/><path d="M4.5 9h7v5h-7z"/></svg>';
+
 // One line at the end naming the data sources, which their licences ask for.
 const credit = () => el('p', 'card-credit', t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie, © OpenStreetMap contributors'));
 
@@ -152,8 +155,10 @@ export class BuildingCard {
     this.getServices = getServices;
   }
 
-  // saved: the saved-buildings store (the star), set by main.js; optional.
+  // saved: the saved-buildings store (the star); onPrint(id, record): viewing sheet.
+  // Both are optional and set by main.js.
   saved = null;
+  onPrint = null;
 
   // Redraw the open card after prices or ads change, keeping the scroll position.
   refresh() {
@@ -196,10 +201,16 @@ export class BuildingCard {
     close.type = 'button';
     close.setAttribute('aria-label', t('Close building details'));
     close.onclick = () => this.onClose();
-    // The star (save) sits left of the close button (Ton, 16 Oct 2026).
+    // Star (save) and print sit left of the close button (Ton, 16 Oct 2026).
     const actions = el('div', 'card-actions');
     this.savedShown = !!this.saved?.has(buildingId);
     if (record && this.saved) actions.append(starButton(this.saved, buildingId, record, unique.join(' · ') || null));
+    if (record && this.onPrint) {
+      const print = el('button', 'card-icon');
+      print.type = 'button'; print.innerHTML = PRINT; print.title = t('Print a viewing sheet'); print.setAttribute('aria-label', print.title);
+      print.onclick = () => this.onPrint(buildingId, record);
+      actions.append(print);
+    }
     actions.append(close);
     header.append(heading, actions);
     card.append(header);

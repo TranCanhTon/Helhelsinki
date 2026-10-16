@@ -25,6 +25,7 @@ import {indexListings} from './data/listings.js';
 import {adsLegend} from './ui/adsPanel.js';
 import {createSaved} from './data/saved.js';
 import {savedPanel as createSavedPanel} from './ui/savedCard.js';
+import {printSheet} from './ui/printSheet.js';
 import {nearestPlaces,SERVICE_KEYS,SERVICE_NEAR_M} from './data/places.js';
 import {loadJson,dataUrl} from './data/load.js';
 import {AddressSearch} from './ui/search.js';
@@ -267,6 +268,12 @@ async function start(){
  // Saved buildings (browser only): the star on the card, the list from the tool bar.
  const saved=createSaved((()=>{try{return localStorage;}catch{return null;}})());
  card.saved=saved;
+ // Viewing sheet: the map as it is now (drawn once more so its picture can be read), then the card.
+ card.onPrint=()=>{
+  let picture=null;
+  try{viewer.scene.requestRender();viewer.scene.render();picture=viewer.scene.canvas.toDataURL('image/jpeg',0.86);}catch(e){console.warn('Map picture unavailable',e);}
+  printSheet(card.el,{picture});
+ };
  // Removed from the list while its card is open: redraw the card so its star follows.
  saved.onChange(()=>{if(card.current&&!card.el.hidden&&saved.has(card.current[0])!==card.savedShown)card.refresh();});
  savedPanel=createSavedPanel($('#saved-panel'),$('#tool-saved'),saved,id=>{
