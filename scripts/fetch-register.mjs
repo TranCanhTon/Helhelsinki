@@ -32,14 +32,35 @@ const download = await fetchAllFeatures({
   bbox,
   sortBy: 'id',
   // Only the fields we use, which keeps the download small.
-  extra: {propertyName: [
-    'id', 'ratu', 'vtj_prt', 'c_vtj_prt', 'tyyppi', 'c_kayttark', 'c_rakennusluokka', 'tila',
-    'katunimi_suomi', 'katunimi_ruotsi', 'osoitenumero', 'postinumero', 'c_valmpvm',
-    // building facts for the card
-    'i_kerrlkm', 'i_huoneistojen_lkm', 'i_asuinhuoneistojen_lkm', 'i_toimitilojen_lkm', 'i_kerrosala',
-    'c_lammtapa', 'c_poltaine', 'c_rakeaine', 'c_julkisivu', 'c_hissi',
-    'geom',
-  ].join(',')},
+  extra: {
+    propertyName: [
+      'id',
+      'ratu',
+      'vtj_prt',
+      'c_vtj_prt',
+      'tyyppi',
+      'c_kayttark',
+      'c_rakennusluokka',
+      'tila',
+      'katunimi_suomi',
+      'katunimi_ruotsi',
+      'osoitenumero',
+      'postinumero',
+      'c_valmpvm',
+      // building facts for the card
+      'i_kerrlkm',
+      'i_huoneistojen_lkm',
+      'i_asuinhuoneistojen_lkm',
+      'i_toimitilojen_lkm',
+      'i_kerrosala',
+      'c_lammtapa',
+      'c_poltaine',
+      'c_rakeaine',
+      'c_julkisivu',
+      'c_hissi',
+      'geom',
+    ].join(','),
+  },
 });
 
 await writeFile(new URL(`${area}.json`, dir), JSON.stringify({area, bbox3879: bbox, ...download}));
@@ -57,4 +78,6 @@ const protectedDownload = await fetchAllFeatures({
   sortBy: 'id',
 });
 await writeFile(new URL(`${area}-protected.json`, dir), JSON.stringify({area, bbox3879: bbox, ...protectedDownload}));
-console.log(`${protectedDownload.features.length} protected building areas. Next: npm run data:city-tiles -- --area=${area}`);
+console.log(
+  `${protectedDownload.features.length} protected building areas. Next: npm run data:city-tiles -- --area=${area}`,
+);

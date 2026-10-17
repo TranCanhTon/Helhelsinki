@@ -31,23 +31,51 @@ const LAYERS = [
 const dir = new URL('../data/raw/basemap/', import.meta.url);
 await mkdir(dir, {recursive: true});
 const force = process.argv.includes('--force');
-const exists = path => access(path).then(() => true, () => false);
+const exists = path =>
+  access(path).then(
+    () => true,
+    () => false,
+  );
 
 // Helsinki's bounding box in EPSG:3879 (the server's own grid), from the boundary.
-const boundary = await loadBoundary().catch(() => { throw new Error('Run npm run data:boundary first.'); });
+const boundary = await loadBoundary().catch(() => {
+  throw new Error('Run npm run data:boundary first.');
+});
 const box = [Infinity, Infinity, -Infinity, -Infinity];
-for (const polygon of boundary.geometry.coordinates) for (const point of polygon[0]) {
-  const [e, n] = lonLatToGrid(point);
-  box[0] = Math.min(box[0], e); box[1] = Math.min(box[1], n); box[2] = Math.max(box[2], e); box[3] = Math.max(box[3], n);
-}
+for (const polygon of boundary.geometry.coordinates)
+  for (const point of polygon[0]) {
+    const [e, n] = lonLatToGrid(point);
+    box[0] = Math.min(box[0], e);
+    box[1] = Math.min(box[1], n);
+    box[2] = Math.max(box[2], e);
+    box[3] = Math.max(box[3], n);
+  }
 const scopes = {helsinki: box.map(Math.round), central: areaBbox('central')};
 
 for (const {name, layer, sortBy, scope} of LAYERS) {
   const file = new URL(`${name}.json`, dir);
-  if (!force && await exists(file)) { console.log(`  have ${name} (${layer})`); continue; }
+  if (!force && (await exists(file))) {
+    console.log(`  have ${name} (${layer})`);
+    continue;
+  }
   console.log(`Downloading ${layer} for ${scope}...`);
-  const download = await fetchAllFeatures({typeName: `avoindata:${layer}`, srsName: 'CRS:84', bbox: scopes[scope], sortBy, pageSize: 5000});
-  await writeFile(file, JSON.stringify({layer: `avoindata:${layer}`, scope, bbox3879: scopes[scope], license: 'City of Helsinki, CC BY 4.0', ...download}));
+  const download = await fetchAllFeatures({
+    typeName: `avoindata:${layer}`,
+    srsName: 'CRS:84',
+    bbox: scopes[scope],
+    sortBy,
+    pageSize: 5000,
+  });
+  await writeFile(
+    file,
+    JSON.stringify({
+      layer: `avoindata:${layer}`,
+      scope,
+      bbox3879: scopes[scope],
+      license: 'City of Helsinki, CC BY 4.0',
+      ...download,
+    }),
+  );
   console.log(`  ${name}: ${download.features.length} features`);
 }
 console.log('Next: npm run data:basemap:build');

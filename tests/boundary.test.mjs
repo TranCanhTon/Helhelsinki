@@ -3,7 +3,15 @@ import assert from 'node:assert/strict';
 import {unionDistricts, makeInsideTest, multiPolygonAreaKm2} from '../scripts/lib/boundary.mjs';
 
 // Two invented neighbouring square "districts" and one separate "island".
-const square = (x, y, s) => [[[x, y], [x + s, y], [x + s, y + s], [x, y + s], [x, y]]];
+const square = (x, y, s) => [
+  [
+    [x, y],
+    [x + s, y],
+    [x + s, y + s],
+    [x, y + s],
+    [x, y],
+  ],
+];
 const districts = [
   {properties: {nimi_fi: 'A'}, geometry: {type: 'Polygon', coordinates: square(24.9, 60.1, 0.1)}},
   {properties: {nimi_fi: 'B'}, geometry: {type: 'Polygon', coordinates: square(25.0, 60.1, 0.1)}},
@@ -26,7 +34,15 @@ test('inside test: inside, outside and island points', () => {
 });
 
 test('area: a merged 0.2° x 0.1° rectangle at 60°N is about 124 km²', () => {
-  const rectangle = [[[24.9, 60.1], [25.1, 60.1], [25.1, 60.2], [24.9, 60.2], [24.9, 60.1]]];
+  const rectangle = [
+    [
+      [24.9, 60.1],
+      [25.1, 60.1],
+      [25.1, 60.2],
+      [24.9, 60.2],
+      [24.9, 60.1],
+    ],
+  ];
   const area = multiPolygonAreaKm2({type: 'MultiPolygon', coordinates: [rectangle]});
   assert.ok(area > 120 && area < 128, `area ${area}`);
 });

@@ -18,7 +18,8 @@ export function gridPointToLocal([east, north, height]) {
   return FRAME.toLocal(geodeticToEcef(lon, lat, height));
 }
 
-export const N2000_LIMITATION = 'Heights are N2000 (above sea level) shown above a flat sea-level globe; there is no terrain model, so buildings on higher ground can appear to float slightly.';
+export const N2000_LIMITATION =
+  'Heights are N2000 (above sea level) shown above a flat sea-level globe; there is no terrain model, so buildings on higher ground can appear to float slightly.';
 export const LIMITATIONS = [
   'Partial coverage: only the areas listed in coverage are modelled.',
   N2000_LIMITATION,
@@ -51,31 +52,57 @@ export function validateTileset({tileset, manifest, readTile, isInside}) {
     if (ids.has(record.buildingId)) problems.push(`duplicate buildingId ${record.buildingId}`);
     ids.add(record.buildingId);
     if (!record.position?.every(Number.isFinite)) problems.push(`${record.buildingId}: position is not finite`);
-    else if (isInside && !isInside(record.position)) problems.push(`${record.buildingId}: position is outside Helsinki`);
+    else if (isInside && !isInside(record.position))
+      problems.push(`${record.buildingId}: position is outside Helsinki`);
   }
   const children = tileset.root.children ?? [];
-  if (children.length !== byTile.size) problems.push(`tileset lists ${children.length} tiles, manifest uses ${byTile.size}`);
+  if (children.length !== byTile.size)
+    problems.push(`tileset lists ${children.length} tiles, manifest uses ${byTile.size}`);
   for (const child of children) {
     const uri = child.content.uri;
     const records = (byTile.get(uri) ?? []).sort((a, b) => a.tileFeatureId - b.tileFeatureId);
     let tile;
-    try { tile = decodeB3dm(readTile(uri)); } catch (error) { problems.push(`${uri}: ${error.message}`); continue; }
-    if (tile.featureTable.BATCH_LENGTH !== records.length) problems.push(`${uri}: BATCH_LENGTH ${tile.featureTable.BATCH_LENGTH}, manifest has ${records.length}`);
+    try {
+      tile = decodeB3dm(readTile(uri));
+    } catch (error) {
+      problems.push(`${uri}: ${error.message}`);
+      continue;
+    }
+    if (tile.featureTable.BATCH_LENGTH !== records.length)
+      problems.push(`${uri}: BATCH_LENGTH ${tile.featureTable.BATCH_LENGTH}, manifest has ${records.length}`);
     records.forEach((record, i) => {
       if (record.tileFeatureId !== i) problems.push(`${uri}: feature IDs are not 0..n-1`);
-      if (tile.batchTable.buildingId[i] !== record.buildingId) problems.push(`${uri}: feature ${i} is ${tile.batchTable.buildingId[i]}, manifest says ${record.buildingId}`);
+      if (tile.batchTable.buildingId[i] !== record.buildingId)
+        problems.push(`${uri}: feature ${i} is ${tile.batchTable.buildingId[i]}, manifest says ${record.buildingId}`);
     });
     const vertexCount = tile.positions.length / 3;
     const usedBatch = new Set();
-    for (const id of tile.batchIds) { if (id >= records.length) { problems.push(`${uri}: _BATCHID ${id} out of range`); break; } usedBatch.add(id); }
-    if (usedBatch.size !== records.length) problems.push(`${uri}: ${records.length - usedBatch.size} buildings have no triangles`);
-    for (const i of tile.indices) if (i >= vertexCount) { problems.push(`${uri}: index out of range`); break; }
+    for (const id of tile.batchIds) {
+      if (id >= records.length) {
+        problems.push(`${uri}: _BATCHID ${id} out of range`);
+        break;
+      }
+      usedBatch.add(id);
+    }
+    if (usedBatch.size !== records.length)
+      problems.push(`${uri}: ${records.length - usedBatch.size} buildings have no triangles`);
+    for (const i of tile.indices)
+      if (i >= vertexCount) {
+        problems.push(`${uri}: index out of range`);
+        break;
+      }
     const [cx, cy, cz, hx, , , , hy, , , , hz] = child.boundingVolume.box;
     for (let i = 0; i < tile.positions.length; i += 3) {
       const p = [tile.positions[i], tile.positions[i + 1], tile.positions[i + 2]];
-      if (!p.every(Number.isFinite)) { problems.push(`${uri}: non-finite vertex`); break; }
+      if (!p.every(Number.isFinite)) {
+        problems.push(`${uri}: non-finite vertex`);
+        break;
+      }
       const [e, n, u] = fromGltfAxes(p);
-      if (Math.abs(e - cx) > hx + 1e-3 || Math.abs(n - cy) > hy + 1e-3 || Math.abs(u - cz) > hz + 1e-3) { problems.push(`${uri}: vertex outside its bounding box`); break; }
+      if (Math.abs(e - cx) > hx + 1e-3 || Math.abs(n - cy) > hy + 1e-3 || Math.abs(u - cz) > hz + 1e-3) {
+        problems.push(`${uri}: vertex outside its bounding box`);
+        break;
+      }
     }
   }
   return problems;

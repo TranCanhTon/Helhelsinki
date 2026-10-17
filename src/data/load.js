@@ -5,10 +5,10 @@ export const dataUrl = path => DATA_URL + path;
 
 export async function loadJson(url) {
   const response = await fetch(dataUrl(url));
-  if(!response.ok || !(response.headers.get('content-type')??'').includes('json')) throw new Error('Data unavailable: '+url);
+  if (!response.ok || !(response.headers.get('content-type') ?? '').includes('json'))
+    throw new Error('Data unavailable: ' + url);
   return response.json();
 }
-
 
 // The body of a response as bytes, calling onBytes(loaded, total) as parts arrive, for
 // the loading screen. total is the Content-Length, or null when the server sends none.
@@ -16,16 +16,22 @@ export async function loadJson(url) {
 export async function readWithProgress(response, onBytes) {
   const total = Number(response.headers.get('content-length')) || null;
   if (!onBytes || !response.body) return new Uint8Array(await response.arrayBuffer());
-  const reader = response.body.getReader(), parts = [];
+  const reader = response.body.getReader(),
+    parts = [];
   let loaded = 0;
   onBytes(0, total);
   for (;;) {
     const {done, value} = await reader.read();
     if (done) break;
-    parts.push(value); loaded += value.length; onBytes(loaded, total);
+    parts.push(value);
+    loaded += value.length;
+    onBytes(loaded, total);
   }
   const bytes = new Uint8Array(loaded);
   let at = 0;
-  for (const part of parts) { bytes.set(part, at); at += part.length; }
+  for (const part of parts) {
+    bytes.set(part, at);
+    at += part.length;
+  }
   return bytes;
 }

@@ -23,14 +23,22 @@ test('services: weekday flags and date range, then added and removed dates', () 
     {service_id: 'mon', monday: '1', tuesday: '0', start_date: '20261001', end_date: '20261031'},
     {service_id: 'old', tuesday: '1', start_date: '20260901', end_date: '20260930'},
   ];
-  const exceptions = [{service_id: 'tue', date: '20261020', exception_type: '2'}, {service_id: 'extra', date: '20261020', exception_type: '1'}];
+  const exceptions = [
+    {service_id: 'tue', date: '20261020', exception_type: '2'},
+    {service_id: 'extra', date: '20261020', exception_type: '1'},
+  ];
   assert.deepEqual([...activeServices(calendar, exceptions, '20261027')], ['tue']);
   assert.deepEqual([...activeServices(calendar, exceptions, '20261020')], ['extra']);
 });
 
 test('platforms with the same name and type close together form one stop', () => {
   const p = (name, mode, dx) => ({name, mode, position: [25 + dx / 55600, 60]});
-  const groups = groupStops([p('Vaasankatu', 'bus', 0), p('Vaasankatu', 'bus', 40), p('Vaasankatu', 'tram', 20), p('Vaasankatu', 'bus', 900)]);
+  const groups = groupStops([
+    p('Vaasankatu', 'bus', 0),
+    p('Vaasankatu', 'bus', 40),
+    p('Vaasankatu', 'tram', 20),
+    p('Vaasankatu', 'bus', 900),
+  ]);
   assert.equal(groups[0], groups[1]);
   assert.notEqual(groups[0], groups[2]);
   assert.notEqual(groups[0], groups[3]);
@@ -38,8 +46,18 @@ test('platforms with the same name and type close together form one stop', () =>
 
 test('nearest stops: closest platform per stop, within the radius, at most three', () => {
   const x = dx => 25 + dx / 55600;
-  const near = nearestStops([[x(300), 60, 0], [x(100), 60, 0], [x(200), 60, 1], [x(50), 60, 2], [x(250), 60, 3], [x(2000), 60, 4]]);
-  assert.deepEqual(near([25, 60]).map(s => s.group), [2, 0, 1]);
+  const near = nearestStops([
+    [x(300), 60, 0],
+    [x(100), 60, 0],
+    [x(200), 60, 1],
+    [x(50), 60, 2],
+    [x(250), 60, 3],
+    [x(2000), 60, 4],
+  ]);
+  assert.deepEqual(
+    near([25, 60]).map(s => s.group),
+    [2, 0, 1],
+  );
   assert.equal(near([25, 60])[1].distanceM, 100);
   assert.deepEqual(nearestStops([[x(2000), 60, 0]])([25, 60]), []);
 });

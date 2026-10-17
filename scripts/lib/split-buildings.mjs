@@ -9,7 +9,11 @@ import {writeFile, mkdir, rm, rename} from 'node:fs/promises';
 import {encodeIndex, detailFile} from '../../src/data/buildingIndex.js';
 
 export function flatTileset(tileset) {
-  const children = contentTiles(tileset).map(t => ({boundingVolume: t.boundingVolume, geometricError: 0, content: t.content}));
+  const children = contentTiles(tileset).map(t => ({
+    boundingVolume: t.boundingVolume,
+    geometricError: 0,
+    content: t.content,
+  }));
   const {content, ...root} = tileset.root;
   return {...tileset, geometricError: 2000, root: {...root, geometricError: 500, refine: 'ADD', children}};
 }
@@ -17,7 +21,10 @@ export function flatTileset(tileset) {
 // The content tiles of a tileset, flat or tree (for checks).
 export function contentTiles(tileset) {
   const out = [];
-  const walk = node => { if (node.content) out.push(node); for (const c of node.children ?? []) walk(c); };
+  const walk = node => {
+    if (node.content) out.push(node);
+    for (const c of node.children ?? []) walk(c);
+  };
   walk(tileset.root);
   return out;
 }
@@ -25,7 +32,9 @@ export function contentTiles(tileset) {
 // On Windows a running dev server can hold a folder for a moment (EPERM/EBUSY): try again.
 async function retry(step) {
   for (let attempt = 1; ; attempt++) {
-    try { return await step(); } catch (error) {
+    try {
+      return await step();
+    } catch (error) {
       if (attempt >= 5 || !['EPERM', 'EBUSY', 'ENOTEMPTY', 'EACCES'].includes(error.code)) throw error;
       await new Promise(resolve => setTimeout(resolve, 500 * attempt));
     }
@@ -40,7 +49,8 @@ export async function writeBuildingFiles(root, manifest) {
     byTile.get(r.tileContentUri).push(r);
   }
   // Write into a new folder, then swap, so the map never sees half a set.
-  const dir = new URL('public/buildings/', root), next = new URL('public/buildings.next/', root);
+  const dir = new URL('public/buildings/', root),
+    next = new URL('public/buildings.next/', root);
   await retry(() => rm(next, {recursive: true, force: true}));
   await mkdir(next, {recursive: true});
   for (const [uri, records] of byTile) await writeFile(new URL(detailFile(uri), next), JSON.stringify(records));
@@ -48,6 +58,10 @@ export async function writeBuildingFiles(root, manifest) {
   await retry(() => rename(next, dir));
   const index = JSON.stringify(encodeIndex(manifest));
   await writeFile(new URL('public/buildings-index.json.tmp', root), index);
-  await retry(() => rename(new URL('public/buildings-index.json.tmp', root), new URL('public/buildings-index.json', root)));
-  console.log(`Building index: ${manifest.length} buildings, ${(index.length / 1024 / 1024).toFixed(2)} MB; ${byTile.size} detail files.`);
+  await retry(() =>
+    rename(new URL('public/buildings-index.json.tmp', root), new URL('public/buildings-index.json', root)),
+  );
+  console.log(
+    `Building index: ${manifest.length} buildings, ${(index.length / 1024 / 1024).toFixed(2)} MB; ${byTile.size} detail files.`,
+  );
 }

@@ -16,7 +16,10 @@ export function createViewFade(viewer) {
   // change(): switches the view. Runs at once; the fade is only on top.
   return change => {
     const source = viewer.scene.canvas;
-    if (still() || !source.width) { change(); return; }
+    if (still() || !source.width) {
+      change();
+      return;
+    }
     try {
       // The map's own picture is only readable right after it is drawn, so draw it now.
       // The map skips drawing unless asked, hence requestRender first.
@@ -25,7 +28,10 @@ export function createViewFade(viewer) {
       layer.width = source.width;
       layer.height = source.height;
       layer.getContext('2d').drawImage(source, 0, 0);
-    } catch { change(); return; }
+    } catch {
+      change();
+      return;
+    }
     clearTimeout(timer);
     layer.style.transition = 'none';
     layer.style.opacity = '1';
@@ -33,11 +39,16 @@ export function createViewFade(viewer) {
     change();
     viewer.scene.requestRender();
     // Two frames: the copy must show once at full strength before it starts to fade.
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      layer.style.transition = `opacity ${FADE_MS}ms ease`;
-      layer.style.opacity = '0';
-    }));
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        layer.style.transition = `opacity ${FADE_MS}ms ease`;
+        layer.style.opacity = '0';
+      }),
+    );
     // Free the copy afterwards (it is the size of the window).
-    timer = setTimeout(() => { layer.hidden = true; layer.width = layer.height = 0; }, FADE_MS + 120);
+    timer = setTimeout(() => {
+      layer.hidden = true;
+      layer.width = layer.height = 0;
+    }, FADE_MS + 120);
   };
 }

@@ -7,15 +7,17 @@
 // small "metres east / north / up of the origin" numbers, and give Cesium one
 // matrix (the tileset transform) that places that local frame on the globe.
 
-const A = 6378137.0;                 // WGS84 equatorial radius (m)
-const F = 1 / 298.257223563;         // WGS84 flattening
-const E2 = F * (2 - F);              // eccentricity squared
+const A = 6378137.0; // WGS84 equatorial radius (m)
+const F = 1 / 298.257223563; // WGS84 flattening
+const E2 = F * (2 - F); // eccentricity squared
 const RAD = Math.PI / 180;
 
 // Longitude/latitude in degrees and height in metres -> ECEF [x, y, z].
 export function geodeticToEcef(lon, lat, height = 0) {
-  const sinLat = Math.sin(lat * RAD), cosLat = Math.cos(lat * RAD);
-  const sinLon = Math.sin(lon * RAD), cosLon = Math.cos(lon * RAD);
+  const sinLat = Math.sin(lat * RAD),
+    cosLat = Math.cos(lat * RAD);
+  const sinLon = Math.sin(lon * RAD),
+    cosLon = Math.cos(lon * RAD);
   const n = A / Math.sqrt(1 - E2 * sinLat * sinLat);
   return [(n + height) * cosLat * cosLon, (n + height) * cosLat * sinLon, (n * (1 - E2) + height) * sinLat];
 }
@@ -24,8 +26,10 @@ export function geodeticToEcef(lon, lat, height = 0) {
 // Transforms.eastNorthUpToFixedFrame (a test checks this).
 export function enuFrame(lon, lat, height = 0) {
   const origin = geodeticToEcef(lon, lat, height);
-  const sinLat = Math.sin(lat * RAD), cosLat = Math.cos(lat * RAD);
-  const sinLon = Math.sin(lon * RAD), cosLon = Math.cos(lon * RAD);
+  const sinLat = Math.sin(lat * RAD),
+    cosLat = Math.cos(lat * RAD);
+  const sinLon = Math.sin(lon * RAD),
+    cosLon = Math.cos(lon * RAD);
   const east = [-sinLon, cosLon, 0];
   const north = [-sinLat * cosLon, -sinLat * sinLon, cosLat];
   const up = [cosLat * cosLon, cosLat * sinLon, sinLat];

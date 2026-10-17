@@ -19,7 +19,7 @@ export const NEAR_M = 1000;
 // service map's service ids. Nearest in a straight line, not the school or health
 // station the address belongs to.
 export const SERVICE_KINDS = [
-  {key: 'daycare', label: 'Day care', services: [663, 603, 151]},    // day care in Finnish, Swedish, English
+  {key: 'daycare', label: 'Day care', services: [663, 603, 151]}, // day care in Finnish, Swedish, English
   {key: 'school', label: 'Primary school', services: [661, 601, 149]}, // grades 1 to 6 in Finnish, Swedish, English
   {key: 'health', label: 'Health station', services: [703]},
 ];
@@ -52,9 +52,11 @@ export function nearestPlaces(rows, radiusM = NEAR_M, keys = PLACE_KEYS) {
   return point => {
     const best = Object.fromEntries(keys.map(k => [k, null]));
     if (!rows.length) return best;
-    const dLat = radiusM / 111320, dLon = radiusM / (111320 * Math.cos(point[1] * Math.PI / 180));
+    const dLat = radiusM / 111320,
+      dLon = radiusM / (111320 * Math.cos((point[1] * Math.PI) / 180));
     for (const i of index.search(point[0] - dLon, point[1] - dLat, point[0] + dLon, point[1] + dLat)) {
-      const [kind, name, lon, lat] = rows[i], d = metresBetween(point, [lon, lat]);
+      const [kind, name, lon, lat] = rows[i],
+        d = metresBetween(point, [lon, lat]);
       if (d <= radiusM && kind in best && d < (best[kind]?.distanceM ?? Infinity)) best[kind] = {name, distanceM: d};
     }
     for (const k of keys) if (best[k]) best[k].distanceM = Math.round(best[k].distanceM);

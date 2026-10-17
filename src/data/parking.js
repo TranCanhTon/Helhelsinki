@@ -21,50 +21,67 @@ export const GROUP_KEYS = PARKING_GROUPS.map(g => g.key);
 export const PARKING_TYPES = {
   'free-short': {label: 'Free, time limited', group: 'free'},
   'free-long': {label: 'Free, no time limit', group: 'free'},
-  'paid': {label: 'Paid', group: 'paid'},
+  paid: {label: 'Paid', group: 'paid'},
   'paid-permit': {label: 'Paid, free with resident or business permit', group: 'permit'},
   'disc-permit': {label: 'Free with parking disc, or with permit', group: 'free'},
-  'conditional': {label: 'Free outside no-parking hours', group: 'free'},
+  conditional: {label: 'Free outside no-parking hours', group: 'free'},
   'car-sharing': {label: 'Car sharing (Z permit)', group: 'other', short: 'car sharing'},
-  'loading': {label: 'Loading', group: 'other', short: 'loading bay'},
-  'accessible': {label: 'Accessible (disabled permit)', group: 'other', short: 'disabled permit'},
-  'reserved': {label: 'Reserved (taxi, police, diplomats, officials)', group: 'other', short: 'taxi or official'},
-  'ev': {label: 'Electric cars', group: 'other', short: 'electric car'},
+  loading: {label: 'Loading', group: 'other', short: 'loading bay'},
+  accessible: {label: 'Accessible (disabled permit)', group: 'other', short: 'disabled permit'},
+  reserved: {label: 'Reserved (taxi, police, diplomats, officials)', group: 'other', short: 'taxi or official'},
+  ev: {label: 'Electric cars', group: 'other', short: 'electric car'},
   'other-vehicle': {label: 'Motorcycles, coaches or trucks', group: 'other', short: 'motorcycle, coach or truck'},
-  'unknown': {label: 'Unknown type', group: 'other', short: 'unknown type'},
+  unknown: {label: 'Unknown type', group: 'other', short: 'unknown type'},
 };
 export const TYPE_KEYS = Object.keys(PARKING_TYPES);
 
 // luokka -> type, from the luokka_nimi texts in the data (checked 12 Oct 2026).
 const CLASS_TYPES = {
-  1: 'free-short',    // Ilmainen lyhytaikainen pysäköinti
-  2: 'free-long',     // Ilmainen pitkäaikainen pysäköinti
-  3: 'paid',          // Kertamaksu enintään 1 tunti
-  4: 'paid',          // Kertamaksu enintään 2 tuntia
-  5: 'paid',          // Kertamaksu enintään 4 tuntia
-  6: 'paid-permit',   // Maksullinen ilman asukas-/yritystunnusta
-  7: 'paid-permit',   // Kertamaksu enintään 1 h ilman asukas-/yritystunnusta
-  8: 'disc-permit',   // Ilman asukas-/yritystunnusta ilmainen lyhytaikainen pysäköinti. Käytä pysäköintikiekkoa.
-  9: 'conditional',   // Pysäköinti sallittu pysäköintikieltoajan ulkopuolella
-  10: 'paid',         // Maksullinen vyöhykehinta
-  11: 'car-sharing',  // Z-tunnus nouto/palautus
+  1: 'free-short', // Ilmainen lyhytaikainen pysäköinti
+  2: 'free-long', // Ilmainen pitkäaikainen pysäköinti
+  3: 'paid', // Kertamaksu enintään 1 tunti
+  4: 'paid', // Kertamaksu enintään 2 tuntia
+  5: 'paid', // Kertamaksu enintään 4 tuntia
+  6: 'paid-permit', // Maksullinen ilman asukas-/yritystunnusta
+  7: 'paid-permit', // Kertamaksu enintään 1 h ilman asukas-/yritystunnusta
+  8: 'disc-permit', // Ilman asukas-/yritystunnusta ilmainen lyhytaikainen pysäköinti. Käytä pysäköintikiekkoa.
+  9: 'conditional', // Pysäköinti sallittu pysäköintikieltoajan ulkopuolella
+  10: 'paid', // Maksullinen vyöhykehinta
+  11: 'car-sharing', // Z-tunnus nouto/palautus
 };
 // tyyppi texts. 'exclude' = not parking for cars at all, left out of everything.
 const USE_TYPES = {
-  'pysäköintikielto': 'exclude', 'pysäyttämiskielto': 'exclude',
-  'sähköpotkulauta': 'exclude', 'polkupyörä': 'exclude', 'parklet': 'exclude',
-  'kuormauspaikka': 'loading',
-  'inva': 'accessible',
-  'taxi': 'reserved', 'taksi': 'reserved', 'taxi, lataus': 'reserved', 'cd': 'reserved', 'virka-auto': 'reserved',
-  'poliisi': 'reserved', 'kaupunginkanslia': 'reserved', 'valtioneuvosto': 'reserved', 'kirjastoauto': 'reserved',
-  'sähköauto': 'ev',
-  'moottoripyörä': 'other-vehicle', 'matkailuliikenne': 'other-vehicle', 'kuorma-auto': 'other-vehicle',
+  pysäköintikielto: 'exclude',
+  pysäyttämiskielto: 'exclude',
+  sähköpotkulauta: 'exclude',
+  polkupyörä: 'exclude',
+  parklet: 'exclude',
+  kuormauspaikka: 'loading',
+  inva: 'accessible',
+  taxi: 'reserved',
+  taksi: 'reserved',
+  'taxi, lataus': 'reserved',
+  cd: 'reserved',
+  'virka-auto': 'reserved',
+  poliisi: 'reserved',
+  kaupunginkanslia: 'reserved',
+  valtioneuvosto: 'reserved',
+  kirjastoauto: 'reserved',
+  sähköauto: 'ev',
+  moottoripyörä: 'other-vehicle',
+  matkailuliikenne: 'other-vehicle',
+  'kuorma-auto': 'other-vehicle',
 };
 
 // properties -> type key, or 'exclude'. A known use text wins over the class,
 // so a "no parking" record is never counted as parking.
 export function classify(properties) {
-  const use = USE_TYPES[String(properties.tyyppi ?? '').trim().toLowerCase()];
+  const use =
+    USE_TYPES[
+      String(properties.tyyppi ?? '')
+        .trim()
+        .toLowerCase()
+    ];
   if (use) return use;
   return CLASS_TYPES[properties.luokka] ?? 'unknown';
 }
@@ -79,9 +96,13 @@ export const capacityOf = properties => {
 export function centreOf(geometry) {
   const b = [Infinity, Infinity, -Infinity, -Infinity];
   const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
-  for (const polygon of polygons) for (const [x, y] of polygon[0]) {
-    b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y);
-  }
+  for (const polygon of polygons)
+    for (const [x, y] of polygon[0]) {
+      b[0] = Math.min(b[0], x);
+      b[1] = Math.min(b[1], y);
+      b[2] = Math.max(b[2], x);
+      b[3] = Math.max(b[3], y);
+    }
   return [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 }
 
@@ -91,17 +112,23 @@ export function centreOf(geometry) {
 export function grownHull(geometry, metres) {
   const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
   const corners = polygons.flatMap(p => p[0]);
-  const lat0 = corners[0][1], kx = 111320 * Math.cos(lat0 * Math.PI / 180), ky = 110540;
+  const lat0 = corners[0][1],
+    kx = 111320 * Math.cos((lat0 * Math.PI) / 180),
+    ky = 110540;
   const points = [];
-  for (const [lon, lat] of corners) for (let k = 0; k < 12; k++) {
-    points.push([lon * kx + Math.cos(k * Math.PI / 6) * metres, lat * ky + Math.sin(k * Math.PI / 6) * metres]);
-  }
+  for (const [lon, lat] of corners)
+    for (let k = 0; k < 12; k++) {
+      points.push([lon * kx + Math.cos((k * Math.PI) / 6) * metres, lat * ky + Math.sin((k * Math.PI) / 6) * metres]);
+    }
   // Convex hull (monotone chain).
   points.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
   const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
   const half = list => {
     const out = [];
-    for (const p of list) { while (out.length > 1 && cross(out.at(-2), out.at(-1), p) <= 0) out.pop(); out.push(p); }
+    for (const p of list) {
+      while (out.length > 1 && cross(out.at(-2), out.at(-1), p) <= 0) out.pop();
+      out.push(p);
+    }
     out.pop();
     return out;
   };
@@ -112,8 +139,10 @@ export function grownHull(geometry, metres) {
 
 // Straight-line metres between two [lon, lat] points (fine at city scale).
 export function metresBetween([x1, y1], [x2, y2]) {
-  const k = Math.PI / 180, lat = (y1 + y2) / 2 * k;
-  const dx = (x2 - x1) * k * Math.cos(lat) * 6371008, dy = (y2 - y1) * k * 6371008;
+  const k = Math.PI / 180,
+    lat = ((y1 + y2) / 2) * k;
+  const dx = (x2 - x1) * k * Math.cos(lat) * 6371008,
+    dy = (y2 - y1) * k * 6371008;
   return Math.hypot(dx, dy);
 }
 
@@ -126,7 +155,8 @@ export function nearbyIndex(segments, radius = 200) {
   if (!segments.length) index.add(0, 0, 0, 0);
   index.finish();
   return point => {
-    const dLat = radius / 111320, dLon = radius / (111320 * Math.cos(point[1] * Math.PI / 180));
+    const dLat = radius / 111320,
+      dLon = radius / (111320 * Math.cos((point[1] * Math.PI) / 180));
     const groups = Object.fromEntries(GROUP_KEYS.map(k => [k, {spaces: null, areas: 0, noEstimate: 0}]));
     const out = {radiusM: radius, groups, other: {}};
     if (!segments.length) return out;
@@ -134,7 +164,10 @@ export function nearbyIndex(segments, radius = 200) {
       const s = segments[i];
       if (metresBetween(point, s.position) > radius) continue;
       const group = groups[PARKING_TYPES[s.type].group];
-      if (!group) { out.other[s.type] = (out.other[s.type] ?? 0) + 1; continue; }
+      if (!group) {
+        out.other[s.type] = (out.other[s.type] ?? 0) + 1;
+        continue;
+      }
       group.areas++;
       if (s.capacity === null) group.noEstimate++;
       else group.spaces = (group.spaces ?? 0) + s.capacity;
@@ -150,7 +183,9 @@ export function nearbyIndex(segments, radius = 200) {
 export function hoursText(raw) {
   const text = String(raw ?? '').trim();
   if (!text) return null;
-  const m = text.match(/^(\d{1,2})\s*-\s*(\d{1,2})(?:\s*,?\s*\((\d{1,2})\s*-\s*(\d{1,2})\))?(?:\s*,\s*(\d{1,2})\s*-\s*(\d{1,2}))?$/);
+  const m = text.match(
+    /^(\d{1,2})\s*-\s*(\d{1,2})(?:\s*,?\s*\((\d{1,2})\s*-\s*(\d{1,2})\))?(?:\s*,\s*(\d{1,2})\s*-\s*(\d{1,2}))?$/,
+  );
   if (!m) return text;
   const parts = [`Mon to Fri ${m[1]} to ${m[2]}`];
   if (m[3]) parts.push(`Sat ${m[3]} to ${m[4]}`);

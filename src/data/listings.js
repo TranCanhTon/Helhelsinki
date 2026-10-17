@@ -13,7 +13,7 @@ export function median(values) {
   const mid = Math.floor(v.length / 2);
   return v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2;
 }
-export const perM2 = ad => Number.isFinite(ad.sizeM2) && ad.sizeM2 > 0 ? ad.rent / ad.sizeM2 : null;
+export const perM2 = ad => (Number.isFinite(ad.sizeM2) && ad.sizeM2 > 0 ? ad.rent / ad.sizeM2 : null);
 // postcode -> {group key -> {count, rent (median €/month), perM2 (median €/m²)}}
 export function areaStats(ads) {
   const byPostcode = new Map();
@@ -27,8 +27,11 @@ export function areaStats(ads) {
     const groups = {};
     for (const g of ROOM_GROUPS) {
       const ads = list.filter(a => g.test(a.rooms));
-      groups[g.key] = {count: ads.length, rent: ads.length >= MIN_ADS ? median(ads.map(a => a.rent)) : null,
-        perM2: ads.length >= MIN_ADS ? median(ads.map(perM2)) : null};
+      groups[g.key] = {
+        count: ads.length,
+        rent: ads.length >= MIN_ADS ? median(ads.map(a => a.rent)) : null,
+        perM2: ads.length >= MIN_ADS ? median(ads.map(perM2)) : null,
+      };
     }
     stats.set(postcode, {count: list.length, groups});
   }
@@ -37,9 +40,10 @@ export function areaStats(ads) {
 export const groupOf = rooms => ROOM_GROUPS.find(g => g.test(rooms))?.key ?? null;
 export function indexListings(data) {
   const byBuilding = new Map();
-  for (const ad of data.ads) for (const id of ad.buildingIds) {
-    if (!byBuilding.has(id)) byBuilding.set(id, []);
-    byBuilding.get(id).push(ad);
-  }
+  for (const ad of data.ads)
+    for (const id of ad.buildingIds) {
+      if (!byBuilding.has(id)) byBuilding.set(id, []);
+      byBuilding.get(id).push(ad);
+    }
   return {...data, byBuilding, stats: areaStats(data.ads)};
 }

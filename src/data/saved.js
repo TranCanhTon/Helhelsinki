@@ -7,19 +7,29 @@ const KEY = 'daroad.saved';
 // {buildingId: {address, place, position, savedAt}}
 export function createSaved(storage = globalThis.localStorage) {
   let items = {};
-  try { items = JSON.parse(storage?.getItem(KEY) ?? '{}') ?? {}; } catch { items = {}; }
+  try {
+    items = JSON.parse(storage?.getItem(KEY) ?? '{}') ?? {};
+  } catch {
+    items = {};
+  }
   const listeners = new Set();
   const write = () => {
-    try { storage?.setItem(KEY, JSON.stringify(items)); } catch {}
+    try {
+      storage?.setItem(KEY, JSON.stringify(items));
+    } catch {}
     for (const fn of listeners) fn();
   };
   return {
     has: id => id in items,
     get: id => items[id] ?? null,
-    get size() { return Object.keys(items).length; },
+    get size() {
+      return Object.keys(items).length;
+    },
     // Newest saved first.
     list() {
-      return Object.entries(items).map(([id, item]) => ({id, ...item})).sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+      return Object.entries(items)
+        .map(([id, item]) => ({id, ...item}))
+        .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
     },
     toggle(id, {address, place, position}) {
       if (id in items) delete items[id];
@@ -27,6 +37,8 @@ export function createSaved(storage = globalThis.localStorage) {
       write();
       return id in items;
     },
-    onChange(fn) { listeners.add(fn); },
+    onChange(fn) {
+      listeners.add(fn);
+    },
   };
 }

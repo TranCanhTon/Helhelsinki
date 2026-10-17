@@ -33,16 +33,19 @@ const isInside = makeInsideTest(geometry);
 // the boundary is broken and we stop instead of publishing it.
 const controlPoints = [
   {name: 'Senate Square', point: [24.9522, 60.1693], inside: true},
-  {name: 'Kamppi', point: [24.9316, 60.1690], inside: true},
+  {name: 'Kamppi', point: [24.9316, 60.169], inside: true},
   {name: 'Suomenlinna (island)', point: [24.9883, 60.1454], inside: true},
-  {name: 'Vuosaari', point: [25.1440, 60.2096], inside: true},
-  {name: 'Otaniemi, Espoo', point: [24.8270, 60.1867], inside: false},
+  {name: 'Vuosaari', point: [25.144, 60.2096], inside: true},
+  {name: 'Otaniemi, Espoo', point: [24.827, 60.1867], inside: false},
   {name: 'Tapiola, Espoo', point: [24.8053, 60.1757], inside: false},
   {name: 'Tikkurila, Vantaa', point: [25.0444, 60.2925], inside: false},
   {name: 'Helsinki Airport, Vantaa', point: [24.9633, 60.3172], inside: false},
 ];
 const failures = controlPoints.filter(c => isInside(c.point) !== c.inside);
-for (const c of controlPoints) console.log(`  ${isInside(c.point) === c.inside ? 'ok  ' : 'FAIL'} ${c.name}: ${isInside(c.point) ? 'inside' : 'outside'}`);
+for (const c of controlPoints)
+  console.log(
+    `  ${isInside(c.point) === c.inside ? 'ok  ' : 'FAIL'} ${c.name}: ${isInside(c.point) ? 'inside' : 'outside'}`,
+  );
 if (failures.length) throw new Error('Boundary control points failed: ' + failures.map(f => f.name).join(', '));
 
 const source = {
@@ -53,29 +56,35 @@ const source = {
   requests: download.requests,
 };
 
-await writeFile(BOUNDARY_FILE, JSON.stringify({
-  type: 'Feature',
-  properties: {
-    name: 'Helsinki',
-    municipalityCode: '091',
-    districts: download.features.length,
-    pieces: geometry.coordinates.length,
-    areaKm2: Math.round(area * 10) / 10,
-    method: 'Union of the 60 official districts. Includes islands and the sea areas inside the municipal border.',
-    source,
-  },
-  geometry,
-}));
-
-await writeFile(new URL('district-boundaries.json', PUBLIC_MAP), JSON.stringify({
-  type: 'FeatureCollection',
-  source,
-  features: download.features.map(f => ({
+await writeFile(
+  BOUNDARY_FILE,
+  JSON.stringify({
     type: 'Feature',
-    properties: {id: f.properties.tunnus, nameFi: f.properties.nimi_fi, nameSv: f.properties.nimi_se},
-    geometry: f.geometry,
-  })),
-}));
+    properties: {
+      name: 'Helsinki',
+      municipalityCode: '091',
+      districts: download.features.length,
+      pieces: geometry.coordinates.length,
+      areaKm2: Math.round(area * 10) / 10,
+      method: 'Union of the 60 official districts. Includes islands and the sea areas inside the municipal border.',
+      source,
+    },
+    geometry,
+  }),
+);
+
+await writeFile(
+  new URL('district-boundaries.json', PUBLIC_MAP),
+  JSON.stringify({
+    type: 'FeatureCollection',
+    source,
+    features: download.features.map(f => ({
+      type: 'Feature',
+      properties: {id: f.properties.tunnus, nameFi: f.properties.nimi_fi, nameSv: f.properties.nimi_se},
+      geometry: f.geometry,
+    })),
+  }),
+);
 
 // Sub-districts (osa-alueet), e.g. Kalasatama inside Sörnäinen. Some listing
 // sites (SATO) use these names. Fields: tunnus, nimi_fi, nimi_se, tyyppi.
@@ -83,6 +92,8 @@ console.log('Downloading Helsinki sub-districts (Maavesi_osa_alueet)...');
 const subdistricts = await fetchAllFeatures({typeName: 'avoindata:Maavesi_osa_alueet', sortBy: 'tietopalvelu_id'});
 await writeFile(new URL('Maavesi_osa_alueet.json', RAW), JSON.stringify(subdistricts));
 
-console.log(`\nHelsinki boundary: ${download.features.length} districts merged into ${geometry.coordinates.length} piece(s), ${area.toFixed(1)} km².`);
+console.log(
+  `\nHelsinki boundary: ${download.features.length} districts merged into ${geometry.coordinates.length} piece(s), ${area.toFixed(1)} km².`,
+);
 console.log(`Sub-districts: ${subdistricts.features.length}.`);
 console.log('Wrote public/map/helsinki-boundary.json and public/map/district-boundaries.json');

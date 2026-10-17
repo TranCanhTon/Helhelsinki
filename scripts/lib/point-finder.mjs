@@ -11,9 +11,13 @@ export function pointFinder(features) {
   for (const f of usable) {
     const b = [Infinity, Infinity, -Infinity, -Infinity];
     const polygons = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
-    for (const polygon of polygons) for (const [x, y] of polygon[0]) {
-      b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y);
-    }
+    for (const polygon of polygons)
+      for (const [x, y] of polygon[0]) {
+        b[0] = Math.min(b[0], x);
+        b[1] = Math.min(b[1], y);
+        b[2] = Math.max(b[2], x);
+        b[3] = Math.max(b[3], y);
+      }
     index.add(...b);
   }
   index.finish();

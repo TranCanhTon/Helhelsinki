@@ -13,8 +13,11 @@ test('median handles odd, even and empty lists', () => {
 
 test('area rent needs at least 3 ads of that size; others stay unknown', () => {
   const stats = areaStats([
-    ad('a', '00530', 2, 1000, 50), ad('b', '00530', 2, 1100, 50), ad('c', '00530', 2, 1300, 52),
-    ad('d', '00530', 1, 800, 30), ad('e', '00530', 4, 2000, 90),
+    ad('a', '00530', 2, 1000, 50),
+    ad('b', '00530', 2, 1100, 50),
+    ad('c', '00530', 2, 1300, 52),
+    ad('d', '00530', 1, 800, 30),
+    ad('e', '00530', 4, 2000, 90),
   ]);
   const s = stats.get('00530');
   assert.equal(s.count, 5);
@@ -25,7 +28,10 @@ test('area rent needs at least 3 ads of that size; others stay unknown', () => {
 });
 
 test('ads are indexed by every building they matched', () => {
-  const data = indexListings({updatedAt: 'x', ads: [ad('a', '00530', 2, 1000, 50, ['B1', 'B2']), ad('b', '00530', 3, 1500, 70, ['B1'])]});
+  const data = indexListings({
+    updatedAt: 'x',
+    ads: [ad('a', '00530', 2, 1000, 50, ['B1', 'B2']), ad('b', '00530', 3, 1500, 70, ['B1'])],
+  });
   assert.equal(data.byBuilding.get('B1').length, 2);
   assert.equal(data.byBuilding.get('B2').length, 1);
   assert.equal(groupOf(5), '3+');

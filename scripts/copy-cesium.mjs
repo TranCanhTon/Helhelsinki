@@ -11,7 +11,9 @@ import {existsSync} from 'node:fs';
 
 const source = new URL('../node_modules/cesium/Build/Cesium/', import.meta.url);
 const target = new URL('../public/cesium/', import.meta.url);
-const version = JSON.parse(await readFile(new URL('../node_modules/cesium/package.json', import.meta.url), 'utf8')).version;
+const version = JSON.parse(
+  await readFile(new URL('../node_modules/cesium/package.json', import.meta.url), 'utf8'),
+).version;
 const stamp = new URL('VERSION', target);
 
 // Skip the copy when the same Cesium version is already there.

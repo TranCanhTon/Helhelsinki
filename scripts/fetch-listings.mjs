@@ -25,19 +25,32 @@ const UA = 'HelsinkiLens/0.1 (personal research project; +https://github.com/Tra
 const PAUSE_MS = 1100;
 const CACHE = new URL('../data/raw/listings/', import.meta.url);
 const CACHE_FILE = new URL('ads.json', CACHE);
-const quick = process.argv.includes('--quick'), watch = process.argv.includes('--watch');
+const quick = process.argv.includes('--quick'),
+  watch = process.argv.includes('--watch');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 class Blocked extends Error {}
 async function get(url) {
   for (let attempt = 0; ; attempt++) {
     let response;
-    try { response = await fetch(url, {headers: {'User-Agent': UA}, signal: AbortSignal.timeout(60000)}); }
-    catch (error) { if (attempt < 2) { await sleep(5000 * (attempt + 1)); continue; } throw error; }
-    if ([403, 429].includes(response.status)) throw new Blocked(`Oikotie answered HTTP ${response.status} for ${url}. Stopping; do not work around it.`);
-    if ([502, 503, 504].includes(response.status) && attempt < 2) { await sleep(5000 * (attempt + 1)); continue; }
+    try {
+      response = await fetch(url, {headers: {'User-Agent': UA}, signal: AbortSignal.timeout(60000)});
+    } catch (error) {
+      if (attempt < 2) {
+        await sleep(5000 * (attempt + 1));
+        continue;
+      }
+      throw error;
+    }
+    if ([403, 429].includes(response.status))
+      throw new Blocked(`Oikotie answered HTTP ${response.status} for ${url}. Stopping; do not work around it.`);
+    if ([502, 503, 504].includes(response.status) && attempt < 2) {
+      await sleep(5000 * (attempt + 1));
+      continue;
+    }
     const text = await response.text();
-    if (/captcha|cf-challenge|challenge-platform/i.test(text)) throw new Blocked(`Oikotie showed a bot check for ${url}. Stopping; do not work around it.`);
+    if (/captcha|cf-challenge|challenge-platform/i.test(text))
+      throw new Blocked(`Oikotie showed a bot check for ${url}. Stopping; do not work around it.`);
     return {status: response.status, text};
   }
 }
@@ -60,20 +73,28 @@ async function sitemapAds(files) {
 // Facts from the ad page's schema.org block, or null if the page has none.
 function parseAd(html) {
   for (const [, json] of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
-    let data; try { data = JSON.parse(json); } catch { continue; }
+    let data;
+    try {
+      data = JSON.parse(json);
+    } catch {
+      continue;
+    }
     const types = [].concat(data['@type']);
     if (!types.includes('Apartment')) continue;
-    const num = v => Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : null;
+    const num = v => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Number(v) : null);
     return {
       rent: num(data.offers?.price),
       currency: data.offers?.priceCurrency ?? null,
       sizeM2: num(data.floorSize?.value),
       rooms: num(data.numberOfRooms),
-      layout: data.name?.replace(/\s*\|\s*Oikotie$/, '') || null,       // e.g. "2h + k + kph"
+      layout: data.name?.replace(/\s*\|\s*Oikotie$/, '') || null, // e.g. "2h + k + kph"
       street: data.address?.streetAddress?.split(',')[0].trim() || null,
       postcode: data.address?.postalCode ? String(data.address.postalCode) : null,
       district: data.address?.addressLocality ?? null,
-      position: num(data.geo?.longitude) !== null && num(data.geo?.latitude) !== null ? [num(data.geo.longitude), num(data.geo.latitude)] : null,
+      position:
+        num(data.geo?.longitude) !== null && num(data.geo?.latitude) !== null
+          ? [num(data.geo.longitude), num(data.geo.latitude)]
+          : null,
       condition: data.itemCondition?.name ?? null,
     };
   }
@@ -92,29 +113,47 @@ async function run(full) {
   await mkdir(CACHE, {recursive: true});
   const cache = await readFile(CACHE_FILE, 'utf8').then(JSON.parse, () => ({ads: {}}));
   const index = (await get(SITE + '/sitemaps/index.xml')).text;
-  const files = [...index.matchAll(/<loc>([^<]*\/sm_ad_\d+\.xml)<\/loc>/g)].map(m => m[1])
+  const files = [...index.matchAll(/<loc>([^<]*\/sm_ad_\d+\.xml)<\/loc>/g)]
+    .map(m => m[1])
     .sort((a, b) => Number(/(\d+)\.xml$/.exec(a)[1]) - Number(/(\d+)\.xml$/.exec(b)[1]));
   if (!files.length) throw new Error('No ad sitemaps found in the sitemap index');
   const listed = await sitemapAds(full ? files : files.slice(0, 1));
   console.log(`${listed.length} Helsinki rental ads in ${full ? files.length : 1} sitemap file(s).`);
 
   const todo = listed.filter(a => cache.ads[a.id]?.lastmod !== a.lastmod);
-  console.log(`${todo.length} new or changed ads to read (about ${Math.ceil(todo.length * PAUSE_MS / 60000)} min).`);
-  let done = 0, gone = 0;
+  console.log(`${todo.length} new or changed ads to read (about ${Math.ceil((todo.length * PAUSE_MS) / 60000)} min).`);
+  let done = 0,
+    gone = 0;
   for (const ad of todo) {
     const {status, text} = await get(ad.url);
-    if (status === 404 || status === 410) { delete cache.ads[ad.id]; gone++; }
-    else if (status === 200) {
-      cache.ads[ad.id] = {...ad, firstSeen: cache.ads[ad.id]?.firstSeen ?? new Date().toISOString(), facts: parseAd(text)};
+    if (status === 404 || status === 410) {
+      delete cache.ads[ad.id];
+      gone++;
+    } else if (status === 200) {
+      cache.ads[ad.id] = {
+        ...ad,
+        firstSeen: cache.ads[ad.id]?.firstSeen ?? new Date().toISOString(),
+        facts: parseAd(text),
+      };
     }
-    if (++done % 50 === 0) { await writeFile(CACHE_FILE, JSON.stringify(cache)); console.log(`  ${done}/${todo.length}`); }
+    if (++done % 50 === 0) {
+      await writeFile(CACHE_FILE, JSON.stringify(cache));
+      console.log(`  ${done}/${todo.length}`);
+    }
     // Publish along the way so the map shows ads long before a first full run ends.
-    if (done % 200 === 0) { cache.updatedAt = new Date().toISOString(); await publish(cache); }
+    if (done % 200 === 0) {
+      cache.updatedAt = new Date().toISOString();
+      await publish(cache);
+    }
     await sleep(PAUSE_MS);
   }
   if (full) {
     const live = new Set(listed.map(a => a.id));
-    for (const id of Object.keys(cache.ads)) if (!live.has(id)) { delete cache.ads[id]; gone++; }
+    for (const id of Object.keys(cache.ads))
+      if (!live.has(id)) {
+        delete cache.ads[id];
+        gone++;
+      }
   }
   cache.updatedAt = new Date().toISOString();
   if (full) cache.fullAt = cache.updatedAt;
@@ -127,41 +166,75 @@ async function publish(cache) {
   const boundary = await loadBoundary();
   const addresses = await readJson('public/addresses.json');
   const byAddress = new Map();
-  for (const row of addresses) if (row.buildingIds.length) byAddress.set(exactAddress(row.address) + '|' + row.postcode, row.buildingIds);
+  for (const row of addresses)
+    if (row.buildingIds.length) byAddress.set(exactAddress(row.address) + '|' + row.postcode, row.buildingIds);
   const rows = [];
-  let outside = 0, noFacts = 0;
+  let outside = 0,
+    noFacts = 0;
   for (const ad of Object.values(cache.ads)) {
     const f = ad.facts;
-    if (!f || !Number.isFinite(f.rent) || f.currency !== 'EUR') { noFacts++; continue; }
-    if (!f.position || !boundary.isInside(f.position)) { outside++; continue; }
-    const key = addressKeys(f.street).map(k => k + '|' + f.postcode).find(k => byAddress.has(k));
-    rows.push({id: ad.id, url: ad.url, rent: f.rent, sizeM2: f.sizeM2, rooms: f.rooms, layout: f.layout,
-      street: f.street, postcode: f.postcode, district: f.district, position: f.position, condition: f.condition,
-      buildingIds: key ? byAddress.get(key) : [], firstSeen: ad.firstSeen, lastmod: ad.lastmod});
+    if (!f || !Number.isFinite(f.rent) || f.currency !== 'EUR') {
+      noFacts++;
+      continue;
+    }
+    if (!f.position || !boundary.isInside(f.position)) {
+      outside++;
+      continue;
+    }
+    const key = addressKeys(f.street)
+      .map(k => k + '|' + f.postcode)
+      .find(k => byAddress.has(k));
+    rows.push({
+      id: ad.id,
+      url: ad.url,
+      rent: f.rent,
+      sizeM2: f.sizeM2,
+      rooms: f.rooms,
+      layout: f.layout,
+      street: f.street,
+      postcode: f.postcode,
+      district: f.district,
+      position: f.position,
+      condition: f.condition,
+      buildingIds: key ? byAddress.get(key) : [],
+      firstSeen: ad.firstSeen,
+      lastmod: ad.lastmod,
+    });
   }
   rows.sort((a, b) => b.lastmod.localeCompare(a.lastmod));
   await publishJson('public/listings.json', {updatedAt: cache.updatedAt, fullAt: cache.fullAt ?? null, ads: rows});
   await datasetSection('listings', {
     source: 'Oikotie rental ads (asunnot.oikotie.fi): sitemaps and ad pages, schema.org data only',
-    updatedAt: cache.updatedAt, lastFullPassAt: cache.fullAt ?? null, count: rows.length,
-    matchedToBuilding: rows.filter(r => r.buildingIds.length).length, skippedNoPriceData: noFacts, skippedOutsideHelsinki: outside,
+    updatedAt: cache.updatedAt,
+    lastFullPassAt: cache.fullAt ?? null,
+    count: rows.length,
+    matchedToBuilding: rows.filter(r => r.buildingIds.length).length,
+    skippedNoPriceData: noFacts,
+    skippedOutsideHelsinki: outside,
     kept: 'rent per month, size, rooms, layout, street address, postcode, district, coordinates, condition, link',
     notKept: 'photos, descriptions, landlord or agent names',
-    limitations: ['Asking rents in current ads, not agreed rents.', 'Only ads published on Oikotie.', 'Matched to a building only on an exact street address and postcode.'],
+    limitations: [
+      'Asking rents in current ads, not agreed rents.',
+      'Only ads published on Oikotie.',
+      'Matched to a building only on an exact street address and postcode.',
+    ],
   });
-  console.log(`Published ${rows.length} ads, ${rows.filter(r => r.buildingIds.length).length} matched to a 3D building (outside Helsinki ${outside}, no price ${noFacts}).`);
+  console.log(
+    `Published ${rows.length} ads, ${rows.filter(r => r.buildingIds.length).length} matched to a 3D building (outside Helsinki ${outside}, no price ${noFacts}).`,
+  );
 }
 
 try {
   if (process.argv.includes('--publish-only')) await publish(JSON.parse(await readFile(CACHE_FILE, 'utf8')));
   else if (!watch) await run(!quick);
-  else for (;;) {
-    const cache = await readFile(CACHE_FILE, 'utf8').then(JSON.parse, () => ({}));
-    const full = !cache.fullAt || Date.now() - Date.parse(cache.fullAt) > 6 * 3600e3;
-    await run(full);
-    console.log(`Next check at ${new Date(Date.now() + 15 * 60e3).toLocaleTimeString('fi-FI')}.`);
-    await sleep(15 * 60e3);
-  }
+  else
+    for (;;) {
+      const cache = await readFile(CACHE_FILE, 'utf8').then(JSON.parse, () => ({}));
+      const full = !cache.fullAt || Date.now() - Date.parse(cache.fullAt) > 6 * 3600e3;
+      await run(full);
+      console.log(`Next check at ${new Date(Date.now() + 15 * 60e3).toLocaleTimeString('fi-FI')}.`);
+      await sleep(15 * 60e3);
+    }
 } catch (error) {
   console.error(error instanceof Blocked ? error.message : error);
   process.exit(1);

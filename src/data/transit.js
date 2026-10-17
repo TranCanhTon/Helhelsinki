@@ -34,11 +34,13 @@ export function modeOf(routeType) {
 export const compareLines = (a, b) => a.localeCompare(b, 'en', {numeric: true});
 
 const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-export const dayOf = date => new Date(Date.UTC(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8))).getUTCDay();
+export const dayOf = date =>
+  new Date(Date.UTC(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8))).getUTCDay();
 
 // calendar rows + calendar_dates rows -> Set of service_ids running on date 'YYYYMMDD'.
 export function activeServices(calendar, exceptions, date) {
-  const day = WEEKDAYS[dayOf(date)], out = new Set();
+  const day = WEEKDAYS[dayOf(date)],
+    out = new Set();
   for (const c of calendar) if (c[day] === '1' && c.start_date <= date && date <= c.end_date) out.add(c.service_id);
   for (const e of exceptions) {
     if (e.date !== date) continue;
@@ -51,12 +53,18 @@ export function activeServices(calendar, exceptions, date) {
 // stops: [{name, mode, position}] -> group number per stop. Same name and mode,
 // and within maxM of the group's first platform.
 export function groupStops(stops, maxM = 300) {
-  const firsts = new Map(), out = [];
+  const firsts = new Map(),
+    out = [];
   let next = 0;
   for (const stop of stops) {
-    const key = stop.name + '\u0000' + stop.mode, list = firsts.get(key) ?? [];
+    const key = stop.name + '\u0000' + stop.mode,
+      list = firsts.get(key) ?? [];
     let group = list.find(g => metresBetween(g.position, stop.position) <= maxM);
-    if (!group) { group = {id: next++, position: stop.position}; list.push(group); firsts.set(key, list); }
+    if (!group) {
+      group = {id: next++, position: stop.position};
+      list.push(group);
+      firsts.set(key, list);
+    }
     out.push(group.id);
   }
   return out;
@@ -71,13 +79,18 @@ export function nearestStops(platforms, {count = 3, radiusM = 1500} = {}) {
   index.finish();
   return point => {
     if (!platforms.length) return [];
-    const dLat = radiusM / 111320, dLon = radiusM / (111320 * Math.cos(point[1] * Math.PI / 180));
+    const dLat = radiusM / 111320,
+      dLon = radiusM / (111320 * Math.cos((point[1] * Math.PI) / 180));
     const best = new Map();
     for (const i of index.search(point[0] - dLon, point[1] - dLat, point[0] + dLon, point[1] + dLat)) {
-      const [lon, lat, group] = platforms[i], d = metresBetween(point, [lon, lat]);
+      const [lon, lat, group] = platforms[i],
+        d = metresBetween(point, [lon, lat]);
       if (d <= radiusM && d < (best.get(group) ?? Infinity)) best.set(group, d);
     }
-    return [...best].sort((a, b) => a[1] - b[1]).slice(0, count).map(([group, d]) => ({group, distanceM: Math.round(d)}));
+    return [...best]
+      .sort((a, b) => a[1] - b[1])
+      .slice(0, count)
+      .map(([group, d]) => ({group, distanceM: Math.round(d)}));
   };
 }
 

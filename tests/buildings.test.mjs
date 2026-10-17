@@ -12,28 +12,56 @@ import {syntheticCityGml} from './fixtures/synthetic-citygml.mjs';
 const near = (a, b, tolerance = 1e-6) => Math.abs(a - b) <= tolerance;
 
 test('courtyard: the hole stays a hole after triangulation', () => {
-  const outer = [[0, 0, 0], [20, 0, 0], [20, 20, 0], [0, 20, 0]];
-  const hole = [[6, 6, 0], [14, 6, 0], [14, 14, 0], [6, 14, 0]];
+  const outer = [
+    [0, 0, 0],
+    [20, 0, 0],
+    [20, 20, 0],
+    [0, 20, 0],
+  ];
+  const hole = [
+    [6, 6, 0],
+    [14, 6, 0],
+    [14, 14, 0],
+    [6, 14, 0],
+  ];
   const result = triangulatePolygon([outer, hole]);
   assert.ok(near(triangulatedArea(result), 400 - 64), `area ${triangulatedArea(result)}`);
 });
 
 test('vertical wall: keeps its full area instead of collapsing to a line', () => {
-  const wall = [[0, 0, 0], [10, 0, 0], [10, 0, 6], [0, 0, 6]];
+  const wall = [
+    [0, 0, 0],
+    [10, 0, 0],
+    [10, 0, 6],
+    [0, 0, 6],
+  ];
   const result = triangulatePolygon([wall]);
   assert.ok(near(triangulatedArea(result), 60));
   assert.ok(near(Math.abs(result.normal[1]), 1), 'wall should face along the y axis');
 });
 
 test('pitched roof: sloped polygon keeps its true (sloped) area', () => {
-  const roof = [[0, 0, 6], [10, 0, 6], [10, 5, 9], [0, 5, 9]];
+  const roof = [
+    [0, 0, 6],
+    [10, 0, 6],
+    [10, 5, 9],
+    [0, 5, 9],
+  ];
   const result = triangulatePolygon([roof]);
   assert.ok(near(triangulatedArea(result), 10 * Math.hypot(5, 3)));
   assert.ok(result.normal[2] > 0.5, 'roof faces upwards');
 });
 
 test('every triangle faces the same way as its polygon', () => {
-  const result = triangulatePolygon([[[0, 0, 0], [10, 0, 0], [10, 10, 0], [5, 3, 0], [0, 10, 0]]]);
+  const result = triangulatePolygon([
+    [
+      [0, 0, 0],
+      [10, 0, 0],
+      [10, 10, 0],
+      [5, 3, 0],
+      [0, 10, 0],
+    ],
+  ]);
   const n = polygonNormal(result.positions);
   for (let i = 0; i < result.indices.length; i += 3) {
     const [a, b, c] = [0, 1, 2].map(k => result.positions[result.indices[i + k]]);
@@ -103,8 +131,30 @@ test('local frame: a point 100 m up is [0, 0, 100] locally', () => {
 
 test('register join: several addresses kept, conflicting type left unknown', () => {
   const index = buildRegisterIndex([
-    {properties: {ratu: 5, vtj_prt: '1X', tila: 'voimassa', katunimi_suomi: 'Unioninkatu', katunimi_ruotsi: 'Unionsgatan', osoitenumero: '27', postinumero: '00170', tyyppi: 'Liikerakennus'}},
-    {properties: {ratu: 5, vtj_prt: '1X', tila: 'voimassa', katunimi_suomi: 'Aleksanterinkatu', katunimi_ruotsi: 'Alexandersgatan', osoitenumero: '20', postinumero: '00170', tyyppi: 'Asuinrakennus'}},
+    {
+      properties: {
+        ratu: 5,
+        vtj_prt: '1X',
+        tila: 'voimassa',
+        katunimi_suomi: 'Unioninkatu',
+        katunimi_ruotsi: 'Unionsgatan',
+        osoitenumero: '27',
+        postinumero: '00170',
+        tyyppi: 'Liikerakennus',
+      },
+    },
+    {
+      properties: {
+        ratu: 5,
+        vtj_prt: '1X',
+        tila: 'voimassa',
+        katunimi_suomi: 'Aleksanterinkatu',
+        katunimi_ruotsi: 'Alexandersgatan',
+        osoitenumero: '20',
+        postinumero: '00170',
+        tyyppi: 'Asuinrakennus',
+      },
+    },
   ]);
   const result = joinRegister({ratu: '5', vtjPrt: null}, index);
   assert.equal(result.registerJoin, 'matched-by-ratu');

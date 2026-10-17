@@ -17,10 +17,10 @@ test('OpenStreetMap tags sort into place kinds', () => {
 
 test('nearest place of each kind within the radius', () => {
   const rows = [
-    ['grocery', 'Far', 24.9500, 60.1700],
-    ['grocery', 'Near', 24.9410, 60.1700],
-    ['pharmacy', null, 24.9400, 60.1720],
-    ['gym', 'Too far', 24.9800, 60.1700],
+    ['grocery', 'Far', 24.95, 60.17],
+    ['grocery', 'Near', 24.941, 60.17],
+    ['pharmacy', null, 24.94, 60.172],
+    ['gym', 'Too far', 24.98, 60.17],
   ];
   const near = nearestPlaces(rows, 1000)([24.94, 60.17]);
   assert.deepEqual(Object.keys(near), PLACE_KEYS);

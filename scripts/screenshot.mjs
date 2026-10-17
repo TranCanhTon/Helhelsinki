@@ -17,12 +17,19 @@ const browser = await chromium.launch({
 });
 const errors = [];
 try {
-  for (const [name, viewport] of [['desktop', {width: 1440, height: 900}], ['mobile', {width: 390, height: 844}]]) {
+  for (const [name, viewport] of [
+    ['desktop', {width: 1440, height: 900}],
+    ['mobile', {width: 390, height: 844}],
+  ]) {
     const page = await browser.newPage({viewport});
     page.on('pageerror', e => errors.push(`${name}: ${e.message}`));
-    page.on('console', m => { if (m.type() === 'error') errors.push(`${name}: ${m.text().slice(0, 300)}`); });
+    page.on('console', m => {
+      if (m.type() === 'error') errors.push(`${name}: ${m.text().slice(0, 300)}`);
+    });
     page.on('requestfailed', r => errors.push(`${name}: request failed ${r.url()}`));
-    page.on('response', r => { if (r.status() >= 400) errors.push(`${name}: HTTP ${r.status()} ${r.url()}`); });
+    page.on('response', r => {
+      if (r.status() >= 400) errors.push(`${name}: HTTP ${r.status()} ${r.url()}`);
+    });
     await page.goto(url);
     await page.waitForFunction(() => window.__lens?.ready === true, null, {timeout: 120000});
     await page.waitForTimeout(1500);

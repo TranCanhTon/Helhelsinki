@@ -24,27 +24,35 @@ export function unionDistricts(features) {
 // Area of a [lon, lat] ring in square kilometres (good enough for a sanity check at 60°N).
 export function ringAreaKm2(ring) {
   const kmPerDegLat = 111.32;
-  const lat0 = ring[0][1] * Math.PI / 180;
+  const lat0 = (ring[0][1] * Math.PI) / 180;
   const kmPerDegLon = kmPerDegLat * Math.cos(lat0);
   let sum = 0;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    sum += (ring[j][0] * kmPerDegLon) * (ring[i][1] * kmPerDegLat) - (ring[i][0] * kmPerDegLon) * (ring[j][1] * kmPerDegLat);
+    sum +=
+      ring[j][0] * kmPerDegLon * (ring[i][1] * kmPerDegLat) - ring[i][0] * kmPerDegLon * (ring[j][1] * kmPerDegLat);
   }
   return Math.abs(sum) / 2;
 }
 
 export function multiPolygonAreaKm2(geometry) {
-  return geometry.coordinates.reduce((total, polygon) =>
-    total + ringAreaKm2(polygon[0]) - polygon.slice(1).reduce((holes, ring) => holes + ringAreaKm2(ring), 0), 0);
+  return geometry.coordinates.reduce(
+    (total, polygon) =>
+      total + ringAreaKm2(polygon[0]) - polygon.slice(1).reduce((holes, ring) => holes + ringAreaKm2(ring), 0),
+    0,
+  );
 }
 
 // Returns a fast test function: isInside([lon, lat]) -> true/false.
 // A bounding-box check runs first so most far-away points skip the exact test.
 export function makeInsideTest(geometry) {
   let [minX, minY, maxX, maxY] = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const polygon of geometry.coordinates) for (const [x, y] of polygon[0]) {
-    minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
-  }
+  for (const polygon of geometry.coordinates)
+    for (const [x, y] of polygon[0]) {
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
   const feature = {type: 'Feature', properties: {}, geometry};
   return ([lon, lat]) =>
     lon >= minX && lon <= maxX && lat >= minY && lat <= maxY && booleanPointInPolygon([lon, lat], feature);

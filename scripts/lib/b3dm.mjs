@@ -34,18 +34,19 @@ export function encodeB3dm(mesh, properties) {
   const batchTable = jsonChunk(properties, 28 + featureTable.length);
   const header = Buffer.alloc(28);
   header.write('b3dm', 0, 'ascii');
-  header.writeUInt32LE(1, 4);                                        // version
+  header.writeUInt32LE(1, 4); // version
   header.writeUInt32LE(28 + featureTable.length + batchTable.length + glb.length, 8);
-  header.writeUInt32LE(featureTable.length, 12);                     // feature table JSON
-  header.writeUInt32LE(0, 16);                                       // feature table binary
-  header.writeUInt32LE(batchTable.length, 20);                       // batch table JSON
-  header.writeUInt32LE(0, 24);                                       // batch table binary
+  header.writeUInt32LE(featureTable.length, 12); // feature table JSON
+  header.writeUInt32LE(0, 16); // feature table binary
+  header.writeUInt32LE(batchTable.length, 20); // batch table JSON
+  header.writeUInt32LE(0, 24); // batch table binary
   return Buffer.concat([header, featureTable, batchTable, glb]);
 }
 
 function encodeGlb({positions, normals, batchIds, indices}, batchLength) {
   const vertexCount = positions.length / 3;
-  if (normals.length !== positions.length || batchIds.length !== vertexCount) throw new Error('Mesh arrays have different lengths');
+  if (normals.length !== positions.length || batchIds.length !== vertexCount)
+    throw new Error('Mesh arrays have different lengths');
   const ids = vertexCount > 0 && batchLength <= 65535 ? Uint16Array.from(batchIds) : Uint32Array.from(batchIds);
   const parts = [
     Buffer.from(positions.buffer, positions.byteOffset, positions.byteLength),
@@ -55,10 +56,14 @@ function encodeGlb({positions, normals, batchIds, indices}, batchLength) {
   ].map(b => pad(b, 4, 0));
   const offsets = [];
   let offset = 0;
-  for (const part of parts) { offsets.push(offset); offset += part.length; }
+  for (const part of parts) {
+    offsets.push(offset);
+    offset += part.length;
+  }
   const binary = Buffer.concat(parts);
 
-  const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+  const min = [Infinity, Infinity, Infinity],
+    max = [-Infinity, -Infinity, -Infinity];
   for (let i = 0; i < positions.length; i++) {
     min[i % 3] = Math.min(min[i % 3], positions[i]);
     max[i % 3] = Math.max(max[i % 3], positions[i]);
@@ -69,7 +74,12 @@ function encodeGlb({positions, normals, batchIds, indices}, batchLength) {
     scenes: [{nodes: [0]}],
     nodes: [{mesh: 0}],
     meshes: [{primitives: [{attributes: {POSITION: 0, NORMAL: 1, _BATCHID: 2}, indices: 3, material: 0, mode: 4}]}],
-    materials: [{pbrMetallicRoughness: {baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.9}, doubleSided: true}],
+    materials: [
+      {
+        pbrMetallicRoughness: {baseColorFactor: [1, 1, 1, 1], metallicFactor: 0, roughnessFactor: 0.9},
+        doubleSided: true,
+      },
+    ],
     buffers: [{byteLength: binary.length}],
     bufferViews: [
       {buffer: 0, byteOffset: offsets[0], byteLength: positions.byteLength, target: 34962},
@@ -89,8 +99,12 @@ function encodeGlb({positions, normals, batchIds, indices}, batchLength) {
   header.write('glTF', 0, 'ascii');
   header.writeUInt32LE(2, 4);
   header.writeUInt32LE(12 + 8 + json.length + 8 + binary.length, 8);
-  const jsonHeader = Buffer.alloc(8); jsonHeader.writeUInt32LE(json.length, 0); jsonHeader.writeUInt32LE(0x4e4f534a, 4); // "JSON"
-  const binHeader = Buffer.alloc(8); binHeader.writeUInt32LE(binary.length, 0); binHeader.writeUInt32LE(0x004e4942, 4);  // "BIN"
+  const jsonHeader = Buffer.alloc(8);
+  jsonHeader.writeUInt32LE(json.length, 0);
+  jsonHeader.writeUInt32LE(0x4e4f534a, 4); // "JSON"
+  const binHeader = Buffer.alloc(8);
+  binHeader.writeUInt32LE(binary.length, 0);
+  binHeader.writeUInt32LE(0x004e4942, 4); // "BIN"
   return pad(Buffer.concat([header, jsonHeader, json, binHeader, binary]), 8, 0);
 }
 
@@ -98,7 +112,10 @@ function encodeGlb({positions, normals, batchIds, indices}, batchLength) {
 export function decodeB3dm(buffer) {
   if (buffer.toString('ascii', 0, 4) !== 'b3dm') throw new Error('Not a b3dm file');
   if (buffer.readUInt32LE(8) !== buffer.length) throw new Error('b3dm byteLength does not match file size');
-  const ftJson = buffer.readUInt32LE(12), ftBin = buffer.readUInt32LE(16), btJson = buffer.readUInt32LE(20), btBin = buffer.readUInt32LE(24);
+  const ftJson = buffer.readUInt32LE(12),
+    ftBin = buffer.readUInt32LE(16),
+    btJson = buffer.readUInt32LE(20),
+    btBin = buffer.readUInt32LE(24);
   const featureTable = JSON.parse(buffer.toString('utf8', 28, 28 + ftJson));
   const batchStart = 28 + ftJson + ftBin;
   const batchTable = JSON.parse(buffer.toString('utf8', batchStart, batchStart + btJson));
@@ -109,15 +126,23 @@ export function decodeB3dm(buffer) {
   const gltf = JSON.parse(buffer.toString('utf8', glbStart + 20, glbStart + 20 + jsonLength));
   const binStart = glbStart + 20 + jsonLength + 8;
   const view = index => {
-    const accessor = gltf.accessors[index], bv = gltf.bufferViews[accessor.bufferView];
+    const accessor = gltf.accessors[index],
+      bv = gltf.bufferViews[accessor.bufferView];
     const start = binStart + bv.byteOffset;
     const Type = {5126: Float32Array, 5123: Uint16Array, 5125: Uint32Array}[accessor.componentType];
     const size = accessor.type === 'VEC3' ? 3 : 1;
-    return new Type(buffer.buffer.slice(buffer.byteOffset + start, buffer.byteOffset + start + accessor.count * size * Type.BYTES_PER_ELEMENT));
+    return new Type(
+      buffer.buffer.slice(
+        buffer.byteOffset + start,
+        buffer.byteOffset + start + accessor.count * size * Type.BYTES_PER_ELEMENT,
+      ),
+    );
   };
   const primitive = gltf.meshes[0].primitives[0];
   return {
-    featureTable, batchTable, gltf,
+    featureTable,
+    batchTable,
+    gltf,
     positions: view(primitive.attributes.POSITION),
     normals: view(primitive.attributes.NORMAL),
     batchIds: view(primitive.attributes._BATCHID),

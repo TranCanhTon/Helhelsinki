@@ -12,9 +12,9 @@ export function createViewer(containerId) {
   Cesium.Ion.defaultAccessToken = '';
 
   const viewer = new Cesium.Viewer(containerId, {
-    baseLayer: false,            // no satellite imagery
+    baseLayer: false, // no satellite imagery
     baseLayerPicker: false,
-    geocoder: false,             // no online place search
+    geocoder: false, // no online place search
     homeButton: false,
     sceneModePicker: false,
     navigationHelpButton: false,
@@ -44,7 +44,9 @@ export function createViewer(containerId) {
 
   // Cesium only works through its tile loading queue while drawing, so keep
   // drawing until the ground is loaded, then go idle.
-  scene.postRender.addEventListener(() => { if (!scene.globe.tilesLoaded) scene.requestRender(); });
+  scene.postRender.addEventListener(() => {
+    if (!scene.globe.tilesLoaded) scene.requestRender();
+  });
 
   // Draw at most 1.5x device pixels, so high-DPI phones don't render 3x.
   viewer.resolutionScale = Math.min(window.devicePixelRatio || 1, 1.5);

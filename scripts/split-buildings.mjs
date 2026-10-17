@@ -11,7 +11,10 @@ const tileset = flatTileset(await readJson('public/tileset/tileset.json'));
 const tiles = new Set(contentTiles(tileset).map(t => t.content.uri));
 const used = new Set(manifest.map(r => r.tileContentUri));
 const missing = [...used].filter(u => !tiles.has(u));
-if (missing.length || tiles.size !== used.size) throw new Error(`Tiles and building list do not match (${tiles.size} tiles, ${used.size} used, missing ${missing.slice(0, 5).join(', ')})`);
+if (missing.length || tiles.size !== used.size)
+  throw new Error(
+    `Tiles and building list do not match (${tiles.size} tiles, ${used.size} used, missing ${missing.slice(0, 5).join(', ')})`,
+  );
 await publishJson('public/tileset/tileset.json', tileset);
 console.log(`Tile list: ${tiles.size} tiles, all loading when in view.`);
 await writeBuildingFiles(ROOT, manifest);

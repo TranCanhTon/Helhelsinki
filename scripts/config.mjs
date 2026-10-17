@@ -12,7 +12,7 @@ import {gridSquare, lonLatToGrid} from './lib/geo.mjs';
 
 export const AREAS = {
   // About 400 m around Senate Square and the Cathedral.
-  pilot: {center: [24.9522, 60.1700], size: 400},
+  pilot: {center: [24.9522, 60.17], size: 400},
   // The city's "Keskinen suurpiiri" (Central major district), 11 districts.
   central: {
     label: 'Central major district',
@@ -51,11 +51,14 @@ export function areaBbox(name) {
   const box = [Infinity, Infinity, -Infinity, -Infinity];
   for (const f of districtFeatures(area.districts)) {
     const polygons = f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates;
-    for (const polygon of polygons) for (const point of polygon[0]) {
-      const [e, n] = lonLatToGrid(point);
-      box[0] = Math.min(box[0], e); box[1] = Math.min(box[1], n);
-      box[2] = Math.max(box[2], e); box[3] = Math.max(box[3], n);
-    }
+    for (const polygon of polygons)
+      for (const point of polygon[0]) {
+        const [e, n] = lonLatToGrid(point);
+        box[0] = Math.min(box[0], e);
+        box[1] = Math.min(box[1], n);
+        box[2] = Math.max(box[2], e);
+        box[3] = Math.max(box[3], n);
+      }
   }
   return box.map(v => Math.round(v));
 }

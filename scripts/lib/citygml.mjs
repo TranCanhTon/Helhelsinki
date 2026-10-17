@@ -38,17 +38,41 @@ const children = node => {
   for (let c = node.firstChild; c; c = c.nextSibling) if (c.nodeType === ELEMENT) list.push(c);
   return list;
 };
-const gmlId = node => node.getAttribute('gml:id') || [...Array.from(node.attributes || [])].find(a => a.localName === 'id' && a.namespaceURI?.startsWith('http://www.opengis.net/gml'))?.value || null;
+const gmlId = node =>
+  node.getAttribute('gml:id') ||
+  [...Array.from(node.attributes || [])].find(
+    a => a.localName === 'id' && a.namespaceURI?.startsWith('http://www.opengis.net/gml'),
+  )?.value ||
+  null;
 
 // Things inside a building that are not the building's outer shell.
-const SKIP_CONTAINERS = new Set(['BuildingInstallation', 'IntBuildingInstallation', 'interiorRoom', 'Room', 'BuildingFurniture', 'opening', 'Door', 'Window']);
+const SKIP_CONTAINERS = new Set([
+  'BuildingInstallation',
+  'IntBuildingInstallation',
+  'interiorRoom',
+  'Room',
+  'BuildingFurniture',
+  'opening',
+  'Door',
+  'Window',
+]);
 // The outer shell surfaces of a building.
-const BOUNDARY_SURFACES = new Set(['WallSurface', 'RoofSurface', 'GroundSurface', 'ClosureSurface', 'OuterCeilingSurface', 'OuterFloorSurface']);
+const BOUNDARY_SURFACES = new Set([
+  'WallSurface',
+  'RoofSurface',
+  'GroundSurface',
+  'ClosureSurface',
+  'OuterCeilingSurface',
+  'OuterFloorSurface',
+]);
 
 export function parseCityGml(xml) {
   const warnings = [];
-  const doc = new DOMParser({onError: (level, message) => { if (level !== 'warning') throw new Error(`XML ${level}: ${message}`); }})
-    .parseFromString(xml, 'application/xml');
+  const doc = new DOMParser({
+    onError: (level, message) => {
+      if (level !== 'warning') throw new Error(`XML ${level}: ${message}`);
+    },
+  }).parseFromString(xml, 'application/xml');
   const srsNames = new Set();
   for (const el of descendants(doc)) {
     const srs = el.getAttribute?.('srsName');
@@ -95,14 +119,17 @@ function readBuilding(building, warnings) {
 
 // Helsinki marks planned (not yet built) objects in generic attributes.
 function isPlanned(attributes) {
-  return Object.entries(attributes).some(([name, value]) =>
-    /SUUNNITELMA/i.test(name) || /suunnitteilla|suunniteltu/i.test(value ?? ''));
+  return Object.entries(attributes).some(
+    ([name, value]) => /SUUNNITELMA/i.test(name) || /suunnitteilla|suunniteltu/i.test(value ?? ''),
+  );
 }
 
 // Finds which Building/BuildingPart a node belongs to, and the facts we need
 // about its position in the tree (LOD, inside a wall/roof surface, skipped).
 function context(node, owner) {
-  let lod = null, boundary = false, skipped = false;
+  let lod = null,
+    boundary = false,
+    skipped = false;
   for (let n = node.parentNode; n && n !== owner; n = n.parentNode) {
     if (n.nodeType !== ELEMENT) continue;
     if (isBldg(n) && (n.localName === 'BuildingPart' || n.localName === 'Building')) return null; // belongs to a nested part
@@ -136,7 +163,8 @@ function selectPartPolygons(part, buildingId, warnings) {
   if (chosen.some(p => p.boundary)) chosen = chosen.filter(p => p.boundary);
 
   const polygons = [];
-  const seenIds = new Set(), seenCoords = new Set();
+  const seenIds = new Set(),
+    seenCoords = new Set();
   for (const {element} of chosen) {
     const id = gmlId(element);
     if (id && seenIds.has(id)) continue;
@@ -166,15 +194,22 @@ export function readRings(polygon) {
     const posList = children(ring).find(c => c.localName === 'posList');
     const dimension = Number(posList?.getAttribute('srsDimension') || 3);
     if (dimension !== 3) throw new Error(`srsDimension ${dimension} is not 3D`);
-    const text = posList ? posList.textContent : children(ring).filter(c => c.localName === 'pos').map(c => c.textContent).join(' ');
+    const text = posList
+      ? posList.textContent
+      : children(ring)
+          .filter(c => c.localName === 'pos')
+          .map(c => c.textContent)
+          .join(' ');
     const numbers = text.trim().split(/\s+/).map(Number);
-    if (numbers.length % 3 || numbers.some(n => !Number.isFinite(n))) throw new Error('coordinates are not valid x y z triples');
+    if (numbers.length % 3 || numbers.some(n => !Number.isFinite(n)))
+      throw new Error('coordinates are not valid x y z triples');
     const points = [];
     for (let i = 0; i < numbers.length; i += 3) points.push([numbers[i], numbers[i + 1], numbers[i + 2]]);
     // CityGML repeats the first point at the end to close the ring; drop it.
     const [first, last] = [points[0], points.at(-1)];
     if (points.length > 1 && first.every((v, i) => Math.abs(v - last[i]) < 1e-6)) points.pop();
-    if (boundary.localName === 'exterior') rings.unshift(points); else rings.push(points);
+    if (boundary.localName === 'exterior') rings.unshift(points);
+    else rings.push(points);
   }
   if (!rings.length) throw new Error('polygon has no exterior ring');
   return rings;

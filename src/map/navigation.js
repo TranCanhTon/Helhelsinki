@@ -29,15 +29,23 @@ export class Navigation {
 
     viewer.scene.screenSpaceCameraController.enableInputs = false;
     this.canvas.tabIndex = 0;
-    this.canvas.setAttribute('aria-label', 'Helsinki 3D map. Drag to move, scroll to zoom, Shift and drag to rotate. Arrow keys move, plus and minus zoom.');
+    this.canvas.setAttribute(
+      'aria-label',
+      'Helsinki 3D map. Drag to move, scroll to zoom, Shift and drag to rotate. Arrow keys move, plus and minus zoom.',
+    );
     this.canvas.addEventListener('contextmenu', e => e.preventDefault());
     this.canvas.addEventListener('pointerdown', e => this.pointerDown(e));
     this.canvas.addEventListener('pointermove', e => this.pointerMove(e));
-    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) this.canvas.addEventListener(type, e => this.pointers.delete(e.pointerId));
-    this.canvas.addEventListener('wheel', e => {
-      e.preventDefault();
-      this.zoom(Math.exp(clamp(e.deltaY * (e.deltaMode === 1 ? 16 : 1) * 0.0012, -0.3, 0.3)));
-    }, {passive: false});
+    for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
+      this.canvas.addEventListener(type, e => this.pointers.delete(e.pointerId));
+    this.canvas.addEventListener(
+      'wheel',
+      e => {
+        e.preventDefault();
+        this.zoom(Math.exp(clamp(e.deltaY * (e.deltaMode === 1 ? 16 : 1) * 0.0012, -0.3, 0.3)));
+      },
+      {passive: false},
+    );
     this.canvas.addEventListener('keydown', e => this.key(e));
     this.apply();
   }
@@ -45,7 +53,7 @@ export class Navigation {
   // Metres covered by one screen pixel at the look-at point (for panning and the scale bar).
   metersPerPixel() {
     const fovy = this.viewer.camera.frustum.fovy ?? Math.PI / 3;
-    return 2 * this.state.range * Math.tan(fovy / 2) / this.canvas.clientHeight;
+    return (2 * this.state.range * Math.tan(fovy / 2)) / this.canvas.clientHeight;
   }
 
   apply() {
@@ -55,7 +63,10 @@ export class Navigation {
     s.range = clamp(s.range, RANGE.min, RANGE.max);
     s.pitch = clamp(s.pitch, PITCH.min, PITCH.max);
     const target = Cesium.Cartesian3.fromDegrees(s.lon, s.lat, 0);
-    this.viewer.camera.lookAt(target, new Cesium.HeadingPitchRange(Cesium.Math.toRadians(s.heading), Cesium.Math.toRadians(s.pitch), s.range));
+    this.viewer.camera.lookAt(
+      target,
+      new Cesium.HeadingPitchRange(Cesium.Math.toRadians(s.heading), Cesium.Math.toRadians(s.pitch), s.range),
+    );
     // lookAt locks the camera to the target; release it so picking works normally.
     this.viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
     this.viewer.scene.requestRender();
@@ -63,7 +74,8 @@ export class Navigation {
   }
 
   pan(dx, dy) {
-    const s = this.state, m = this.metersPerPixel();
+    const s = this.state,
+      m = this.metersPerPixel();
     const h = Cesium.Math.toRadians(s.heading);
     // A screen drag is stretched on tilted views; divide by the tilt so the map follows the finger.
     const forward = dy / Math.max(0.3, Math.sin(-Cesium.Math.toRadians(s.pitch)));
@@ -74,20 +86,35 @@ export class Navigation {
     this.apply();
   }
 
-  zoom(factor) { this.cancelFlight(); this.state.range *= factor; this.apply(); }
-  rotate(degrees) { this.cancelFlight(); this.state.heading += degrees; this.apply(); }
-  faceNorth() { this.cancelFlight(); this.state.heading = 0; this.apply(); }
+  zoom(factor) {
+    this.cancelFlight();
+    this.state.range *= factor;
+    this.apply();
+  }
+  rotate(degrees) {
+    this.cancelFlight();
+    this.state.heading += degrees;
+    this.apply();
+  }
+  faceNorth() {
+    this.cancelFlight();
+    this.state.heading = 0;
+    this.apply();
+  }
   toggleOverhead() {
     this.cancelFlight();
     this.state.pitch = this.state.pitch < -80 ? this.home.pitch : -89;
     this.apply();
   }
-  goHome() { this.flyTo([this.home.lon, this.home.lat], this.home.range, {heading: this.home.heading, pitch: this.home.pitch}); }
+  goHome() {
+    this.flyTo([this.home.lon, this.home.lat], this.home.range, {heading: this.home.heading, pitch: this.home.pitch});
+  }
 
   // Smooth move to a point. Respects "reduce motion" settings by jumping instead.
   flyTo([lon, lat], range = this.state.range, extra = {}, ms = 900) {
     this.cancelFlight();
-    const start = {...this.state}, end = {...start, lon, lat, range, ...extra};
+    const start = {...this.state},
+      end = {...start, lon, lat, range, ...extra};
     const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : ms;
     const began = performance.now();
     const step = now => {
@@ -99,7 +126,10 @@ export class Navigation {
     };
     this.flight = requestAnimationFrame(step);
   }
-  cancelFlight() { if (this.flight) cancelAnimationFrame(this.flight); this.flight = null; }
+  cancelFlight() {
+    if (this.flight) cancelAnimationFrame(this.flight);
+    this.flight = null;
+  }
 
   pointerDown(e) {
     this.cancelFlight();
@@ -112,7 +142,9 @@ export class Navigation {
   pointerMove(e) {
     const previous = this.pointers.get(e.pointerId);
     if (!previous) return;
-    const next = {x: e.clientX, y: e.clientY}, dx = next.x - previous.x, dy = next.y - previous.y;
+    const next = {x: e.clientX, y: e.clientY},
+      dx = next.x - previous.x,
+      dy = next.y - previous.y;
     if (Math.abs(dx) + Math.abs(dy) > 3) this.dragged = true;
     if (this.pointers.size === 2) {
       // Two fingers: pinch to zoom and move together to pan.
@@ -133,9 +165,18 @@ export class Navigation {
 
   key(e) {
     const moves = {ArrowLeft: [80, 0], ArrowRight: [-80, 0], ArrowUp: [0, 80], ArrowDown: [0, -80]};
-    if (moves[e.key]) { e.preventDefault(); this.pan(...moves[e.key]); }
-    else if (e.key === '+' || e.key === '=') { e.preventDefault(); this.zoom(0.8); }
-    else if (e.key === '-') { e.preventDefault(); this.zoom(1.25); }
-    else if (e.key === 'Home') { e.preventDefault(); this.goHome(); }
+    if (moves[e.key]) {
+      e.preventDefault();
+      this.pan(...moves[e.key]);
+    } else if (e.key === '+' || e.key === '=') {
+      e.preventDefault();
+      this.zoom(0.8);
+    } else if (e.key === '-') {
+      e.preventDefault();
+      this.zoom(1.25);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      this.goHome();
+    }
   }
 }

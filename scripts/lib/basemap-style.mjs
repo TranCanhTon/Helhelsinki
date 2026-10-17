@@ -6,11 +6,27 @@
 // Anything not picked by a class is not drawn (planned roads, underground
 // lines, power lines, labels' text frames...).
 
-const guide = (...classes) => (layer, p) => layer === 'guide' && classes.includes(p.luokka);
-const street = (...uses) => (layer, p) => layer === 'streets' && !['Rakentamaton', 'Rakentaminen kesken'].includes(p.rakentamisen_tila) && uses.includes(p.kayttotarkoitus);
-const line = (...classes) => (layer, p) => layer === 'lines' && classes.includes(p.luokka) && p.voimassaolo !== 'suunnitteilla';
-const lane = (...uses) => (layer, p) => layer === 'lanes' && !['Rakentamaton', 'Rakentaminen kesken'].includes(p.rakentamisen_tila) &&
-  /^(Ajorata|Ajorata, muu|Pysäköintialue)( \(Silta\))?$/.test(p.alatyyppi ?? '') && uses.includes(p.alueen_kayttotarkoitus);
+const guide =
+  (...classes) =>
+  (layer, p) =>
+    layer === 'guide' && classes.includes(p.luokka);
+const street =
+  (...uses) =>
+  (layer, p) =>
+    layer === 'streets' &&
+    !['Rakentamaton', 'Rakentaminen kesken'].includes(p.rakentamisen_tila) &&
+    uses.includes(p.kayttotarkoitus);
+const line =
+  (...classes) =>
+  (layer, p) =>
+    layer === 'lines' && classes.includes(p.luokka) && p.voimassaolo !== 'suunnitteilla';
+const lane =
+  (...uses) =>
+  (layer, p) =>
+    layer === 'lanes' &&
+    !['Rakentamaton', 'Rakentaminen kesken'].includes(p.rakentamisen_tila) &&
+    /^(Ajorata|Ajorata, muu|Pysäköintialue)( \(Silta\))?$/.test(p.alatyyppi ?? '') &&
+    uses.includes(p.alueen_kayttotarkoitus);
 
 const MAIN = ['Pääkatu', 'Joukkoliikennekatu'];
 const COLLECTOR = ['Kokoojakatu tai -tie', 'Kokoojakatu alueellinen'];
@@ -24,7 +40,7 @@ const grow = (atZ12, atZ17) => z => atZ12 * (atZ17 / atZ12) ** ((Math.min(17, Ma
 // texture: true lays the asphalt grain over the fill (build-basemap.mjs).
 // Extra road casing in pixels: widest zoomed out, gone by zoom 15 where the
 // street's real width is wide enough on its own.
-const fade = px => z => (z >= 15 ? 0 : px * (15 - z) / 5);
+const fade = px => z => (z >= 15 ? 0 : (px * (15 - z)) / 5);
 
 export const CLASSES = [
   // shore: a soft lighter band drawn into the sea along every land edge (Ton, 15 Oct 2026).
@@ -35,13 +51,47 @@ export const CLASSES = [
   {id: 'forest', test: guide('metsä'), fill: 'forest'},
   {id: 'parks', test: layer => layer === 'green', fill: 'park'},
   {id: 'water', test: guide('meri', 'joki', 'lampi', 'allas'), fill: 'water'},
-  {id: 'squares', test: (l, p) => guide('aukio')(l, p) || street('Tori', 'Katuaukio')(l, p), fill: 'square', minZoom: 14},
-  {id: 'paths', test: street('Kevyt liikenne', 'Kevyt liikenne, t/h', 'Erillinen kev.liik.väylä'), fill: 'path', minZoom: 15},
+  {
+    id: 'squares',
+    test: (l, p) => guide('aukio')(l, p) || street('Tori', 'Katuaukio')(l, p),
+    fill: 'square',
+    minZoom: 14,
+  },
+  {
+    id: 'paths',
+    test: street('Kevyt liikenne', 'Kevyt liikenne, t/h', 'Erillinen kev.liik.väylä'),
+    fill: 'path',
+    minZoom: 15,
+  },
   {id: 'parking', test: street('Pysäköintialue'), fill: 'parking', texture: true, minZoom: 15},
   {id: 'streets-residential', test: street(...RESIDENTIAL), fill: 'street', texture: true, minZoom: 13},
-  {id: 'streets-collector', test: street(...COLLECTOR), fill: 'collector', outline: fade(1.4), outlineColor: 'outlineCollector', texture: true, minZoom: 12},
-  {id: 'streets-main', test: street(...MAIN), fill: 'main', outline: fade(2.6), outlineColor: 'outlineMain', texture: true, minZoom: 11},
-  {id: 'streets-motorway', test: street(...MOTORWAY), fill: 'motorway', outline: fade(3.2), outlineColor: 'outlineMotorway', texture: true, minZoom: 10},
+  {
+    id: 'streets-collector',
+    test: street(...COLLECTOR),
+    fill: 'collector',
+    outline: fade(1.4),
+    outlineColor: 'outlineCollector',
+    texture: true,
+    minZoom: 12,
+  },
+  {
+    id: 'streets-main',
+    test: street(...MAIN),
+    fill: 'main',
+    outline: fade(2.6),
+    outlineColor: 'outlineMain',
+    texture: true,
+    minZoom: 11,
+  },
+  {
+    id: 'streets-motorway',
+    test: street(...MOTORWAY),
+    fill: 'motorway',
+    outline: fade(3.2),
+    outlineColor: 'outlineMotorway',
+    texture: true,
+    minZoom: 10,
+  },
   {id: 'bridges', test: guide('silta'), fill: 'bridge', minZoom: 13},
   // Central area, zoomed in: the driving surface on top of the street area, so sidewalks show.
   {id: 'lanes', test: lane(...RESIDENTIAL, 'Pysäköintialue'), fill: 'lane', texture: true, minZoom: 16},
@@ -59,13 +109,33 @@ export const STREET_USES = ALL_STREETS;
 // is kept for what you select and for the map layers (paid parking, the sun).
 export const THEMES = {
   dusk: {
-    outside: '#101413', sea: '#11303a', water: '#11303a', land: '#1c2321',
-    shoreWide: '#173e47', shoreNear: '#24555c',
-    block: '#212927', industry: '#232826', field: '#212a23', forest: '#1d2f27', park: '#21342b',
-    square: '#28302d', path: '#262d2b', parking: '#262c2a',
-    street: '#323a37', collector: '#3b413e', main: '#484e4a', motorway: '#535853',
-    outlineCollector: '#2c322f', outlineMain: '#3a403c', outlineMotorway: '#424843',
-    bridge: '#3a423f', lane: '#2a312f', laneBig: '#3c423f',
-    pier: '#46504c', rail: '#5d6663', metro: '#7a5b48', railDash: '#1c2321',
+    outside: '#101413',
+    sea: '#11303a',
+    water: '#11303a',
+    land: '#1c2321',
+    shoreWide: '#173e47',
+    shoreNear: '#24555c',
+    block: '#212927',
+    industry: '#232826',
+    field: '#212a23',
+    forest: '#1d2f27',
+    park: '#21342b',
+    square: '#28302d',
+    path: '#262d2b',
+    parking: '#262c2a',
+    street: '#323a37',
+    collector: '#3b413e',
+    main: '#484e4a',
+    motorway: '#535853',
+    outlineCollector: '#2c322f',
+    outlineMain: '#3a403c',
+    outlineMotorway: '#424843',
+    bridge: '#3a423f',
+    lane: '#2a312f',
+    laneBig: '#3c423f',
+    pier: '#46504c',
+    rail: '#5d6663',
+    metro: '#7a5b48',
+    railDash: '#1c2321',
   },
 };

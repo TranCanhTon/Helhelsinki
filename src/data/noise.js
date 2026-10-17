@@ -27,9 +27,13 @@ export function bandProblem(feature) {
 const bounds = geometry => {
   const b = [Infinity, Infinity, -Infinity, -Infinity];
   const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
-  for (const polygon of polygons) for (const [x, y] of polygon[0]) {
-    b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y);
-  }
+  for (const polygon of polygons)
+    for (const [x, y] of polygon[0]) {
+      b[0] = Math.min(b[0], x);
+      b[1] = Math.min(b[1], y);
+      b[2] = Math.max(b[2], x);
+      b[3] = Math.max(b[3], y);
+    }
   return b;
 };
 
@@ -43,7 +47,8 @@ export function bandIndex(features) {
   return ([x, y]) => {
     let best = null;
     for (const i of index.search(x, y, x, y)) {
-      const f = features[i], lo = f.properties.db_lo;
+      const f = features[i],
+        lo = f.properties.db_lo;
       if ((best === null || lo > best) && booleanPointInPolygon([x, y], f)) best = lo;
     }
     return best;
@@ -60,29 +65,57 @@ export function withAll(bands) {
 // so one centre point can miss the level the walls get. Ton chose this (13 Oct 2026).
 export const WALL_M = 10;
 export function wallPoints([lon, lat], metres = WALL_M) {
-  const dLon = metres / (111320 * Math.cos(lat * Math.PI / 180)), dLat = metres / 110540;
-  return [[lon, lat], ...Array.from({length: 8}, (_, k) => [lon + Math.cos(k * Math.PI / 4) * dLon, lat + Math.sin(k * Math.PI / 4) * dLat])];
+  const dLon = metres / (111320 * Math.cos((lat * Math.PI) / 180)),
+    dLat = metres / 110540;
+  return [
+    [lon, lat],
+    ...Array.from({length: 8}, (_, k) => [
+      lon + Math.cos((k * Math.PI) / 4) * dLon,
+      lat + Math.sin((k * Math.PI) / 4) * dLat,
+    ]),
+  ];
 }
 // Loudest band of a lookup over the wall points, or null.
 export function loudestNear(bandAt, position, metres = WALL_M) {
   let best = null;
-  for (const p of wallPoints(position, metres)) { const v = bandAt(p); if (v !== null && (best === null || v > best)) best = v; }
+  for (const p of wallPoints(position, metres)) {
+    const v = bandAt(p);
+    if (v !== null && (best === null || v > best)) best = v;
+  }
   return best;
 }
 
 // Noise colours and the card's noise section are for apartment buildings only (Ton, 13 Oct 2026).
-export const isApartmentBuilding = record => /^(apartment building|small apartment building|residential building)$/i.test(record?.classEn ?? '');
+export const isApartmentBuilding = record =>
+  /^(apartment building|small apartment building|residential building)$/i.test(record?.classEn ?? '');
 
 // Why a building is noisy, in words, from its bands per source:
 // "Road traffic is the loudest source here (65 to 70 dB). Trams add 55 to 60 dB." or null.
 // The card passes Finnish words and sentence patterns in the same shape.
-const SOURCE_WORDS = {road: ['Road traffic is', 'road traffic'], rail: ['Trains are', 'trains'], metro: ['The metro is', 'the metro'], tram: ['Trams are', 'trams']};
-export function noiseReason(noise, bandOf, {words = SOURCE_WORDS, label = bandLabel, loudest = '{who} the loudest source here ({band}).', also = 'Also {list}.'} = {}) {
-  const heard = NOISE_MODES.map(m => [m.key, noise?.[m.key]]).filter(([, v]) => v !== null && v !== undefined).sort((a, b) => b[1] - a[1]);
+const SOURCE_WORDS = {
+  road: ['Road traffic is', 'road traffic'],
+  rail: ['Trains are', 'trains'],
+  metro: ['The metro is', 'the metro'],
+  tram: ['Trams are', 'trams'],
+};
+export function noiseReason(
+  noise,
+  bandOf,
+  {
+    words = SOURCE_WORDS,
+    label = bandLabel,
+    loudest = '{who} the loudest source here ({band}).',
+    also = 'Also {list}.',
+  } = {},
+) {
+  const heard = NOISE_MODES.map(m => [m.key, noise?.[m.key]])
+    .filter(([, v]) => v !== null && v !== undefined)
+    .sort((a, b) => b[1] - a[1]);
   if (!heard.length) return null;
   const [[key, lo], ...rest] = heard;
   const text = [loudest.replace('{who}', words[key][0]).replace('{band}', label(bandOf(lo)))];
-  if (rest.length) text.push(also.replace('{list}', rest.map(([k, v]) => `${words[k][1]} (${label(bandOf(v))})`).join(', ')));
+  if (rest.length)
+    text.push(also.replace('{list}', rest.map(([k, v]) => `${words[k][1]} (${label(bandOf(v))})`).join(', ')));
   return text.join(' ');
 }
 
@@ -93,4 +126,4 @@ export function bandList(features) {
   return [...seen].map(([lo, hi]) => ({lo, hi})).sort((a, b) => a.lo - b.lo);
 }
 
-export const bandLabel = band => band.hi == null ? `${band.lo} dB and above` : `${band.lo} to ${band.hi} dB`;
+export const bandLabel = band => (band.hi == null ? `${band.lo} dB and above` : `${band.lo} to ${band.hi} dB`);

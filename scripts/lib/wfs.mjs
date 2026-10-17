@@ -14,8 +14,8 @@ export const HELSINKI_WFS = 'https://kartta.hel.fi/ws/geoserver/avoindata/wfs';
 export async function fetchAllFeatures({
   base = HELSINKI_WFS,
   typeName,
-  srsName = 'CRS:84',      // CRS:84 = longitude/latitude, in that order
-  bbox,                    // optional [minE, minN, maxE, maxN] in EPSG:3879
+  srsName = 'CRS:84', // CRS:84 = longitude/latitude, in that order
+  bbox, // optional [minE, minN, maxE, maxN] in EPSG:3879
   pageSize = 2000,
   sortBy = 'id',
   extra = {},
@@ -29,9 +29,15 @@ export async function fetchAllFeatures({
   for (let startIndex = 0; ; ) {
     const url = new URL(base);
     url.search = new URLSearchParams({
-      service: 'WFS', version: '2.0.0', request: 'GetFeature',
-      typeNames: typeName, outputFormat: 'application/json', srsName,
-      count: String(pageSize), startIndex: String(startIndex), sortBy,
+      service: 'WFS',
+      version: '2.0.0',
+      request: 'GetFeature',
+      typeNames: typeName,
+      outputFormat: 'application/json',
+      srsName,
+      count: String(pageSize),
+      startIndex: String(startIndex),
+      sortBy,
       ...(bbox ? {bbox: `${bbox.join(',')},EPSG:3879`} : {}),
       ...extra,
     });
@@ -43,7 +49,8 @@ export async function fetchAllFeatures({
     }
     const pageTotal = Number(page.totalFeatures ?? page.numberMatched);
     if (!Number.isFinite(pageTotal)) throw new Error(`${typeName}: server did not say how many records exist`);
-    if (total !== undefined && pageTotal !== total) throw new Error(`${typeName}: total changed from ${total} to ${pageTotal} during download`);
+    if (total !== undefined && pageTotal !== total)
+      throw new Error(`${typeName}: total changed from ${total} to ${pageTotal} during download`);
     total = pageTotal;
 
     for (const feature of page.features) {
@@ -55,7 +62,8 @@ export async function fetchAllFeatures({
     log(`  ${typeName}: ${features.length} / ${total}`);
 
     if (features.length >= total) break;
-    if (!page.features.length) throw new Error(`${typeName}: server stopped at ${features.length} of ${total} (truncated)`);
+    if (!page.features.length)
+      throw new Error(`${typeName}: server stopped at ${features.length} of ${total} (truncated)`);
     startIndex += page.features.length;
   }
 

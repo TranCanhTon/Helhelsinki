@@ -4,11 +4,22 @@ import {readWithProgress} from '../src/data/load.js';
 
 test('readWithProgress returns every byte and reports each part with the size', async () => {
   const parts = [new Uint8Array([1, 2, 3]), new Uint8Array([4, 5])];
-  const body = new ReadableStream({start(c) { for (const p of parts) c.enqueue(p); c.close(); }});
+  const body = new ReadableStream({
+    start(c) {
+      for (const p of parts) c.enqueue(p);
+      c.close();
+    },
+  });
   const seen = [];
-  const bytes = await readWithProgress(new Response(body, {headers: {'content-length': '5'}}), (loaded, total) => seen.push([loaded, total]));
+  const bytes = await readWithProgress(new Response(body, {headers: {'content-length': '5'}}), (loaded, total) =>
+    seen.push([loaded, total]),
+  );
   assert.deepEqual([...bytes], [1, 2, 3, 4, 5]);
-  assert.deepEqual(seen, [[0, 5], [3, 5], [5, 5]]);
+  assert.deepEqual(seen, [
+    [0, 5],
+    [3, 5],
+    [5, 5],
+  ]);
 });
 
 test('readWithProgress without a size reports null and still reads', async () => {

@@ -33,15 +33,22 @@ const HELSINKI_LAYERS = {
   ],
   parking: ['Pysakointipaikat_alue', 'Pysakoinnin_maksuvyohykkeet_alue', 'Asukas_ja_yrityspysakointivyohykkeet_alue'],
   construction: [
-    'Kaivuilmoitus_alue', 'Kaivuilmoitus_piste',
-    'Aluevuokraus_alue', 'Aluevuokraus_piste',
-    'Tilapainen_liikennejarjestely_alue', 'Tilapainen_liikennejarjestely_piste',
-    'Sijoitussopimus_alue', 'Sijoitussopimus_piste',
-    'Lyhyt_maanvuokraus_alue', 'Lyhyt_maanvuokraus_piste',
-    'Tapahtumat_alue', 'Tapahtumat_piste',
-    
+    'Kaivuilmoitus_alue',
+    'Kaivuilmoitus_piste',
+    'Aluevuokraus_alue',
+    'Aluevuokraus_piste',
+    'Tilapainen_liikennejarjestely_alue',
+    'Tilapainen_liikennejarjestely_piste',
+    'Sijoitussopimus_alue',
+    'Sijoitussopimus_piste',
+    'Lyhyt_maanvuokraus_alue',
+    'Lyhyt_maanvuokraus_piste',
+    'Tapahtumat_alue',
+    'Tapahtumat_piste',
+
     // The Winkki layers' real names are English; their titles are the Finnish ones on HRI.
-    'Winkki_works', 'Winkki_rents_audiences',
+    'Winkki_works',
+    'Winkki_rents_audiences',
   ],
 };
 
@@ -54,7 +61,10 @@ const report = {startedAt: new Date().toISOString(), pilotBbox3879: PILOT_BBOX, 
 async function save(path, content) {
   const url = new URL(path, OUT);
   await mkdir(new URL('.', url), {recursive: true});
-  await writeFile(url, typeof content === 'string' || content instanceof Uint8Array ? content : JSON.stringify(content, null, 2));
+  await writeFile(
+    url,
+    typeof content === 'string' || content instanceof Uint8Array ? content : JSON.stringify(content, null, 2),
+  );
 }
 
 // Runs one check, records timing and success, never stops the whole probe.
@@ -81,7 +91,9 @@ const wfsUrl = (base, params) => {
 await check('helsinki-wfs', 'GetCapabilities (list of all layers)', async () => {
   const xml = await getText(wfsUrl(HELSINKI_WFS, {request: 'GetCapabilities'}));
   await save('helsinki-wfs/capabilities.xml', xml);
-  const layers = [...xml.matchAll(/<FeatureType[\s\S]*?<Name>([^<]+)<\/Name>[\s\S]*?<Title>([^<]*)<\/Title>/g)].map(m => ({name: m[1], title: m[2]}));
+  const layers = [...xml.matchAll(/<FeatureType[\s\S]*?<Name>([^<]+)<\/Name>[\s\S]*?<Title>([^<]*)<\/Title>/g)].map(
+    m => ({name: m[1], title: m[2]}),
+  );
   await save('helsinki-wfs/layer-list.json', layers);
   const formats = [...new Set([...xml.matchAll(/<ows:Value>([^<]*json[^<]*)<\/ows:Value>/gi)].map(m => m[1]))];
   return {layerCount: layers.length, jsonFormats: formats};
@@ -92,9 +104,19 @@ for (const [group, layers] of Object.entries(HELSINKI_LAYERS)) {
     await check('helsinki-wfs', `${group}: ${layer}`, async () => {
       const typeName = `avoindata:${layer}`;
       // Field list with types.
-      const describe = await getJson(wfsUrl(HELSINKI_WFS, {request: 'DescribeFeatureType', typeNames: typeName, outputFormat: 'application/json'}));
+      const describe = await getJson(
+        wfsUrl(HELSINKI_WFS, {request: 'DescribeFeatureType', typeNames: typeName, outputFormat: 'application/json'}),
+      );
       // Two sample records plus the total count, as longitude/latitude GeoJSON.
-      const sample = await getJson(wfsUrl(HELSINKI_WFS, {request: 'GetFeature', typeNames: typeName, outputFormat: 'application/json', srsName: 'CRS:84', count: '2'}));
+      const sample = await getJson(
+        wfsUrl(HELSINKI_WFS, {
+          request: 'GetFeature',
+          typeNames: typeName,
+          outputFormat: 'application/json',
+          srsName: 'CRS:84',
+          count: '2',
+        }),
+      );
       await save(`helsinki-wfs/${group}/${layer}.json`, {describe, sample});
       const fields = describe.featureTypes?.[0]?.properties?.map(p => `${p.name}:${p.localType}`) ?? [];
       return {
@@ -114,12 +136,29 @@ await check('citygml-wfs', 'GetCapabilities', async () => {
   return {featureTypes: types.slice(0, 40)};
 });
 await check('citygml-wfs', 'count buildings in the 400 m pilot square', async () => {
-  const xml = await getText(wfsUrl(CITYGML_WFS, {request: 'GetFeature', typeNames: 'bldg:Building', bbox: PILOT_BBOX.join(','), resultType: 'hits'}), {timeoutMs: 120000});
+  const xml = await getText(
+    wfsUrl(CITYGML_WFS, {
+      request: 'GetFeature',
+      typeNames: 'bldg:Building',
+      bbox: PILOT_BBOX.join(','),
+      resultType: 'hits',
+    }),
+    {timeoutMs: 120000},
+  );
   await save('citygml/pilot-hits.xml', xml);
   return {numberMatched: Number(xml.match(/numberMatched="(\d+)"/)?.[1] ?? NaN)};
 });
 await check('citygml-wfs', '2 sample buildings from the pilot square', async () => {
-  const xml = await getText(wfsUrl(CITYGML_WFS, {request: 'GetFeature', typeNames: 'bldg:Building', bbox: PILOT_BBOX.join(','), count: '2', startIndex: '0'}), {timeoutMs: 120000});
+  const xml = await getText(
+    wfsUrl(CITYGML_WFS, {
+      request: 'GetFeature',
+      typeNames: 'bldg:Building',
+      bbox: PILOT_BBOX.join(','),
+      count: '2',
+      startIndex: '0',
+    }),
+    {timeoutMs: 120000},
+  );
   await save('citygml/pilot-sample.gml', xml);
   if (xml.includes('ExceptionReport')) throw new Error('Server returned an exception: ' + xml.slice(0, 300));
   return {
@@ -150,10 +189,27 @@ await check('postal-wfs', 'list postal boundary layers', async () => {
   return {layers};
 });
 await check('postal-wfs', 'sample Helsinki postal areas (kunta 091)', async () => {
-  const latest = (report.postalLayers ?? []).filter(n => /pno_\d{4}$/.test(n)).sort().at(-1) ?? 'postialue:pno_2024';
-  const sample = await getJson(wfsUrl(POSTAL_WFS, {request: 'GetFeature', typeNames: latest, outputFormat: 'application/json', srsName: 'urn:ogc:def:crs:OGC:1.3:CRS84', count: '2', cql_filter: "kunta='091'"}));
+  const latest =
+    (report.postalLayers ?? [])
+      .filter(n => /pno_\d{4}$/.test(n))
+      .sort()
+      .at(-1) ?? 'postialue:pno_2024';
+  const sample = await getJson(
+    wfsUrl(POSTAL_WFS, {
+      request: 'GetFeature',
+      typeNames: latest,
+      outputFormat: 'application/json',
+      srsName: 'urn:ogc:def:crs:OGC:1.3:CRS84',
+      count: '2',
+      cql_filter: "kunta='091'",
+    }),
+  );
   await save('postal/sample.json', sample);
-  return {layer: latest, total: sample.totalFeatures ?? sample.numberMatched, fields: Object.keys(sample.features?.[0]?.properties ?? {})};
+  return {
+    layer: latest,
+    total: sample.totalFeatures ?? sample.numberMatched,
+    fields: Object.keys(sample.features?.[0]?.properties ?? {}),
+  };
 });
 
 // ---- 5. HSL public transport timetable (GTFS) --------------------------
@@ -178,5 +234,7 @@ await check('helsinki-permits', 'download field description PDF', async () => {
 report.finishedAt = new Date().toISOString();
 await save('report.json', report);
 const failed = report.checks.filter(c => !c.ok);
-console.log(`\n${report.checks.length - failed.length}/${report.checks.length} checks ok. Report: data/raw/probe/report.json`);
+console.log(
+  `\n${report.checks.length - failed.length}/${report.checks.length} checks ok. Report: data/raw/probe/report.json`,
+);
 if (failed.length) console.log('Failed:\n' + failed.map(c => `  ${c.source}: ${c.name}`).join('\n'));

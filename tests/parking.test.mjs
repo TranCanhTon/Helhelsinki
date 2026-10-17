@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {classify, capacityOf, nearbyIndex, hoursText, limitText, zonePrice, grownHull, PARKING_TYPES, GROUP_KEYS} from '../src/data/parking.js';
+import {
+  classify,
+  capacityOf,
+  nearbyIndex,
+  hoursText,
+  limitText,
+  zonePrice,
+  grownHull,
+  PARKING_TYPES,
+  GROUP_KEYS,
+} from '../src/data/parking.js';
 
 test('a known use wins over the class, and no-parking records are left out', () => {
   assert.equal(classify({luokka: 3, tyyppi: 'Pysäköintikielto'}), 'exclude');
@@ -25,7 +35,13 @@ test('missing or zero capacity stays null, not 0', () => {
 
 test('nearby sums spaces per group within the radius only', () => {
   const at = (dx, type, capacity) => ({position: [25 + dx / 55600, 60], type, capacity});
-  const near = nearbyIndex([at(0, 'paid', 3.4), at(50, 'paid', 2.2), at(100, 'free-short', null), at(150, 'loading', null), at(400, 'paid', 9)]);
+  const near = nearbyIndex([
+    at(0, 'paid', 3.4),
+    at(50, 'paid', 2.2),
+    at(100, 'free-short', null),
+    at(150, 'loading', null),
+    at(400, 'paid', 9),
+  ]);
   const out = near([25, 60]);
   assert.deepEqual(out.groups.paid, {spaces: 6, areas: 2, noEstimate: 0});
   assert.deepEqual(out.groups.free, {spaces: null, areas: 1, noEstimate: 1});
@@ -58,10 +74,22 @@ test('paid zone price comes from the city note or stays missing', () => {
 });
 
 test('a kerb strip grows into a closed zone outline around it', () => {
-  const strip = {type: 'Polygon', coordinates: [[[25, 60], [25.0002, 60], [25.0002, 60.00002], [25, 60.00002], [25, 60]]]};
+  const strip = {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [25, 60],
+        [25.0002, 60],
+        [25.0002, 60.00002],
+        [25, 60.00002],
+        [25, 60],
+      ],
+    ],
+  };
   const ring = grownHull(strip, 6);
   assert.deepEqual(ring[0], ring.at(-1));
-  const lons = ring.map(p => p[0]), lats = ring.map(p => p[1]);
+  const lons = ring.map(p => p[0]),
+    lats = ring.map(p => p[1]);
   assert.ok(Math.min(...lons) < 25 && Math.max(...lons) > 25.0002);
   assert.ok(Math.abs((Math.max(...lats) - 60.00002) * 110540 - 6) < 0.5);
 });

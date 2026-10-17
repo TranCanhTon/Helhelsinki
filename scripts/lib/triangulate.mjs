@@ -15,14 +15,18 @@ const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const length = a => Math.hypot(a[0], a[1], a[2]);
-const normalize = a => { const l = length(a); return l ? [a[0] / l, a[1] / l, a[2] / l] : null; };
+const normalize = a => {
+  const l = length(a);
+  return l ? [a[0] / l, a[1] / l, a[2] / l] : null;
+};
 
 // Newell's method: a stable normal even for polygons that are slightly
 // non-flat or have many nearly-collinear points.
 export function polygonNormal(ring) {
   const n = [0, 0, 0];
   for (let i = 0; i < ring.length; i++) {
-    const a = ring[i], b = ring[(i + 1) % ring.length];
+    const a = ring[i],
+      b = ring[(i + 1) % ring.length];
     n[0] += (a[1] - b[1]) * (a[2] + b[2]);
     n[1] += (a[2] - b[2]) * (a[0] + b[0]);
     n[2] += (a[0] - b[0]) * (a[1] + b[1]);
@@ -52,7 +56,10 @@ export function triangulatePolygon(rings) {
   }
   const holes = [];
   let offset = outer.length;
-  for (const ring of rings.slice(1)) { holes.push(offset); offset += ring.length; }
+  for (const ring of rings.slice(1)) {
+    holes.push(offset);
+    offset += ring.length;
+  }
 
   const raw = earcut(flat, holes, 2);
   const indices = [];

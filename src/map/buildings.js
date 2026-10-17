@@ -17,7 +17,8 @@ import {loadJson, dataUrl, readWithProgress} from '../data/load.js';
 // CC BY 4.0). It has simpler versions for far away built in, so zooming out keeps
 // the buildings. The model holds Helsinki buildings only (data:city-tiles found 0
 // outside the boundary). Our grey tiles are the fallback when it cannot load.
-export const TEXTURED_URL = 'https://kartta.hel.fi/3d/datasource-data/e5e7158a-52df-45a1-9be0-1be8f2828abd/tileset.json';
+export const TEXTURED_URL =
+  'https://kartta.hel.fi/3d/datasource-data/e5e7158a-52df-45a1-9be0-1be8f2828abd/tileset.json';
 
 // The textured buildings stand at their real height; our ground map is flat at 0.
 // The vertex shader lowers every vertex by the ground grid under it (data:ground,
@@ -26,25 +27,44 @@ export const TEXTURED_URL = 'https://kartta.hel.fi/3d/datasource-data/e5e7158a-5
 // never floats.
 // onBytes(loaded, total): download progress of the grid, for the loading screen.
 export async function groundShader(onBytes) {
-  const [meta, bytes] = await Promise.all([loadJson('/ground-grid.json'), fetch(dataUrl('/ground-grid.bin')).then(r => {
-    if (!r.ok) throw new Error('Ground grid unavailable. Run npm run data:ground');
-    return readWithProgress(r, onBytes);
-  })]);
-  if (bytes.byteLength !== meta.width * meta.height) throw new Error('ground-grid.bin does not match ground-grid.json. Run npm run data:ground');
+  const [meta, bytes] = await Promise.all([
+    loadJson('/ground-grid.json'),
+    fetch(dataUrl('/ground-grid.bin')).then(r => {
+      if (!r.ok) throw new Error('Ground grid unavailable. Run npm run data:ground');
+      return readWithProgress(r, onBytes);
+    }),
+  ]);
+  if (bytes.byteLength !== meta.width * meta.height)
+    throw new Error('ground-grid.bin does not match ground-grid.json. Run npm run data:ground');
   const frame = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(...meta.origin));
   const up = Cesium.Matrix4.getColumn(frame, 2, new Cesium.Cartesian4());
   return new Cesium.CustomShader({
     uniforms: {
-      u_toLocal: {type: Cesium.UniformType.MAT4, value: Cesium.Matrix4.inverseTransformation(frame, new Cesium.Matrix4())},
+      u_toLocal: {
+        type: Cesium.UniformType.MAT4,
+        value: Cesium.Matrix4.inverseTransformation(frame, new Cesium.Matrix4()),
+      },
       u_up: {type: Cesium.UniformType.VEC3, value: new Cesium.Cartesian3(up.x, up.y, up.z)},
-      u_grid: {type: Cesium.UniformType.VEC4, value: new Cesium.Cartesian4(meta.minE, meta.minN, meta.width * meta.cellM, meta.height * meta.cellM)},
+      u_grid: {
+        type: Cesium.UniformType.VEC4,
+        value: new Cesium.Cartesian4(meta.minE, meta.minN, meta.width * meta.cellM, meta.height * meta.cellM),
+      },
       u_heights: {type: Cesium.UniformType.VEC3, value: new Cesium.Cartesian3(meta.minM, meta.stepM, meta.fallbackM)},
       u_plain: {type: Cesium.UniformType.VEC3, value: PLAIN_SHADE.clone()},
-      u_ground: {type: Cesium.UniformType.SAMPLER_2D, value: new Cesium.TextureUniform({
-        typedArray: bytes, width: meta.width, height: meta.height,
-        pixelFormat: Cesium.PixelFormat.LUMINANCE, pixelDatatype: Cesium.PixelDatatype.UNSIGNED_BYTE,
-        minificationFilter: Cesium.TextureMinificationFilter.NEAREST, magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST, wrapS: Cesium.TextureWrap.CLAMP_TO_EDGE, wrapT: Cesium.TextureWrap.CLAMP_TO_EDGE,
-      })},
+      u_ground: {
+        type: Cesium.UniformType.SAMPLER_2D,
+        value: new Cesium.TextureUniform({
+          typedArray: bytes,
+          width: meta.width,
+          height: meta.height,
+          pixelFormat: Cesium.PixelFormat.LUMINANCE,
+          pixelDatatype: Cesium.PixelDatatype.UNSIGNED_BYTE,
+          minificationFilter: Cesium.TextureMinificationFilter.NEAREST,
+          magnificationFilter: Cesium.TextureMagnificationFilter.NEAREST,
+          wrapS: Cesium.TextureWrap.CLAMP_TO_EDGE,
+          wrapT: Cesium.TextureWrap.CLAMP_TO_EDGE,
+        }),
+      },
     },
     vertexShaderText: `
       void vertexMain(VertexInput vsInput, inout czm_modelVertexOutput vsOutput) {
@@ -90,10 +110,10 @@ async function loadTextured(onBytes) {
   return tileset;
 }
 
-const NEUTRAL = '#f3f0ea';   // warm white: the grey buildings in Overview
-const NEUTRAL_COLOURED = '#454c48';  // dark granite: buildings a coloured view leaves out
-const SELECTED = '#c2622f';  // copper
-const SELECTED_ON_PRICES = '#1d2826';  // dark ink, stands out from blue and red
+const NEUTRAL = '#f3f0ea'; // warm white: the grey buildings in Overview
+const NEUTRAL_COLOURED = '#454c48'; // dark granite: buildings a coloured view leaves out
+const SELECTED = '#c2622f'; // copper
+const SELECTED_ON_PRICES = '#1d2826'; // dark ink, stands out from blue and red
 
 // progress(name) -> onBytes(loaded, total), for the loading screen (optional).
 export async function loadBuildings(viewer, progress = () => null) {
@@ -101,10 +121,15 @@ export async function loadBuildings(viewer, progress = () => null) {
   const isJson = r => r.ok && (r.headers.get('content-type') ?? '').includes('json');
   const [indexBytes, textured] = await Promise.all([
     // Read while the city model loads, so the loading screen counts the real download.
-    fetch(dataUrl('/buildings-index.json')).then(r => isJson(r) ? readWithProgress(r, progress('index')) : null),
+    fetch(dataUrl('/buildings-index.json')).then(r => (isJson(r) ? readWithProgress(r, progress('index')) : null)),
     // A city server that does not answer must not hold up the map: grey after 8 s.
-    Promise.race([loadTextured(progress('ground')), new Promise((_, reject) => setTimeout(() => reject(new Error('no answer in 8 s')), 8000))])
-      .catch(error => { console.warn('Textured buildings unavailable, using the grey ones', error); return null; }),
+    Promise.race([
+      loadTextured(progress('ground')),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('no answer in 8 s')), 8000)),
+    ]).catch(error => {
+      console.warn('Textured buildings unavailable, using the grey ones', error);
+      return null;
+    }),
   ]);
   if (!indexBytes) {
     console.error('Missing buildings-index.json. Locally: npm run data:split. Public site: npm run data:upload.');
@@ -114,7 +139,9 @@ export async function loadBuildings(viewer, progress = () => null) {
   let tileset = textured;
   if (!tileset) {
     if (!isJson(await fetch('/tileset/tileset.json').catch(() => ({ok: false, headers: new Headers()})))) {
-      console.error('No textured buildings (city server or ground-grid files) and no grey fallback. Locally: npm run data:ground, data:pilot.');
+      console.error(
+        'No textured buildings (city server or ground-grid files) and no grey fallback. Locally: npm run data:ground, data:pilot.',
+      );
       throw new Error('Map data is missing on this server (3D buildings)');
     }
     tileset = await Cesium.Cesium3DTileset.fromUrl('/tileset/tileset.json', {cacheBytes: 256 * 1024 * 1024});
@@ -127,16 +154,28 @@ export async function loadBuildings(viewer, progress = () => null) {
   const detail = async buildingId => {
     const uri = records.get(buildingId)?.tileContentUri;
     if (!uri) return null;
-    if (!details.has(uri)) details.set(uri, fetch(dataUrl('/buildings/' + detailFile(uri))).then(r => {
-      if (!r.ok) throw new Error(`Building details could not load (HTTP ${r.status})`);
-      return r.json();
-    }).then(list => new Map(list.map(r => [r.buildingId, r]))).catch(error => { details.delete(uri); throw error; }));
+    if (!details.has(uri))
+      details.set(
+        uri,
+        fetch(dataUrl('/buildings/' + detailFile(uri)))
+          .then(r => {
+            if (!r.ok) throw new Error(`Building details could not load (HTTP ${r.status})`);
+            return r.json();
+          })
+          .then(list => new Map(list.map(r => [r.buildingId, r])))
+          .catch(error => {
+            details.delete(uri);
+            throw error;
+          }),
+      );
     return (await details.get(uri)).get(buildingId) ?? null;
   };
 
   viewer.scene.primitives.add(tileset);
   // Same as the ground (createViewer.js): keep drawing until the tiles in view are in.
-  viewer.scene.postRender.addEventListener(() => { if (!tileset.tilesLoaded) viewer.scene.requestRender(); });
+  viewer.scene.postRender.addEventListener(() => {
+    if (!tileset.tilesLoaded) viewer.scene.requestRender();
+  });
   tileset.shadows = Cesium.ShadowMode.DISABLED;
 
   // The colour rule is a "style": Cesium applies it to every building in
@@ -144,50 +183,68 @@ export async function loadBuildings(viewer, progress = () => null) {
   // the accent colour (dark ink when a price view colours the rest); the others
   // get their price colour, or stay neutral.
   const colors = new Map();
-  const colorFor = css => { if (!colors.has(css)) colors.set(css, Cesium.Color.fromCssColorString(css)); return colors.get(css); };
-  let selected = null, colorOf = () => null, selectedOnColors = SELECTED_ON_PRICES;
+  const colorFor = css => {
+    if (!colors.has(css)) colors.set(css, Cesium.Color.fromCssColorString(css));
+    return colors.get(css);
+  };
+  let selected = null,
+    colorOf = () => null,
+    selectedOnColors = SELECTED_ON_PRICES;
   // Building ID of a feature: 'buildingId' in our tiles, 'id' in the textured ones,
   // where a building part points to its building through __PARENT_FEATURE.
   const idOf = feature => {
     const own = feature.getProperty('buildingId') ?? feature.getProperty('id');
     if (!textured || records.has(own)) return own;
     const parent = feature.getProperty('__PARENT_FEATURE');
-    return parent >= 0 ? feature.content.getFeature(parent)?.getProperty('id') ?? own : own;
+    return parent >= 0 ? (feature.content.getFeature(parent)?.getProperty('id') ?? own) : own;
   };
   // Textured: the photo shows in Overview and Price (tinted copper when selected); in
   // a coloured view the colour washes over the photo.
-  let coloured = false, mix = 0.6, rest = NEUTRAL_COLOURED;
+  let coloured = false,
+    mix = 0.6,
+    rest = NEUTRAL_COLOURED;
   const applyStyle = () => {
     if (textured) {
       // Coloured views keep the photos under a 60% wash of the colour (Ton, 15 Oct 2026),
       // so windows and roofs still show; the other views show the plain photo.
-      tileset.colorBlendMode = coloured ? Cesium.Cesium3DTileColorBlendMode.MIX : Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
+      tileset.colorBlendMode = coloured
+        ? Cesium.Cesium3DTileColorBlendMode.MIX
+        : Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
       tileset.colorBlendAmount = mix;
       tileset.customShader.setUniform('u_plain', coloured ? NO_SHADE : PLAIN_SHADE);
     }
     const neutral = coloured ? rest : textured ? '#ffffff' : NEUTRAL;
     const style = new Cesium.Cesium3DTileStyle();
-    style.color = {evaluateColor: (feature, result) => {
-      // Some city tiles carry no building data; Cesium then asks once for the whole tile, without a feature.
-      if (!feature) return Cesium.Color.clone(colorFor(neutral), result);
-      const id = idOf(feature), price = colorOf(id);
-      // In a coloured view the selected building always takes that view's selected colour,
-      // also when the view leaves it out (copper would read as a noise level).
-      const css = id === selected ? (coloured ? selectedOnColors : SELECTED) : price ?? neutral;
-      return Cesium.Color.clone(colorFor(css), result);
-    }};
+    style.color = {
+      evaluateColor: (feature, result) => {
+        // Some city tiles carry no building data; Cesium then asks once for the whole tile, without a feature.
+        if (!feature) return Cesium.Color.clone(colorFor(neutral), result);
+        const id = idOf(feature),
+          price = colorOf(id);
+        // In a coloured view the selected building always takes that view's selected colour,
+        // also when the view leaves it out (copper would read as a noise level).
+        const css = id === selected ? (coloured ? selectedOnColors : SELECTED) : (price ?? neutral);
+        return Cesium.Color.clone(colorFor(css), result);
+      },
+    };
     tileset.style = style;
     viewer.scene.requestRender();
   };
   // The selected building shows by colour only. An outline effect used to run over the whole screen on every frame.
-  const setSelected = buildingId => { selected = buildingId; applyStyle(); };
+  const setSelected = buildingId => {
+    selected = buildingId;
+    applyStyle();
+  };
   // fn(buildingId) -> CSS colour or null. Call again after its answers change.
   // selectedCss: the selected building's colour while the others are coloured.
   // options: mix, how strongly the colours cover the photos (0.6 when not given), and
   // rest, the colour of the buildings fn leaves out (dark granite when not given).
   const setColoring = (fn, selectedCss = SELECTED_ON_PRICES, options = {}) => {
-    coloured = !!fn; colorOf = fn ?? (() => null); selectedOnColors = selectedCss;
-    mix = options.mix ?? 0.6; rest = options.rest ?? NEUTRAL_COLOURED;
+    coloured = !!fn;
+    colorOf = fn ?? (() => null);
+    selectedOnColors = selectedCss;
+    mix = options.mix ?? 0.6;
+    rest = options.rest ?? NEUTRAL_COLOURED;
     applyStyle();
   };
   setSelected(null);
@@ -200,5 +257,17 @@ export async function loadBuildings(viewer, progress = () => null) {
     return {buildingId: id, record: records.get(id) ?? null};
   };
 
-  return {tileset, textured: !!textured, manifest, records, detail, pick, setSelected, setColoring, get selected() { return selected; }};
+  return {
+    tileset,
+    textured: !!textured,
+    manifest,
+    records,
+    detail,
+    pick,
+    setSelected,
+    setColoring,
+    get selected() {
+      return selected;
+    },
+  };
 }
