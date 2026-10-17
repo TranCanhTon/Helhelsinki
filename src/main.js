@@ -22,7 +22,6 @@ import {createWalkRings} from './map/walkRings.js';
 import {legendGradient} from './ui/legend.js';
 import {BuildingCard} from './ui/buildingCard.js';
 import {indexListings} from './data/listings.js';
-import {adsLegend} from './ui/adsPanel.js';
 import {createSaved} from './data/saved.js';
 import {savedPanel as createSavedPanel} from './ui/savedCard.js';
 import {printSheet} from './ui/printSheet.js';
@@ -161,7 +160,10 @@ function setMetric(metric){
  // Sun: shadows and the sun's light only while this tab is open.
  const sunny=metric==='sun'&&!!sun;sun?.setOn(sunny);$('#sun-panel').hidden=!sunny;$('#sun-dial').hidden=!sunny;
  if(metric==='ads'){
-  paintAds();adsLegend(legend,listings,AD_COLOR);
+  // No legend (Ton, 17 Oct 2026): the amber speaks for itself. A line only when the ads did not load.
+  paintAds();
+  legend.hidden=!!listings;legend.classList.remove('is-gradient','is-keys');
+  if(!listings)legend.textContent=t('Rental ads are still loading or unavailable.');
   $('#area-info').hidden=true;save();return;
  }
  if(metric==='sun'){

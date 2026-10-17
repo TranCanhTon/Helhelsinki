@@ -437,13 +437,6 @@ const FI = {
   // Ton, 16 Oct 2026: Ads view, schools and health, saved buildings, viewing sheet,
   // loading screen and sources panel.
   'Ads': 'Ilmoitukset',
-  '{ads} at {addresses}': '{ads}, {addresses}',
-  '{n} address': '{n} osoite',
-  '{n} addresses': '{n} osoitetta',
-  '{n} ad': '{n} ilmoitus',
-  '{n} ads': '{n} ilmoitusta',
-  'Oikotie, {time}': 'Oikotie, {time}',
-  'Building with a rental ad now': 'Talossa vuokrailmoitus nyt',
   'Rental ads': 'Vuokrailmoitukset',
   'Rental ads are still loading or unavailable.': 'Vuokrailmoitukset latautuvat vielä tai eivät ole saatavilla.',
   'Schools and health': 'Koulut ja terveys',
