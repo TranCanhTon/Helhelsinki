@@ -82,17 +82,22 @@ async function priceLayer(){
 }
 // Current Oikotie ads (npm run data:listings). Checked again every 10 minutes,
 // so ads collected by the background job show up without a reload.
+// The ads stay on this computer (the data pack never publishes them), so the Ads tab
+// shows only once they load and is hidden on the public site (Ton, 17 Oct 2026).
 async function adsLayer(){
  try{
   const response=await fetch(dataUrl('/listings.json'),{cache:'no-cache'});
-  if(!response.ok||!(response.headers.get('content-type')??'').includes('json'))return;
+  if(!response.ok||!(response.headers.get('content-type')??'').includes('json')){noAds();return;}
   const data=await response.json();
   if(listings?.updatedAt===data.updatedAt)return;
   listings=indexListings(data);useAds();
+  $('[data-view=ads]').hidden=false;
   if(prices||state.metric==='ads')setMetric(state.metric);
   card?.refresh();
- }catch(e){console.warn('Rental ads unavailable',e);}
+ }catch(e){console.warn('Rental ads unavailable',e);noAds();}
 }
+// No ads: a link that opened the Ads tab falls back to Overview.
+function noAds(){if(!listings&&state.metric==='ads')setMetric('overview');}
 function useAds(){
  if(!prices||!listings)return;
  const ads=listings;
