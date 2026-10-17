@@ -23,10 +23,10 @@ const el = (tag, className, textValue) => {
   return node;
 };
 
-const titleCase = s => s ? s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase()) : s;
-const number = n => n === null || n === undefined ? null : num(n);
+const titleCase = s => (s ? s.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase()) : s);
+const number = n => (n === null || n === undefined ? null : num(n));
 // Register words (building type...) are stored in English; shown in the chosen language.
-const word = s => s == null ? s : t(s);
+const word = s => (s == null ? s : t(s));
 
 // Noise sources in words, for the key strip.
 const NOISE_SOURCE = {road: 'road traffic', rail: 'trains', metro: 'metro', tram: 'trams'};
@@ -53,12 +53,18 @@ function factsSection(record) {
 function protectionSection(protection) {
   const box = el('section', 'protection');
   box.append(el('h3', null, t('Protected in the city plan')));
-  const meta = [protection.marking && t('Marking {m}', {m: protection.marking}), protection.plan && t('plan {p}', {p: protection.plan}),
-    protection.inForce && t('in force since {y}', {y: protection.inForce.slice(0, 4)})].filter(Boolean).join(' · ');
+  const meta = [
+    protection.marking && t('Marking {m}', {m: protection.marking}),
+    protection.plan && t('plan {p}', {p: protection.plan}),
+    protection.inForce && t('in force since {y}', {y: protection.inForce.slice(0, 4)}),
+  ]
+    .filter(Boolean)
+    .join(' · ');
   if (meta) box.append(el('p', 'protection-meta', meta));
   if (protection.ruleFi) {
     // Only state in English what the Finnish text says word for word.
-    if (/ei saa purkaa/i.test(protection.ruleFi)) box.append(el('p', 'protection-summary', t('The plan says it may not be demolished.')));
+    if (/ei saa purkaa/i.test(protection.ruleFi))
+      box.append(el('p', 'protection-summary', t('The plan says it may not be demolished.')));
     const details = el('details', 'protection-details');
     details.append(el('summary', null, t('Full rule text (Finnish)')));
     const rule = el('p', 'protection-rule', protection.ruleFi);
@@ -71,31 +77,69 @@ function protectionSection(protection) {
 
 // Four answers at the top of the card (Ton, 15 Oct 2026): rent, noise, the nearest
 // stop and parking, each a big value with a short line under it. Missing says "No data".
-const euroText = v => getLang() === 'fi' ? num(Math.round(v)) + ' €' : '€' + num(Math.round(v));
+const euroText = v => (getLang() === 'fi' ? num(Math.round(v)) + ' €' : '€' + num(Math.round(v)));
 function keyStrip(record, {prices, listings, noise, transit, parking}) {
   const keys = [];
   // Rent: median asking rent of current 2-room ads in the postal area, else the official per m².
-  const area = prices?.areaAt('rent', record.position), stats = area && listings?.stats.get(area.postcode);
+  const area = prices?.areaAt('rent', record.position),
+    stats = area && listings?.stats.get(area.postcode);
   // Rent by flat size from the ads: 2 rooms big, the other sizes in the line under it
   // (Ton, 16 Oct 2026: replaces the separate Average rent section).
-  const sizes = ROOM_GROUPS.map(g => ({label: t(g.label), rent: stats?.groups[g.key]?.rent})).filter(g => g.rent != null);
+  const sizes = ROOM_GROUPS.map(g => ({label: t(g.label), rent: stats?.groups[g.key]?.rent})).filter(
+    g => g.rent != null,
+  );
   const main = sizes.find(g => g.label === t('2 rooms')) ?? sizes[0];
-  if (main) keys.push(['Rent', euroText(main.rent), [main.label + ' · ' + t('per month'), sizes.filter(g => g !== main).map(g => g.label + ' ' + euroText(g.rent)).join(' · ')]]);
-  else if (area?.values[1] != null) keys.push(['Rent', priceValue(area.values[1], prices.data.metrics.rent.units), t('Average for the postal area')]);
+  if (main)
+    keys.push([
+      'Rent',
+      euroText(main.rent),
+      [
+        main.label + ' · ' + t('per month'),
+        sizes
+          .filter(g => g !== main)
+          .map(g => g.label + ' ' + euroText(g.rent))
+          .join(' · '),
+      ],
+    ]);
+  else if (area?.values[1] != null)
+    keys.push(['Rent', priceValue(area.values[1], prices.data.metrics.rent.units), t('Average for the postal area')]);
   else keys.push(['Rent', null, prices ? null : t('Loading…')]);
   // Noise: apartment buildings only, as in the Noise view.
   if (isApartmentBuilding(record) && noise) {
     const band = noise.band(noise.bandOf(record, 'all'));
-    const [loudest] = NOISE_MODES.map(m => m.key).filter(k => record.noise?.[k] != null).sort((a, b) => record.noise[b] - record.noise[a]);
-    keys.push(['Noise', band ? (band.hi == null ? band.lo + '+ dB' : band.lo + '–' + band.hi + ' dB') : t('Under 45 dB'), loudest ? t(NOISE_SOURCE[loudest]) : null]);
+    const [loudest] = NOISE_MODES.map(m => m.key)
+      .filter(k => record.noise?.[k] != null)
+      .sort((a, b) => record.noise[b] - record.noise[a]);
+    keys.push([
+      'Noise',
+      band ? (band.hi == null ? band.lo + '+ dB' : band.lo + '–' + band.hi + ' dB') : t('Under 45 dB'),
+      loudest ? t(NOISE_SOURCE[loudest]) : null,
+    ]);
   } else keys.push(['Noise', null, isApartmentBuilding(record) ? t('Loading…') : t('Modelled for homes only')]);
   // Nearest stop: distance big, name and lines under it.
   const stop = transit?.nearest(record.position)[0];
-  if (stop) keys.push(['Nearest stop', num(stop.distanceM) + ' m', [stop.stop.name, [...new Set(stop.stop.lines.map(l => l.short))].slice(0, 3).join(' ')].filter(Boolean).join(' · ')]);
+  if (stop)
+    keys.push([
+      'Nearest stop',
+      num(stop.distanceM) + ' m',
+      [stop.stop.name, [...new Set(stop.stop.lines.map(l => l.short))].slice(0, 3).join(' ')]
+        .filter(Boolean)
+        .join(' · '),
+    ]);
   else keys.push(['Nearest stop', null, transit ? t('None within 1.5 km') : t('Loading…')]);
   // Parking: the paid zone's price, else free street parking nearby.
   const near = parking?.near(record.position);
-  if (near?.paidZone) keys.push(['Parking', priceText(near.paidZone.price) ?? t('Paid zone'), [t('Paid zone {n}', {n: near.paidZone.number}), near.residentZone && t('resident zone {code}', {code: near.residentZone.code})].filter(Boolean).join(' · ')]);
+  if (near?.paidZone)
+    keys.push([
+      'Parking',
+      priceText(near.paidZone.price) ?? t('Paid zone'),
+      [
+        t('Paid zone {n}', {n: near.paidZone.number}),
+        near.residentZone && t('resident zone {code}', {code: near.residentZone.code}),
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    ]);
   else if (near?.groups.free.areas) keys.push(['Parking', t('Free'), spacesText(near.groups.free)]);
   else keys.push(['Parking', null, parking ? t('None mapped') : t('Loading…')]);
 
@@ -112,8 +156,10 @@ function keyStrip(record, {prices, listings, noise, transit, parking}) {
 }
 
 // Small copy button next to the title; a tick shows for a moment once copied.
-const COPY = '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5"/></svg>';
-const TICK = '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+const COPY =
+  '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5"/><path d="M10.5 3.5v-.5a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5"/></svg>';
+const TICK =
+  '<svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
 function copyButton(address) {
   const b = el('button', 'copy-address');
   b.type = 'button';
@@ -121,9 +167,19 @@ function copyButton(address) {
   b.title = t('Copy address');
   b.setAttribute('aria-label', b.title);
   b.onclick = async () => {
-    try { await navigator.clipboard.writeText(address + ', Helsinki'); } catch { return; }
-    b.innerHTML = TICK; b.title = t('Address copied'); b.setAttribute('aria-label', b.title);
-    setTimeout(() => { b.innerHTML = COPY; b.title = t('Copy address'); b.setAttribute('aria-label', b.title); }, 1600);
+    try {
+      await navigator.clipboard.writeText(address + ', Helsinki');
+    } catch {
+      return;
+    }
+    b.innerHTML = TICK;
+    b.title = t('Address copied');
+    b.setAttribute('aria-label', b.title);
+    setTimeout(() => {
+      b.innerHTML = COPY;
+      b.title = t('Copy address');
+      b.setAttribute('aria-label', b.title);
+    }, 1600);
   };
   return b;
 }
@@ -136,12 +192,17 @@ function titleRow(text, address) {
 }
 
 // Print button: the viewing sheet (main.js builds it from this card).
-const PRINT = '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5V2h7v3.5"/><rect x="1.8" y="5.5" width="12.4" height="5.5" rx="1.3"/><path d="M4.5 9h7v5h-7z"/></svg>';
+const PRINT =
+  '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 5.5V2h7v3.5"/><rect x="1.8" y="5.5" width="12.4" height="5.5" rx="1.3"/><path d="M4.5 9h7v5h-7z"/></svg>';
 
 // One line at the end naming the data sources, which their licences ask for.
 // "All sources" opens the sources panel (main.js listens for clicks on .credit-link).
 const credit = () => {
-  const p = el('p', 'card-credit', t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie, © OpenStreetMap contributors') + ' · ');
+  const p = el(
+    'p',
+    'card-credit',
+    t('Data: City of Helsinki, HSL, Statistics Finland, Oikotie, © OpenStreetMap contributors') + ' · ',
+  );
   const link = el('button', 'credit-link', t('All sources'));
   link.type = 'button';
   p.append(link);
@@ -149,17 +210,13 @@ const credit = () => {
 };
 
 export class BuildingCard {
-  constructor(container, onClose, getPrices = () => null, getListings = () => null, getNoise = () => null, getParking = () => null, getTransit = () => null, getConstruction = () => null, getPlaces = () => null, getServices = () => null) {
+  // layers: the map's data layers in one object ({prices, listings, noise, parking,
+  // transit, construction, places, services}), filled in by main.js as each one loads,
+  // so the card always reads the current ones. A missing layer shows as loading.
+  constructor(container, onClose, layers = {}) {
     this.el = container;
     this.onClose = onClose;
-    this.getPrices = getPrices;
-    this.getListings = getListings;
-    this.getNoise = getNoise;
-    this.getParking = getParking;
-    this.getTransit = getTransit;
-    this.getConstruction = getConstruction;
-    this.getPlaces = getPlaces;
-    this.getServices = getServices;
+    this.layers = layers;
   }
 
   // saved: the saved-buildings store (the star); onPrint(id, record): viewing sheet.
@@ -177,20 +234,28 @@ export class BuildingCard {
 
   // The four answers at the top, for a building and for a bare address.
   keys(row) {
-    return keyStrip(row, {prices: this.getPrices(), listings: this.getListings(), noise: this.getNoise(), transit: this.getTransit(), parking: this.getParking()});
+    return keyStrip(row, {
+      prices: this.layers.prices,
+      listings: this.layers.listings,
+      noise: this.layers.noise,
+      transit: this.layers.transit,
+      parking: this.layers.parking,
+    });
   }
 
   // Sections about the surroundings (Ton, 16 Oct 2026): public transport, nearby
   // places, schools and health, and street parking first; construction goes last, after plan protection.
   surroundings(row) {
     return [
-      transitSection(row.position, this.getTransit()),
-      placesSection(row.position, this.getPlaces()),
-      servicesSection(row.position, this.getServices()),
-      parkingSection(row.position, this.getParking()),
+      transitSection(row.position, this.layers.transit),
+      placesSection(row.position, this.layers.places),
+      servicesSection(row.position, this.layers.services),
+      parkingSection(row.position, this.layers.parking),
     ];
   }
-  construction(row) { return constructionSection(row.position, this.getConstruction()); }
+  construction(row) {
+    return constructionSection(row.position, this.layers.construction);
+  }
 
   show(buildingId, record) {
     this.current = [buildingId, record];
@@ -200,7 +265,11 @@ export class BuildingCard {
     const header = el('header', 'card-header');
     const heading = el('div', 'card-heading');
     // Place in small capitals above the address, the address big below it.
-    const place = [titleCase(record?.district?.nameFi), titleCase(record?.subdistrict?.nameFi), record?.postcode].filter(Boolean);
+    const place = [
+      titleCase(record?.district?.nameFi),
+      titleCase(record?.subdistrict?.nameFi),
+      record?.postcode,
+    ].filter(Boolean);
     const unique = place.filter((p, i) => place.indexOf(p) === i);
     if (unique.length) heading.append(el('p', 'card-place', unique.join(' · ')));
     heading.append(titleRow(record?.address ?? t('Building without a registered address'), record?.address));
@@ -214,7 +283,10 @@ export class BuildingCard {
     if (record && this.saved) actions.append(starButton(this.saved, buildingId, record, unique.join(' · ') || null));
     if (record && this.onPrint) {
       const print = el('button', 'card-icon');
-      print.type = 'button'; print.innerHTML = PRINT; print.title = t('Print a viewing sheet'); print.setAttribute('aria-label', print.title);
+      print.type = 'button';
+      print.innerHTML = PRINT;
+      print.title = t('Print a viewing sheet');
+      print.setAttribute('aria-label', print.title);
       print.onclick = () => this.onPrint(buildingId, record);
       actions.append(print);
     }
@@ -234,11 +306,12 @@ export class BuildingCard {
     if (record.protection) tags.append(el('span', 'tag tag-protected', t('Protected')));
     if (tags.children.length) card.append(tags);
 
-    if (record.addresses?.length > 1) card.append(el('p', 'card-sub', t('Also {list}', {list: record.addresses.slice(1).join(', ')})));
+    if (record.addresses?.length > 1)
+      card.append(el('p', 'card-sub', t('Also {list}', {list: record.addresses.slice(1).join(', ')})));
 
     // The four answers first, then rental ads in this building, then the facts.
     if (record.address) card.append(this.keys(record));
-    const ads = adsSection(record, this.getListings());
+    const ads = adsSection(record, this.layers.listings);
     if (ads) card.append(ads);
     if (record.address) card.append(factsSection(record));
     else card.append(el('p', 'note', t('No register data.')));
@@ -253,22 +326,45 @@ export class BuildingCard {
   showAddress(row) {
     this.current = null;
     this.el.replaceChildren();
-    const header=el('header','card-header');
-    const close=el('button','card-close','×');close.type='button';close.setAttribute('aria-label',t('Close address details'));close.onclick=this.onClose;
-    header.append(titleRow(row.address,row.address),close);this.el.append(header);
-    this.el.append(el('p','note',t('No linked 3D building')),el('p','card-sub',[row.addressSv,row.postcode].filter(Boolean).join(' · ')));
-    this.el.append(this.keys(row),...this.surroundings(row),this.construction(row),credit());
-    this.el.hidden=false;this.el.scrollTop=0;
+    const header = el('header', 'card-header');
+    const close = el('button', 'card-close', '×');
+    close.type = 'button';
+    close.setAttribute('aria-label', t('Close address details'));
+    close.onclick = this.onClose;
+    header.append(titleRow(row.address, row.address), close);
+    this.el.append(header);
+    this.el.append(
+      el('p', 'note', t('No linked 3D building')),
+      el('p', 'card-sub', [row.addressSv, row.postcode].filter(Boolean).join(' · ')),
+    );
+    this.el.append(this.keys(row), ...this.surroundings(row), this.construction(row), credit());
+    this.el.hidden = false;
+    this.el.scrollTop = 0;
   }
-  showChoices(row,records,onSelect) {
+  showChoices(row, records, onSelect) {
     this.showAddress(row);
-    this.el.querySelector('.note').textContent=t('Several buildings share this exact register address. Choose a building:');
-    const list=el('div','building-choices');
-    for(const record of records){
-      const button=el('button',null,[record.address,word(record.classEn??record.useEn),record.sourceIds.ratu?'RATU '+record.sourceIds.ratu:record.buildingId].filter(Boolean).join(' · '));
-      button.onclick=()=>onSelect(record.buildingId);list.append(button);
+    this.el.querySelector('.note').textContent = t(
+      'Several buildings share this exact register address. Choose a building:',
+    );
+    const list = el('div', 'building-choices');
+    for (const record of records) {
+      const button = el(
+        'button',
+        null,
+        [
+          record.address,
+          word(record.classEn ?? record.useEn),
+          record.sourceIds.ratu ? 'RATU ' + record.sourceIds.ratu : record.buildingId,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      );
+      button.onclick = () => onSelect(record.buildingId);
+      list.append(button);
     }
     this.el.querySelector('.card-header').after(list);
   }
-  hide() { this.el.hidden = true; }
+  hide() {
+    this.el.hidden = true;
+  }
 }
