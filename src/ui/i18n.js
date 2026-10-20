@@ -62,6 +62,8 @@ const FI = {
   'Reset view (Home)': 'Palauta näkymä (Home)',
   'Reset view': 'Palauta näkymä',
   Menu: 'Valikko',
+  'Find listings': 'Etsi ilmoituksia',
+  'For rent': 'Vuokrattavat',
   'Zoom in (+)': 'Lähennä (+)',
   'Zoom in': 'Lähennä',
   'Zoom out (−)': 'Loitonna (−)',

@@ -14,6 +14,7 @@ import {transitSection} from './transitCard.js';
 import {constructionSection} from './constructionCard.js';
 import {placesSection, servicesSection} from './placesCard.js';
 import {starButton} from './savedCard.js';
+import {listingLinks} from '../data/listingLinks.js';
 import {t, num, getLang} from './i18n.js';
 
 const el = (tag, className, textValue) => {
@@ -48,6 +49,26 @@ function factsSection(record) {
     grid.append(cell);
   }
   return grid;
+}
+
+// "Find listings": Oikotie searches for this street and number, for sale and for rent,
+// opening in a new tab. Nothing is fetched. No street and number, no section.
+function listingsSection(address) {
+  const links = listingLinks(address);
+  if (!links.length) return null;
+  const box = el('section', 'find-listings');
+  box.append(el('h3', null, t('Find listings')));
+  const row = el('div', 'listing-links');
+  for (const {kind, url} of links) {
+    const a = el('a', 'listing-link');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.append(el('strong', null, t(kind === 'sale' ? 'For sale' : 'For rent')), el('span', null, 'Oikotie ↗'));
+    row.append(a);
+  }
+  box.append(row);
+  return box;
 }
 
 function protectionSection(protection) {
@@ -313,6 +334,8 @@ export class BuildingCard {
     if (record.address) card.append(this.keys(record));
     const ads = adsSection(record, this.layers.listings);
     if (ads) card.append(ads);
+    const find = listingsSection(record.address);
+    if (find) card.append(find);
     if (record.address) card.append(factsSection(record));
     else card.append(el('p', 'note', t('No register data.')));
 
@@ -337,7 +360,10 @@ export class BuildingCard {
       el('p', 'note', t('No linked 3D building')),
       el('p', 'card-sub', [row.addressSv, row.postcode].filter(Boolean).join(' · ')),
     );
-    this.el.append(this.keys(row), ...this.surroundings(row), this.construction(row), credit());
+    this.el.append(this.keys(row));
+    const find = listingsSection(row.address);
+    if (find) this.el.append(find);
+    this.el.append(...this.surroundings(row), this.construction(row), credit());
     this.el.hidden = false;
     this.el.scrollTop = 0;
   }

@@ -322,6 +322,12 @@ button { font: inherit; color: inherit; }
 .building-ad { display:flex;flex-direction:column;gap:3px;padding:10px 12px;margin-top:8px;border:1px solid var(--line);border-radius:var(--radius-small);color:var(--ink);text-decoration:none;font-size:13px; }
 .building-ad:hover { border-color:var(--verdigris);background:var(--verdigris-soft); }
 .building-ad strong { font-size:15px; }
+/* Find listings: two Oikotie searches side by side, in the rental ad links' style. */
+.listing-links { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+.listing-link { display:flex;flex-direction:column;gap:3px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-small);color:var(--ink);text-decoration:none;font-size:13px; }
+.listing-link strong { font-size:15px; }
+.listing-link span { color:var(--muted);font-size:12px; }
+.listing-link:hover,.listing-link:focus-visible { border-color:var(--verdigris);background:var(--verdigris-soft); }
 .building-ad .note { margin:0; }
 .ad-compare { font-weight:600; }
 .ad-compare.is-above { color:#f0a08a; }
@@ -481,6 +487,7 @@ button { font: inherit; color: inherit; }
   .print-sheet .keys { break-inside:avoid; }
   .print-sheet section { break-inside:avoid;margin-top:16px;padding-top:12px; }
   .print-sheet .building-ad { color:var(--ink); }
+  .print-sheet .find-listings { display:none; }
   .print-line { height:9mm;border-bottom:1px solid var(--line); }
 }
 
