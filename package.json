@@ -10,6 +10,7 @@
   "scripts": {
     "predev": "node scripts/copy-cesium.mjs",
     "dev": "vite",
+    "dev:phone": "vite --host --port 5174 --strictPort",
     "prebuild": "node scripts/copy-cesium.mjs && node scripts/fetch-data.mjs",
     "build": "vite build",
     "preview": "vite preview",
