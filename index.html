@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#101413" />
     <link rel="icon" href="/favicon.svg" />
     <title>daroad</title>
@@ -39,9 +39,10 @@
         <button id="tool-zoom-out" type="button" title="Zoom out (−)" aria-label="Zoom out" data-i18n-title="Zoom out (−)" data-i18n-label="Zoom out"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12h13"/></svg></button>
         <button id="tool-overhead" type="button" title="Overhead view" aria-label="Toggle overhead view" data-i18n-title="Overhead view" data-i18n-label="Toggle overhead view"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><g class="icon-2d"><rect x="5" y="5" width="14" height="14" rx="2"/><path d="M5 12h14M12 5v14"/></g><g class="icon-3d"><path d="M12 3.8 19.5 8v8L12 20.2 4.5 16V8z"/><path d="M4.5 8 12 12.2 19.5 8M12 12.2v8"/></g></svg></button>
         <button id="tool-north" type="button" title="Face north" aria-label="Face north" data-i18n-title="Face north" data-i18n-label="Face north"><span id="compass"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path class="needle-n" d="M12 3.5 15 12H9z"/><path class="needle-s" d="M9 12h6l-3 8.5z"/></svg></span></button>
-        <button id="tool-saved" type="button" title="Saved" aria-label="Saved buildings" aria-controls="saved-panel" data-i18n-title="Saved" data-i18n-label="Saved buildings"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 16.6l-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg></button>
-        <button id="tool-sources" type="button" title="Sources" aria-label="Sources" data-i18n-title="Sources" data-i18n-label="Sources"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 11v5.5"/><path d="M12 7.6v.1"/></svg></button>
-        <button id="tool-lang" class="tool-lang" type="button"></button>
+        <button id="tool-saved" class="tool-in-menu" type="button" title="Saved" aria-label="Saved buildings" aria-controls="saved-panel" data-i18n-title="Saved" data-i18n-label="Saved buildings"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 16.6l-4.8 2.5.9-5.4-3.9-3.8 5.4-.8z"/></svg></button>
+        <button id="tool-sources" class="tool-in-menu" type="button" title="Sources" aria-label="Sources" data-i18n-title="Sources" data-i18n-label="Sources"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 11v5.5"/><path d="M12 7.6v.1"/></svg></button>
+        <button id="tool-lang" class="tool-lang tool-in-menu" type="button"></button>
+        <button id="tool-more" type="button" title="Menu" aria-label="Menu" aria-expanded="false" data-i18n-title="Menu" data-i18n-label="Menu"><svg class="tool-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg></button>
       </nav>
 
       <div class="map-caption"><span class="scale-line"></span><span id="scale-label">100 m</span></div>

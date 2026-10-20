@@ -61,6 +61,7 @@ const FI = {
   'Scroll to zoom · Shift + drag to rotate': 'Vieritä zoomataksesi · Shift + vedä kääntääksesi',
   'Reset view (Home)': 'Palauta näkymä (Home)',
   'Reset view': 'Palauta näkymä',
+  Menu: 'Valikko',
   'Zoom in (+)': 'Lähennä (+)',
   'Zoom in': 'Lähennä',
   'Zoom out (−)': 'Loitonna (−)',

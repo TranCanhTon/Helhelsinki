@@ -17,6 +17,7 @@ import {createSourcesPanel} from './ui/sourcesPanel.js';
 import {AddressSearch} from './ui/search.js';
 import {addressLinker} from './data/addresses.js';
 import {createLanding} from './ui/landing.js';
+import {initPhone} from './ui/phone.js';
 import {t, num, locale, setLang, translatePage} from './ui/i18n.js';
 import {readState, writeState} from './data/urlState.js';
 import {VIEWS} from './views/index.js';
@@ -24,12 +25,14 @@ import {loadDataLayers} from './layers.js';
 import '@fontsource/syne/800.css';
 import '@fontsource/khand/600.css';
 import './styles.css';
+import './phone.css';
 const $ = selector => document.querySelector(selector);
 const HOME = {lon: 24.948, lat: 60.1835, heading: 20, pitch: -40, range: 1400};
 const initial = readState(location.search, HOME),
   state = {...initial};
 setLang(state.lang);
 translatePage();
+initPhone($('#app'));
 const viewer = createViewer('scene');
 const frame = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(HOME.lon, HOME.lat));
 const lightDirection = Cesium.Matrix4.multiplyByPointAsVector(

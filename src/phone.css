@@ -1,0 +1,97 @@
+/* Phone layout (Ton, 20 Oct 2026). Same site; on a narrow screen these rules take
+   over and the desktop layout in styles.css stays as it is. Keep the width in step
+   with PHONE in src/ui/phone.js.
+   Top: search across the screen, Neighbourhoods under it, round map tools on the right.
+   Bottom: the tab bar across the screen, the legend or sun panel just above it, and the
+   scale bar and sun dial above that (--dock-h comes from phone.js).
+   Safe areas keep everything clear of the iPhone notch, the home bar and Safari's bars. */
+.map-tools #tool-more { display: none; }
+
+@media (max-width: 760px) {
+  :root {
+    --edge: 10px;
+    --gap: 8px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --top: calc(var(--safe-top) + var(--edge));
+    --tool: 44px; /* smallest comfortable size for a thumb */
+  }
+  /* 100dvh: the height Safari really shows, with its address bar in or out. */
+  html, body, #app { height: 100vh; height: 100dvh; }
+
+  /* The name stays on the landing page; on the map the search takes the top. */
+  .brand { display: none; }
+  .landing { padding: calc(11vh + var(--safe-top)) 24px 24px; }
+
+  /* Above Neighbourhoods and the tools, so the results list covers them. */
+  .search { top: var(--top); left: calc(var(--safe-left) + var(--edge)); right: calc(var(--safe-right) + var(--edge)); width: auto; padding: 4px; z-index: 8; }
+  .search::before { top: 18px; left: 18px; }
+  /* 16px or more, or Safari zooms the whole page when the field gets focus. */
+  .search input, .search input::placeholder { font-size: 16px; }
+  #address-results { max-height: 50dvh; }
+  #address-results button { padding: 13px 12px; }
+
+  .left-column { top: calc(var(--top) + 56px + var(--gap)); left: calc(var(--safe-left) + var(--edge)); width: auto; max-width: calc(100% - 2 * var(--edge) - var(--tool) - 24px); max-height: calc(100% - var(--top) - 56px - var(--dock-h, 70px) - 40px); }
+  .neighbourhoods summary { padding: 11px 16px; }
+  .neighbourhoods[open] { width: 240px; }
+  #neighbourhood-list { max-height: 40dvh; }
+  #neighbourhood-list button { padding: 11px 8px; font-size: 15px; }
+
+  /* Postal area info and the building under the finger: under the search. */
+  .area-info, .hover-tip { top: calc(var(--top) + 56px + var(--gap)); left: calc(var(--edge) + 150px); right: calc(var(--tool) + 24px); }
+
+  /* Map tools: round buttons on the right under the search. No zoom buttons, pinch
+     does that. Saved, Sources and Language sit in the menu under the last button. */
+  .map-tools { top: calc(var(--top) + 56px + var(--gap)); bottom: auto; right: calc(var(--safe-right) + var(--edge)); padding: 0; gap: 8px; background: none; border: 0; box-shadow: none; backdrop-filter: none; }
+  .map-tools button { width: var(--tool); height: var(--tool); border-radius: 50%; background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(14px); color: var(--ink); }
+  .map-tools #tool-zoom-in, .map-tools #tool-zoom-out { display: none; }
+  .map-tools #tool-more { display: grid; order: 1; }
+  .map-tools .tool-in-menu { display: none; order: 2; }
+  .map-tools.is-open .tool-in-menu { display: grid; }
+  .map-tools.is-open #tool-more { color: var(--copper-ink); border-color: var(--copper); }
+  /* Hover colours stick after a tap on a phone, so the buttons keep their own colours. */
+  .map-tools button:hover { background: var(--panel); color: var(--ink); }
+
+  /* Bottom dock: the tab bar across the full width, its bottom clear of the home bar. */
+  .bottom-dock { left: 0; right: 0; bottom: 0; transform: none; max-width: none; align-items: stretch; gap: var(--gap); }
+  .bottom-dock > aside { margin: 0 calc(var(--safe-right) + var(--edge)) 0 calc(var(--safe-left) + var(--edge)); }
+  .hint { display: none; }
+  .view-controls { gap: 0; padding: 4px calc(var(--safe-right) + 4px) calc(var(--safe-bottom) + 4px) calc(var(--safe-left) + 4px); border-radius: var(--radius) var(--radius) 0 0; border-width: 1px 0 0; }
+  /* Each tab as wide as its word plus an equal share of the rest, so long words (Pysäköinti) fit. */
+  .view-controls button { flex: 1 1 auto; min-width: 0; min-height: 52px; padding: 10px 3px 16px; font-size: 13.5px; letter-spacing: 0; white-space: nowrap; }
+  .view-controls button::after { bottom: 7px; }
+  .view-controls button:hover { color: var(--muted); transform: none; }
+  .view-controls button:hover::after { opacity: 0; }
+  .view-controls button[aria-pressed="true"]:hover { color: var(--ink); }
+  .view-controls button[aria-pressed="true"]:hover::after { opacity: 1; transform: none; }
+
+  /* Legends fit the width. */
+  .price-legend { padding: 10px 14px 18px; gap: 6px 12px; }
+  .price-legend.is-gradient { gap: 10px; padding: 10px 14px; }
+  .legend-gradient { flex: 1; width: auto; min-width: 60px; }
+  .legend-seg { width: auto; flex: 1; min-width: 24px; }
+  .legend-bar { flex: 1; }
+
+  /* Sun panel: as wide as the screen, a big slider thumb. */
+  .sun-panel { width: auto; gap: 8px 12px; padding: 12px 14px; }
+  .sun-slider { height: 44px; }
+  .sun-slider::-webkit-slider-runnable-track { height: 6px; }
+  .sun-slider::-webkit-slider-thumb { width: 30px; height: 30px; margin-top: -12px; }
+  .sun-month { font-size: 16px; padding: 8px 12px 9px 14px; }
+
+  /* Above the dock on the left: the scale bar, and the sun dial over it. */
+  .map-caption { left: calc(var(--safe-left) + var(--edge)); bottom: calc(var(--dock-h, 70px) + var(--gap)); }
+  .sun-dial { left: calc(var(--safe-left) + var(--edge)); bottom: calc(var(--dock-h, 70px) + 32px + 2 * var(--gap)); width: 104px; height: 104px; }
+  /* No noise source list on the phone (Ton, 20 Oct 2026): it took too much of the map. */
+  #noise-switch { display: none !important; }
+
+  /* Saved and Sources: across the screen between the search and the dock. */
+  .saved-panel, .sources-panel { top: calc(var(--top) + 56px + var(--gap)); bottom: calc(var(--dock-h, 70px) + var(--gap)); left: calc(var(--safe-left) + var(--edge)); right: calc(var(--safe-right) + var(--edge)); width: auto; max-width: none; max-height: none; transform: none; z-index: 6; }
+  .sources-panel { padding: 0 18px 18px; }
+  .sources-head { margin: 0 -18px; padding: 16px 18px 12px; }
+  .source-row { grid-template-columns: 1fr auto; }
+  .source-row dd { grid-column: 1 / -1; grid-row: 2; }
+  .saved-remove { opacity: 1; }
+}
