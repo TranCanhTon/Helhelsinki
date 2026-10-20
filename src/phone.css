@@ -94,4 +94,28 @@
   .source-row { grid-template-columns: 1fr auto; }
   .source-row dd { grid-column: 1 / -1; grid-row: 2; }
   .saved-remove { opacity: 1; }
+
+  /* Building card as a bottom sheet (src/ui/sheet.js): from just under the search down to
+     the dock, so the tabs and the sun slider stay usable. --sheet-y slides it down:
+     a strip with the address and the four answers, or 0 for the full card. */
+  .building-card, #app:has(.building-card:not([hidden])) .building-card {
+    top: calc(var(--top) + 56px + var(--gap)); bottom: var(--dock-h, 61px); left: calc(var(--safe-left)); right: calc(var(--safe-right)); width: auto; max-height: none;
+    padding: 0 18px 18px; border-radius: var(--radius) var(--radius) 0 0; border-width: 1px 1px 0; z-index: 7;
+    overflow-y: hidden; overscroll-behavior: contain; animation: none;
+    transform: translateY(var(--sheet-y, 100%)); transition: transform .32s cubic-bezier(.2, .7, .2, 1);
+  }
+  /* Same strength as the rule above, or it loses: the full card scrolls, the strip
+     does not, and a swipe anywhere on the strip moves the sheet (sheet.js). */
+  #app .building-card.is-full, #app:has(.building-card:not([hidden])) .building-card.is-full { overflow-y: auto; }
+  #app .building-card.is-dragging, #app:has(.building-card:not([hidden])) .building-card.is-dragging { transition: none; }
+  .building-card.is-sheet:not(.is-full) { touch-action: none; }
+  .building-card .card-header { margin: 0 -18px; padding: 24px 18px 12px; touch-action: none; }
+  /* The grab bar at the top of the sheet. */
+  .building-card .card-header::before { content: ""; position: absolute; top: 9px; left: 50%; width: 38px; height: 4px; margin-left: -19px; border-radius: 2px; background: rgba(229, 239, 231, .28); }
+  .building-card .card-header h2 { font-size: 30px; }
+  .building-card .card-icon, .building-card .card-close { width: 40px; height: 40px; }
+  .keys { margin-top: 14px; gap: 14px 12px; }
+  .key-value { font-size: 26px; }
+  /* The map tools stay; the full card covers them. */
+  #app:has(.building-card:not([hidden])) .map-tools { opacity: 1; visibility: visible; pointer-events: auto; transform: none; }
 }

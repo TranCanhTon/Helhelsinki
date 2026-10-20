@@ -18,6 +18,7 @@ import {AddressSearch} from './ui/search.js';
 import {addressLinker} from './data/addresses.js';
 import {createLanding} from './ui/landing.js';
 import {initPhone} from './ui/phone.js';
+import {bottomSheet} from './ui/sheet.js';
 import {t, num, locale, setLang, translatePage} from './ui/i18n.js';
 import {readState, writeState} from './data/urlState.js';
 import {VIEWS} from './views/index.js';
@@ -340,6 +341,7 @@ async function start() {
   layers.sunPanel = createSunPanel($('#sun-panel'), $('#sun-dial'), layers.sun);
   setMetric(state.metric);
   card = new BuildingCard($('#building-card'), closeCard, layers);
+  bottomSheet($('#building-card'), closeCard);
   search = new AddressSearch($('#search'), selectAddress, addressLinker(buildings.manifest));
   // Saved buildings (browser only): the star on the card, the list from the tool bar.
   const saved = createSaved(
