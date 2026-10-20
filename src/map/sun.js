@@ -40,8 +40,10 @@ export function createSunShadows(viewer, tileset) {
   shadowMap.maximumDistance = 2500;
   viewer.shadows = true;
   tileset.shadows = Cesium.ShadowMode.ENABLED;
-  let on = false;
+  let on = false,
+    shadows = true;
   const apply = () => {
+    viewer.shadows = !on || shadows;
     shadowMap.size = on ? 4096 : 2048;
     shadowMap.darkness = on ? 0.3 : CALM.darkness;
     scene.light = on ? light : calmLight;
@@ -52,8 +54,11 @@ export function createSunShadows(viewer, tileset) {
     get on() {
       return on;
     },
-    setOn(next) {
+    // withShadows false: the sun lights the map but nothing casts a shadow (phones,
+    // Ton 20 Oct 2026). The other tabs keep their soft shadows.
+    setOn(next, withShadows = true) {
       on = next;
+      shadows = withShadows;
       apply();
     },
     // Moves the light to the sun at ms. Returns the sun's azimuth and height (degrees).
