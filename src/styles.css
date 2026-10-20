@@ -30,9 +30,9 @@
      card title and its big numbers, the search placeholder), General Sans for all
      other text. Khand comes in one weight here, so no fake bold. */
   --head: 'Khand', 'Arial Narrow', sans-serif;
-  /* Instrument Serif for the tab bar, the Neighbourhoods title and the search
-     placeholder (Ton, 16 Oct 2026). */
-  --serif: 'Instrument Serif', Georgia, serif;
+  /* Tabs, Neighbourhoods and the search placeholder use General Sans 500 like the
+     rest of the interface (Ton, 17 Oct 2026: Instrument Serif dropped, it did not
+     match the Khand headings on the card). */
   --sans: 'General Sans', 'Segoe UI', sans-serif;
   --card: var(--sans);
   --display: 'Syne', var(--head);
@@ -259,7 +259,7 @@ button { font: inherit; color: inherit; }
  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='7' cy='7' r='5.2' fill='none' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M11 11l3.6 3.6' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='7' cy='7' r='5.2' fill='none' stroke='black' stroke-width='1.8'/%3E%3Cpath d='M11 11l3.6 3.6' stroke='black' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat; }
 .search input { width:100%;font:inherit;font-size:14.5px;padding:12px 14px 12px 40px;border:0;border-radius:var(--radius-small);background:transparent;color:var(--ink); }
-.search input::placeholder { color:var(--muted);font-family:var(--serif);font-weight:400;font-size:17px; }
+.search input::placeholder { color:var(--muted);font-family:var(--sans);font-weight:400;font-size:15px; }
 .search input:focus-visible { outline:none; }
 .search:focus-within { background:var(--panel); }
 #address-results { scrollbar-width:none;margin-top:6px;padding:4px 0 2px;border-top:1px solid var(--line);max-height:460px;overflow:auto; }
@@ -272,7 +272,7 @@ button { font: inherit; color: inherit; }
 /* Left column under the name: Neighbourhoods, then any data errors. */
 .left-column { position:absolute;top:calc(var(--edge) + 36px + var(--gap));left:var(--edge);width:270px;display:flex;flex-direction:column;gap:var(--gap);z-index:4;max-height:calc(100% - 200px); }
 .neighbourhoods { padding:0; }
-.neighbourhoods summary { padding:10px 16px 11px;font-family:var(--serif);font-size:17px;font-weight:400;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px; }
+.neighbourhoods summary { padding:10px 16px 11px;font-family:var(--sans);font-size:15px;font-weight:500;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:10px; }
 .neighbourhoods summary::-webkit-details-marker { display:none; }
 .neighbourhoods summary::after { content:'';width:7px;height:7px;border:solid var(--muted);border-width:0 1.6px 1.6px 0;transform:translateY(-2px) rotate(45deg);transition:transform .2s; }
 .neighbourhoods[open] summary::after { transform:translateY(2px) rotate(-135deg); }
@@ -298,7 +298,7 @@ button { font: inherit; color: inherit; }
    full ink with a copper dot under it. Hover: the word brightens and lifts a little,
    and a small faint dot shows where the copper one would go. */
 .view-controls { display:flex;gap:6px;padding:4px 14px;border-radius:999px; }
-.view-controls button { position:relative;border:0;background:transparent;padding:10px 14px 14px;border-radius:999px;cursor:pointer;font-family:var(--serif);font-size:20px;font-weight:400;line-height:1.2;color:var(--faint);transition:color .2s,transform .2s; }
+.view-controls button { position:relative;border:0;background:transparent;padding:10px 14px 14px;border-radius:999px;cursor:pointer;font-family:var(--sans);font-size:16px;font-weight:500;letter-spacing:.01em;line-height:1.2;color:var(--muted);transition:color .2s,transform .2s; }
 .view-controls button::after { content:'';position:absolute;left:50%;bottom:5px;width:5px;height:5px;margin-left:-2.5px;border-radius:50%;background:var(--copper);opacity:0;transform:scale(.4);transition:opacity .2s,transform .25s cubic-bezier(.3,1.6,.5,1); }
 .view-controls button:hover,.view-controls button:focus-visible { color:var(--ink);transform:translateY(-1px); }
 .view-controls button:hover::after,.view-controls button:focus-visible::after { opacity:.45;transform:scale(.7); }
