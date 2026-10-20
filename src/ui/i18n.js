@@ -86,6 +86,7 @@ const FI = {
   'Street and number': 'Katu ja numero',
   'Helsinki address': 'Helsingin osoite',
   'Loading official addresses…': 'Ladataan virallisia osoitteita…',
+  'Searching…': 'Haetaan…',
   'Addresses unavailable. ': 'Osoitteet eivät ole saatavilla. ',
   Retry: 'Yritä uudelleen',
   'No Helsinki addresses found.': 'Helsingin osoitteita ei löytynyt.',

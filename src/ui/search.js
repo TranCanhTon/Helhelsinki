@@ -1,11 +1,37 @@
-import {findAddresses} from '../data/addresses.js';
+import {addressFilter, findAddresses, liveRows, parseQuery} from '../data/addresses.js';
 import {loadJson} from '../data/load.js';
 import {t} from './i18n.js';
+
+// Two ways to search:
+//   live (default)   each search asks the city's address layer directly from the
+//                    browser. The city allows this (it answers with
+//                    Access-Control-Allow-Origin: *).
+//   ?search=local    the old way: download /addresses.json once, search in memory.
+const CITY_WFS = 'https://kartta.hel.fi/ws/geoserver/avoindata/wfs';
+export function addressUrl(filter, count = 50) {
+  const url = new URL(CITY_WFS);
+  url.search = new URLSearchParams({
+    service: 'WFS',
+    version: '2.0.0',
+    request: 'GetFeature',
+    typeNames: 'avoindata:Helsinki_osoiteluettelo',
+    outputFormat: 'application/json',
+    srsName: 'CRS:84', // longitude, latitude
+    count: String(count),
+    CQL_FILTER: filter,
+  });
+  return url.href;
+}
+
 export class AddressSearch {
-  constructor(container, onSelect) {
+  // link: adds buildingIds to live rows (the city's answer has no building ids).
+  constructor(container, onSelect, link = rows => rows.map(r => ({...r, buildingIds: []}))) {
     this.el = container;
     this.onSelect = onSelect;
+    this.link = link;
+    this.live = new URLSearchParams(location.search).get('search') !== 'local';
     this.rows = null;
+    this.request = null;
     this.active = -1;
     this.results = [];
     container.innerHTML =
@@ -14,10 +40,12 @@ export class AddressSearch {
     this.list = container.querySelector('[role=listbox]');
     this.status = container.querySelector('[role=status]');
     this.translate();
-    this.input.addEventListener('focus', () => this.load());
+    this.input.addEventListener('focus', () => {
+      if (!this.live) this.load();
+    });
     this.input.addEventListener('input', () => {
       clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.run(), 200);
+      this.timer = setTimeout(() => this.run(), this.live ? 250 : 200);
     });
     this.input.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
@@ -43,7 +71,7 @@ export class AddressSearch {
   translate() {
     this.input.placeholder = t('Street and number');
     this.input.setAttribute('aria-label', t('Helsinki address'));
-    if (this.rows && this.input.value.trim()) this.run();
+    if ((this.live || this.rows) && this.input.value.trim()) this.run();
   }
   async load() {
     if (this.rows || this.loading) return;
@@ -54,24 +82,60 @@ export class AddressSearch {
       this.status.textContent = '';
       if (document.activeElement === this.input) this.run();
     } catch {
-      this.status.replaceChildren(document.createTextNode(t('Addresses unavailable. ')));
-      const b = document.createElement('button');
-      b.textContent = t('Retry');
-      b.onclick = () => this.load();
-      this.status.append(b);
+      this.failed(() => this.load());
     } finally {
       this.loading = false;
     }
   }
+  // "Addresses unavailable. Retry"
+  failed(retry) {
+    this.status.replaceChildren(document.createTextNode(t('Addresses unavailable. ')));
+    const b = document.createElement('button');
+    b.textContent = t('Retry');
+    b.onclick = retry;
+    this.status.append(b);
+  }
   run() {
+    if (this.live) {
+      this.runLive();
+      return;
+    }
     if (!this.rows) {
       this.load();
       return;
     }
-    this.results = findAddresses(this.rows, this.input.value);
+    this.paint(findAddresses(this.rows, this.input.value));
+  }
+  async runLive() {
+    // A newer search replaces an older one still on its way. Without this, the
+    // answer for "Ma" could arrive after the one for "Manner" and overwrite it.
+    this.request?.abort();
+    this.request = null;
+    const parsed = parseQuery(this.input.value),
+      filter = addressFilter(parsed);
+    if (!filter) {
+      this.paint([], '');
+      return;
+    }
+    const request = (this.request = new AbortController());
+    this.status.textContent = t('Searching…');
+    try {
+      const answer = await fetch(addressUrl(filter), {signal: request.signal});
+      if (!answer.ok) throw new Error('City address search answered ' + answer.status);
+      const {features} = await answer.json();
+      this.paint(this.link(liveRows(features, parsed)));
+    } catch (e) {
+      if (e.name !== 'AbortError') this.failed(() => this.run()); // a cancelled search is not an error
+    } finally {
+      if (this.request === request) this.request = null;
+    }
+  }
+  // Draws the dropdown. Both search ways end here.
+  paint(results, note = this.input.value.trim() && !results.length ? t('No Helsinki addresses found.') : '') {
+    this.results = results;
     this.active = -1;
     this.list.replaceChildren();
-    this.status.textContent = this.input.value.trim() && !this.results.length ? t('No Helsinki addresses found.') : '';
+    this.status.textContent = note;
     this.results.forEach((r, i) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -111,6 +175,12 @@ export class AddressSearch {
     this.onSelect(row);
   }
   close() {
+    // A search still on its way would open the list again when it lands.
+    if (this.request) {
+      this.request.abort();
+      this.request = null;
+      this.status.textContent = '';
+    }
     this.list.hidden = true;
     this.input.setAttribute('aria-expanded', 'false');
     this.input.removeAttribute('aria-activedescendant');
